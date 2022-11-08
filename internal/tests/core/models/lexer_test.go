@@ -11,6 +11,9 @@ func TestNextToken(t *testing.T) {
 	(5 6 1231)
 	(+ (567 123)
 		(123 567))
+	(def a 12)
+
+	}
 	`
 
 	tests := []struct {
@@ -34,6 +37,14 @@ func TestNextToken(t *testing.T) {
 		{models.Int, "567"},
 		{models.RightParen, ")"},
 		{models.RightParen, ")"},
+
+		{models.LeftParen, "("},
+		{models.Identifier, "def"},
+		{models.Identifier, "a"},
+		{models.Int, "12"},
+		{models.RightParen, ")"},
+
+		{models.Illegal, "}"},
 	}
 	reader := strings.NewReader(input)
 	_, tokens := models.NewLexer(reader)

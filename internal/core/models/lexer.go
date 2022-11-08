@@ -47,6 +47,10 @@ func (l *Lexer) run() {
 				continue
 			} else if isDigit(r) {
 				l.readDigit()
+			} else if isLetter(r) {
+				l.readIdentifier()
+			} else {
+				l.emit(Illegal, string(r))
 			}
 		}
 	}
@@ -63,11 +67,29 @@ func (l *Lexer) readDigit() {
 			literal += string(r)
 
 		} else {
+			l.backup()
 			break
 		}
 	}
-	l.backup()
 	l.emit(Int, literal)
+}
+
+func (l *Lexer) readIdentifier() {
+	l.backup()
+	var literal string
+	for {
+		r, _, err := l.reader.ReadRune()
+		errOrUnexpectedEOF(err, l)
+		l.position.column += 1
+		if isLetter(r) {
+			literal += string(r)
+
+		} else {
+			l.backup()
+			break
+		}
+	}
+	l.emit(Identifier, literal)
 }
 
 func (l *Lexer) emit(t TokenType, value string) {
@@ -77,6 +99,19 @@ func (l *Lexer) emit(t TokenType, value string) {
 func (l *Lexer) nextLine() {
 	l.position.line += 1
 	l.position.column = 0
+}
+
+func (l *Lexer) peekRune() rune {
+	r, _, err := l.reader.ReadRune()
+	if err != nil {
+		if err == io.EOF {
+			l.emit(EOF, "")
+		} else {
+			panic(err)
+		}
+	}
+	l.backup()
+	return r
 }
 
 func (l *Lexer) backup() {
@@ -103,4 +138,8 @@ func isWhiteSpace(ch rune) bool {
 
 func isDigit(ch rune) bool {
 	return ('0' <= ch && ch <= '9')
+}
+
+func isLetter(ch rune) bool {
+	return ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_')
 }
