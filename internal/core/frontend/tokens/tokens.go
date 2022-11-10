@@ -1,13 +1,16 @@
-package models
+package tokens
 
-import "fmt"
+import (
+	"fmt"
+	"grimlang/internal/core/frontend/utils"
+)
 
 type TokenType string
 
 type Token struct {
 	Type     TokenType
 	Literal  string
-	Position Position
+	Position utils.Position
 }
 
 const (
