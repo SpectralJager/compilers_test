@@ -52,6 +52,7 @@ func (p *Parser) ParseProgram() ast.Program {
 
 func (p *Parser) parseSExpression() ast.SyntaxNode {
 	var SExpr ast.SExpression
+	SExpr.StartListToken = p.currentToken
 	for {
 		p.readToken()
 		switch p.currentToken.Type {
@@ -59,11 +60,15 @@ func (p *Parser) parseSExpression() ast.SyntaxNode {
 			SExpr.Arguments = append(SExpr.Arguments, &ast.SymbolAtom{Symbol: p.currentToken})
 		case tokens.Int:
 			SExpr.Arguments = append(SExpr.Arguments, &ast.NumberAtom{Number: p.currentToken})
-		case tokens.LeftParen:
+		case tokens.RightParen:
 			SExpr.EndListToken = p.currentToken
 			return &SExpr
+		case tokens.LeftParen:
+			SExpr.Arguments = append(SExpr.Arguments, p.parseSExpression())
+		case tokens.Plus:
+			SExpr.Arguments = append(SExpr.Arguments, &ast.SymbolAtom{Symbol: p.currentToken})
 		default:
-			panic(fmt.Sprintf("expected symbol or number, got (%q)", &p.currentToken))
+			panic(fmt.Sprintf("expected symbol, number or new s-expr, got (%q)", &p.currentToken))
 		}
 	}
 }

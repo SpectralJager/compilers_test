@@ -41,5 +41,5 @@ const (
 // }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("Type: %v, Value: %s, Position: %q", &t.Type, t.Literal)
+	return fmt.Sprintf("Type: %s, Value: %s, Position: %q", t.Type, t.Literal, &t.Position)
 }
