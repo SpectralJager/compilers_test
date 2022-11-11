@@ -9,7 +9,7 @@ import (
 func TestNextToken(t *testing.T) {
 	input := `
 	(5 6 1231)
-	(+ (567 123)
+	(add (567 123)
 		(123 567))
 	(def a 12)
 

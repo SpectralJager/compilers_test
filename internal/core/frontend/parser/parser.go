@@ -65,8 +65,6 @@ func (p *Parser) parseSExpression() ast.SyntaxNode {
 			return &SExpr
 		case tokens.LeftParen:
 			SExpr.Arguments = append(SExpr.Arguments, p.parseSExpression())
-		case tokens.Plus:
-			SExpr.Arguments = append(SExpr.Arguments, &ast.SymbolAtom{Symbol: p.currentToken})
 		default:
 			panic(fmt.Sprintf("expected symbol, number or new s-expr, got (%q)", &p.currentToken))
 		}

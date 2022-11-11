@@ -14,26 +14,37 @@ type Token struct {
 }
 
 const (
-	Illegal = "Illegal"
+	Illegal = "illegal"
 	EOF     = "EOF"
 
 	// Identifiers + Literals
-	Identifier = "Identifier" // print, x ,y, z, ...
-	Int        = "Int"        // 1239164198273
-	String     = "String"     // "x", "y"
+	Identifier = "identifier" // print, x ,y, z, ...
+	Int        = "int"        // 1239164198273
+	Float      = "float"      // 12.2
+	String     = "string"     // "x", "y"
 
 	// Operators
-	Apostrophe = "'"
-	Assign     = "="
-	Plus       = "+"
-	Minus      = "-"
-	Bang       = "!"
-	Asterisk   = "*"
-	Slash      = "/"
+	Quote  = "'"
+	Assign = "="
+	//// Math
+	Plus      = "+"
+	Minus     = "-"
+	Multimply = "*"
+	Divide    = "/"
 
 	// Separators
-	LeftParen  = "("
-	RightParen = ")"
+	LeftParen    = "("
+	RightParen   = ")"
+	LeftSBracet  = "["
+	RightSBracet = "]"
+	LeftCBracet  = "{"
+	RightCBracet = "}"
+
+	// keywords
+	Fn  = "fn"  // lambda function
+	Def = "def" // bind value to symbol
+	Do  = "do"  // multiple expressions
+	Let = "let" // local varibles
 )
 
 // func (tt TokenType) String() string {
