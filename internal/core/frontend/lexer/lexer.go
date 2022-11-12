@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"grimlang/internal/core/frontend/tokens"
 	"grimlang/internal/core/frontend/utils"
+	symboltable "grimlang/internal/core/symbol_table"
 	"io"
 )
 
@@ -36,14 +37,34 @@ func (l *Lexer) run() {
 		}
 		l.position.Column += 1
 		switch r {
+		// special cases
 		case '\n':
 			l.nextLine()
+		// separators
 		case '(':
 			l.emit(tokens.LeftParen, "(")
 		case ')':
 			l.emit(tokens.RightParen, ")")
+		case '[':
+			l.emit(tokens.LeftSBracet, "[")
+		case ']':
+			l.emit(tokens.RightSBracet, "]")
+		case '{':
+			l.emit(tokens.LeftCBracet, "{")
+		case '}':
+			l.emit(tokens.RightCBracet, "}")
+		// math operators
 		case '+':
 			l.emit(tokens.Plus, "+")
+		case '-':
+			l.emit(tokens.Minus, "-")
+		case '*':
+			l.emit(tokens.Multimply, "*")
+		case '/':
+			l.emit(tokens.Divide, "/")
+		// operators
+		case '\'':
+			l.emit(tokens.Quote, "'")
 		default:
 			if isWhiteSpace(r) {
 				continue
@@ -91,6 +112,13 @@ func (l *Lexer) readIdentifier() {
 			break
 		}
 	}
+	kwType, ok := tokens.Keywords[literal]
+	if ok {
+		l.emit(kwType, literal)
+		return
+	}
+	st := symboltable.GetSymbolTableEntity()
+	st.Save(literal, nil)
 	l.emit(tokens.Identifier, literal)
 }
 

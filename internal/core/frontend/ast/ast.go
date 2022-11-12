@@ -1,6 +1,9 @@
 package ast
 
-import "grimlang/internal/core/frontend/tokens"
+import (
+	"fmt"
+	"grimlang/internal/core/frontend/tokens"
+)
 
 type SyntaxNode interface {
 	TokenLiteral() string
@@ -26,21 +29,48 @@ func (p *Program) TokenLiteral() string { return "Program" }
 // ----------------------------------
 type SExpression struct {
 	StartListToken tokens.Token
+	Operation      tokens.Token
 	EndListToken   tokens.Token
 	Arguments      []SyntaxNode
 }
 
 func (se *SExpression) expressionNode() {}
 func (se *SExpression) TokenLiteral() string {
-	lit := "("
+	lit := fmt.Sprintf("(%s", se.Operation.Literal)
 	for _, arg := range se.Arguments {
-		lit += arg.TokenLiteral()
 		lit += " "
-	}
-	if len(se.Arguments) != 0 {
-		lit = lit[:len(lit)-1]
+		lit += arg.TokenLiteral()
 	}
 	lit += ")"
+	return lit
+}
+
+// ----------------------------------
+type QuoteExpression struct {
+	QuoteToken tokens.Token
+	Body       SyntaxNode
+}
+
+func (qe *QuoteExpression) expressionNode() {}
+func (qe *QuoteExpression) TokenLiteral() string {
+	return fmt.Sprintf("'%q", qe.Body.TokenLiteral())
+}
+
+// ----------------------------------
+type ListAtom struct {
+	StartListToken tokens.Token
+	EndListToken   tokens.Token
+	Arguments      []SyntaxAtom
+}
+
+func (la *ListAtom) atomNode() {}
+func (la *ListAtom) TokenLiteral() string {
+	lit := "["
+	for _, arg := range la.Arguments {
+		lit += " "
+		lit += arg.TokenLiteral()
+	}
+	lit += "]"
 	return lit
 }
 

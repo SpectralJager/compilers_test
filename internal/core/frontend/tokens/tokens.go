@@ -24,8 +24,7 @@ const (
 	String     = "string"     // "x", "y"
 
 	// Operators
-	Quote  = "'"
-	Assign = "="
+	Quote = "'"
 	//// Math
 	Plus      = "+"
 	Minus     = "-"
@@ -46,6 +45,20 @@ const (
 	Do  = "do"  // multiple expressions
 	Let = "let" // local varibles
 )
+
+var Keywords = map[string]TokenType{
+	"fn":  Fn,
+	"def": Def,
+	"do":  Do,
+	"let": Let,
+}
+
+var Operations = map[string]TokenType{
+	"+": Plus,
+	"-": Minus,
+	"*": Multimply,
+	"/": Divide,
+}
 
 // func (tt TokenType) String() string {
 // 	return fmt.Sprintf("%s", tt)

@@ -12,14 +12,14 @@ func TestParseSExpression(t *testing.T) {
 	tests := []struct {
 		input                string
 		expectedStartlistLit string
+		expectedOperatorLit  string
 		expectedEndlistLit   string
 		expectedArgumentsLit []string
 	}{
-		{"(a b c)", "(", ")", []string{"a", "b", "c"}},
-		{"(a 1 12)", "(", ")", []string{"a", "1", "12"}},
-		{"(+ 1 12)", "(", ")", []string{"+", "1", "12"}},
-		{"(a (b c))", "(", ")", []string{"a", "(b c)"}},
-		{"()", "(", ")", []string{}},
+		{"(+ b c)", "(", "+", ")", []string{"b", "c"}},
+		{"(add 1 12)", "(", "add", ")", []string{"1", "12"}},
+		{"(sum 1 12)", "(", "sum", ")", []string{"1", "12"}},
+		{"(test)", "(", "test", ")", []string{}},
 	}
 
 	for _, tt := range tests {
@@ -41,6 +41,9 @@ func TestParseSExpression(t *testing.T) {
 		}
 		if se.EndListToken.Literal != tt.expectedEndlistLit {
 			t.Errorf("se.EndListToken.Literal not '%s'. got=%s", tt.expectedEndlistLit, se.EndListToken.Literal)
+		}
+		if se.Operation.Literal != tt.expectedOperatorLit {
+			t.Errorf("se.Operation.Literal not '%s'. got=%s", tt.expectedOperatorLit, se.Operation.Literal)
 		}
 		for i, arg := range se.Arguments {
 			if arg.TokenLiteral() != tt.expectedArgumentsLit[i] {
