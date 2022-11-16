@@ -2,15 +2,15 @@
 
 ## types
 Primetivs:
-- int (15)
-- float (14.1)
-- string ("string")
-- symbol (symbol)
+- int '(15)
+- float '(14.1)
+- string '("string")
+- symbol '(symbol)
 
 Iterable:
-- list ([])
-- hashmap ({:key value})
+- list '([])
+- hashmap '({:key value})
 
 Constructable:
-- struct
+- struct '()
 
