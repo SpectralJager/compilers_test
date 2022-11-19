@@ -15,8 +15,9 @@
 
 # Syntax
 ```lisp
-// simple hellow world programm
-=>(println "Hellow world")
+// simple hello world programm
+=>("Hello world")
+"Hello world"
 ```
 ## keywords
 - *add* - summation of numbers | concatination of strings | append for vectors | add key value pair to hashmap
@@ -95,7 +96,63 @@
 
 =>(mov some_number "str")
 Error: Cannot assign to the some_number of type INT new value of type STRING
+```
+
+- *fn* - lambda function
+```lisp
+=>(def pow2 (fn [x] (mul x x)))
+@pow2: fn [x]
+
+=>(pow2 4)
+16
+```
+
+- *lt* -  less then 
+```lisp
+=>(lt 3 4)
+true
+
+=>(lt 4 3)
+false
+```
+
+- *gt* -  greater then 
+```lisp
+=>(gt 3 4)
+false
+
+=>(gt 4 3)
+true
+```
+
+- *le* -  less then or equal 
+```lisp
+=>(le 3 4)
+true
+
+=>(le 4 3)
+false
+
+=>(le 4 4)
+true
+```
+
+- *ge* -  greater then or equal 
+```lisp
+=>(ge 4 3)
+true
+
+=>(ge 3 4)
+false
+
+=>(ge 4 4)
+true
+```
+
+    
 
 
+
+```lisp
 ```
 ## build-ins
