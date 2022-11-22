@@ -1,175 +1,111 @@
 package lexer
 
 import (
-	"bufio"
 	"grimlang/internal/core/frontend/tokens"
-	"grimlang/internal/core/frontend/utils"
-	symboltable "grimlang/internal/core/symbol_table"
 	"io"
 )
 
 type Lexer struct {
-	position utils.Position
-	reader   *bufio.Reader
-	tokens   chan tokens.Token
+	code string // source code
+
+	// line         int // current line
+	// column       int // current column
+	position     int // current position
+	nextPosition int // next position
 }
 
-func NewLexer(reader io.Reader, tokenChan chan tokens.Token) (*Lexer, chan tokens.Token) {
-	l := &Lexer{
-		tokens:   tokenChan,
-		reader:   bufio.NewReader(reader),
-		position: utils.Position{Line: 0, Column: 0},
+func NewLexer(src io.Reader) *Lexer {
+	code, err := io.ReadAll(src)
+	if err != nil {
+		panic(err)
 	}
-	go l.run()
-	return l, l.tokens
+	lexer := &Lexer{
+		code: string(code),
+		// line:     0,
+		// column:   0,
+	}
+
+	return lexer
 }
 
-func (l *Lexer) run() {
-	defer close(l.tokens)
+func (l *Lexer) Run() []tokens.Token {
+	var tokList []tokens.Token
+
 	for {
-		r, _, err := l.reader.ReadRune()
-		if err != nil {
-			if err == io.EOF {
-				l.emit(tokens.EOF, "")
-				break
-			}
-			panic(err)
-		}
-		l.position.Column += 1
-		switch r {
-		// special cases
+		ch := l.readChar()
+		switch ch {
+		case '0':
+			tokList = append(tokList, *tokens.NewToken(tokens.EOF, ""))
+			return tokList
 		case '\n':
-			l.nextLine()
-		// separators
 		case '(':
-			l.emit(tokens.LeftParen, "(")
+			tokList = append(tokList, *tokens.NewToken(tokens.LParen, "("))
 		case ')':
-			l.emit(tokens.RightParen, ")")
-		case '[':
-			l.emit(tokens.LeftSBracet, "[")
-		case ']':
-			l.emit(tokens.RightSBracet, "]")
+			tokList = append(tokList, *tokens.NewToken(tokens.RParen, ")"))
 		case '{':
-			l.emit(tokens.LeftCBracet, "{")
+			tokList = append(tokList, *tokens.NewToken(tokens.LBrace, "{"))
 		case '}':
-			l.emit(tokens.RightCBracet, "}")
-		// math operators
-		case '+':
-			l.emit(tokens.Plus, "+")
-		case '-':
-			l.emit(tokens.Minus, "-")
-		case '*':
-			l.emit(tokens.Multimply, "*")
-		case '/':
-			l.emit(tokens.Divide, "/")
-		// operators
-		case '\'':
-			l.emit(tokens.Quote, "'")
+			tokList = append(tokList, *tokens.NewToken(tokens.RBrace, "}"))
+		case '[':
+			tokList = append(tokList, *tokens.NewToken(tokens.LBracket, "["))
+		case ']':
+			tokList = append(tokList, *tokens.NewToken(tokens.RBracket, "]"))
 		default:
-			if isWhiteSpace(r) {
-				continue
-			} else if isDigit(r) {
-				l.readDigit()
-			} else if isLetter(r) {
-				l.readIdentifier()
+			if l.isWhitespace(ch) {
+			} else if l.isLetter(ch) {
+				tok := l.readSymbol()
+				tokList = append(tokList, tok)
+			} else if l.isDigit(ch) {
+				tok := l.readNumber()
+				tokList = append(tokList, tok)
 			} else {
-				l.emit(tokens.Illegal, string(r))
+				tokList = append(tokList, *tokens.NewToken(tokens.Illegal, string(ch)))
 			}
 		}
 	}
+
 }
 
-func (l *Lexer) readDigit() {
-	l.backup()
-	var literal string
-	for {
-		r, _, err := l.reader.ReadRune()
-		errOrUnexpectedEOF(err, l)
-		l.position.Column += 1
-		if isDigit(r) {
-			literal += string(r)
+func (l *Lexer) readChar() byte {
+	ch := l.peekChar()
+	l.position = l.nextPosition
+	l.nextPosition += 1
+	return ch
+}
 
-		} else {
-			l.backup()
-			break
-		}
+func (l *Lexer) peekChar() byte {
+	if l.nextPosition >= len(l.code) {
+		return '0'
 	}
-	l.emit(tokens.Int, literal)
+	return l.code[l.nextPosition]
 }
 
-func (l *Lexer) readIdentifier() {
-	l.backup()
-	var literal string
-	for {
-		r, _, err := l.reader.ReadRune()
-		errOrUnexpectedEOF(err, l)
-		l.position.Column += 1
-		if isLetter(r) {
-			literal += string(r)
-
-		} else {
-			l.backup()
-			break
-		}
+func (l *Lexer) readSymbol() tokens.Token {
+	pos := l.position
+	for l.isLetter(l.peekChar()) {
+		l.readChar()
 	}
-	kwType, ok := tokens.Keywords[literal]
-	if ok {
-		l.emit(kwType, literal)
-		return
+	val := l.code[pos : l.position+1]
+	return *tokens.NewToken(tokens.LookupSymbolType(val), val)
+}
+
+func (l *Lexer) readNumber() tokens.Token {
+	pos := l.position
+	for l.isDigit(l.peekChar()) {
+		l.readChar()
 	}
-	st := symboltable.GetSymbolTableEntity()
-	st.Save(literal, nil)
-	l.emit(tokens.Identifier, literal)
+	val := l.code[pos : l.position+1]
+	return *tokens.NewToken(tokens.Number, val)
 }
 
-func (l *Lexer) emit(t tokens.TokenType, value string) {
-	l.tokens <- tokens.Token{Type: t, Literal: value, Position: l.position}
+func (l *Lexer) isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
-func (l *Lexer) nextLine() {
-	l.position.Line += 1
-	l.position.Column = 0
+func (l *Lexer) isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
 }
 
-func (l *Lexer) peekRune() rune {
-	r, _, err := l.reader.ReadRune()
-	if err != nil {
-		if err == io.EOF {
-			l.emit(tokens.EOF, "")
-		} else {
-			panic(err)
-		}
-	}
-	l.backup()
-	return r
-}
-
-func (l *Lexer) backup() {
-	if err := l.reader.UnreadRune(); err != nil {
-		panic(err)
-	}
-	l.position.Column--
-}
-
-// Utils
-func errOrUnexpectedEOF(err error, l *Lexer) {
-	if err != nil {
-		if err == io.EOF {
-			l.emit(tokens.EOF, "0")
-			panic(io.ErrUnexpectedEOF)
-		}
-		panic(err)
-	}
-}
-
-func isWhiteSpace(ch rune) bool {
-	return (ch == ' ' || ch == '\t' || ch == '\r')
-}
-
-func isDigit(ch rune) bool {
-	return ('0' <= ch && ch <= '9')
-}
-
-func isLetter(ch rune) bool {
-	return ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_')
+func (l *Lexer) isWhitespace(ch byte) bool {
+	return ch == ' ' || ch == '\r' || ch == '\t'
 }

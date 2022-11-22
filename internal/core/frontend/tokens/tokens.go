@@ -1,69 +1,76 @@
 package tokens
 
-import (
-	"fmt"
-	"grimlang/internal/core/frontend/utils"
-)
+import "fmt"
 
-type TokenType string
-
-type Token struct {
-	Type     TokenType
-	Literal  string
-	Position utils.Position
-}
+// TokenType -----------------------------
+type TokenType int
 
 const (
-	Illegal = "illegal"
-	EOF     = "EOF"
+	EOF TokenType = iota
+	Illegal
 
-	// Identifiers + Literals
-	Identifier = "identifier" // print, x ,y, z, ...
-	Int        = "int"        // 1239164198273
-	Float      = "float"      // 12.2
-	String     = "string"     // "x", "y"
+	// data
+	Number // 123 1.23
+	Symbol // abc ab_c
 
-	// Operators
-	Quote = "'"
-	//// Math
-	Plus      = "+"
-	Minus     = "-"
-	Multimply = "*"
-	Divide    = "/"
-
-	// Separators
-	LeftParen    = "("
-	RightParen   = ")"
-	LeftSBracet  = "["
-	RightSBracet = "]"
-	LeftCBracet  = "{"
-	RightCBracet = "}"
+	// delimiters
+	LParen
+	RParen
+	LBrace
+	RBrace
+	LBracket
+	RBracket
 
 	// keywords
-	Fn  = "fn"  // lambda function
-	Def = "def" // bind value to symbol
-	Do  = "do"  // multiple expressions
-	Let = "let" // local varibles
+	Def // defenition
 )
 
-var Keywords = map[string]TokenType{
-	"fn":  Fn,
+// Representation of TokenType as String
+var tokenTypeString = map[TokenType]string{
+	EOF:      "EOF",
+	Illegal:  "Illegal",
+	Number:   "Number",
+	Def:      "Def",
+	LParen:   "(",
+	RParen:   ")",
+	LBrace:   "{",
+	RBrace:   "}",
+	LBracket: "[",
+	RBracket: "]",
+}
+
+var keywords = map[string]TokenType{
 	"def": Def,
-	"do":  Do,
-	"let": Let,
 }
 
-var Operations = map[string]TokenType{
-	"+": Plus,
-	"-": Minus,
-	"*": Multimply,
-	"/": Divide,
+func LookupSymbolType(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return Symbol
 }
 
-// func (tt TokenType) String() string {
-// 	return fmt.Sprintf("%s", tt)
-// }
+func (tt *TokenType) String() string {
+	if val, ok := tokenTypeString[*tt]; ok {
+		return val
+	}
+	panic("Undefined TokenType")
+}
+
+// -----------------------------------------
+
+// Token -----------------------------------
+type Token struct {
+	Type  TokenType
+	Value string
+}
+
+func NewToken(tt TokenType, val string) *Token {
+	return &Token{Type: tt, Value: val}
+}
 
 func (t *Token) String() string {
-	return fmt.Sprintf("Type: %s, Value: %s, Position: %q", t.Type, t.Literal, &t.Position)
+	return fmt.Sprintf("{Type: %s, Value: %s", t.Type.String(), t.Value)
 }
+
+// -----------------------------------------

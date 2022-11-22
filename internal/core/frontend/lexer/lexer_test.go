@@ -2,94 +2,36 @@ package lexer
 
 import (
 	"grimlang/internal/core/frontend/tokens"
-	symboltable "grimlang/internal/core/symbol_table"
 	"strings"
 	"testing"
 )
 
-func TestNextToken(t *testing.T) {
-	input := `
-	(5 6 1231)
-	(+ (567 123)
-		(123 567))
-	(def a 12)
-
-	(def add (fn [a b c] 
-		(* a b c)))
-
+func Test(t *testing.T) {
+	code := `
+	(add 1 22)
 	`
 
 	tests := []struct {
-		expectedType    tokens.TokenType
-		expectedLiteral string
+		expectedType  tokens.TokenType
+		expectedValue string
 	}{
-		{tokens.LeftParen, "("},
-		{tokens.Int, "5"},
-		{tokens.Int, "6"},
-		{tokens.Int, "1231"},
-		{tokens.RightParen, ")"},
-
-		{tokens.LeftParen, "("},
-		{tokens.Plus, "+"},
-		{tokens.LeftParen, "("},
-		{tokens.Int, "567"},
-		{tokens.Int, "123"},
-		{tokens.RightParen, ")"},
-		{tokens.LeftParen, "("},
-		{tokens.Int, "123"},
-		{tokens.Int, "567"},
-		{tokens.RightParen, ")"},
-		{tokens.RightParen, ")"},
-
-		{tokens.LeftParen, "("},
-		{tokens.Def, "def"},
-		{tokens.Identifier, "a"},
-		{tokens.Int, "12"},
-		{tokens.RightParen, ")"},
-
-		{tokens.LeftParen, "("},
-		{tokens.Def, "def"},
-		{tokens.Identifier, "add"},
-		{tokens.LeftParen, "("},
-		{tokens.Fn, "fn"},
-		{tokens.LeftSBracet, "["},
-		{tokens.Identifier, "a"},
-		{tokens.Identifier, "b"},
-		{tokens.Identifier, "c"},
-		{tokens.RightSBracet, "]"},
-		{tokens.LeftParen, "("},
-		{tokens.Multimply, "*"},
-		{tokens.Identifier, "a"},
-		{tokens.Identifier, "b"},
-		{tokens.Identifier, "c"},
-		{tokens.RightParen, ")"},
-		{tokens.RightParen, ")"},
-		{tokens.RightParen, ")"},
+		{tokens.LParen, "("},
+		{tokens.Symbol, "add"},
+		{tokens.Number, "1"},
+		{tokens.Number, "22"},
+		{tokens.RParen, ")"},
+		{tokens.EOF, ""},
 	}
-	st := symboltable.GetSymbolTableEntity()
-	reader := strings.NewReader(input)
-	tokenChan := make(chan tokens.Token)
-	_, toks := NewLexer(reader, tokenChan)
-	for i, tt := range tests {
-		tok := <-toks
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokenType wrong. expected=%q, got=%q", i, tt.expectedType, tok.Type)
-		}
 
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
+	lex := NewLexer(strings.NewReader(code))
+	tokList := lex.Run()
+	for n, test := range tests {
+		tok := tokList[n]
+		if tok.Type != test.expectedType {
+			t.Fatalf("[%d] Token type - %s, want - %s", n, tok.Type.String(), test.expectedType.String())
 		}
-		if tok.Type == tokens.Identifier {
-			_, err := st.Get(tok.Literal)
-			if err != nil {
-				t.Fatalf("tests[%d] - %q", i, err)
-			}
-		}
-		if _, ok := tokens.Keywords[tok.Literal]; ok {
-			_, err := st.Get(tok.Literal)
-			if err == nil {
-				t.Fatalf("tests[%d] - keyword %q shouldn't be inserted into symtable", i, &tok)
-			}
+		if tok.Value != test.expectedValue {
+			t.Fatalf("[%d] Token value - %v, want - %v", n, tok.Value, test.expectedValue)
 		}
 	}
 }

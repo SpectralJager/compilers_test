@@ -1,22 +1,10 @@
-# Lang grammars
-## simple grammars
-- *commentary*: //{any}
-- *symbol*: [a-zA-Z_]+ // a atoi str
-- *numbers*: [0-9]+(.[0-9]+)? // 1 123 12345 123.123
-- *string*: "{any}" // "hello world"
-## atoms
-- *atom*: symbol|number|string|vector|list|hashmap  
-## expressions
-- *s-expr*: (symbol {atom|s-expr}) // (add 123 '(123 123))
-## composition grammars
-- *list*: '({atom|symbol}) // '(123 syb ...)
-- *vector*: [{atom}] // [123 123 ...]
-- *hashmap*: { {:symbol atom} } // {:key1 val1 key2 val2 ...}
+# EBNF
+
 
 # Syntax
 ```lisp
 // simple hello world programm
-=>("Hello world")
+=>(println "Hello world")
 "Hello world"
 ```
 ## keywords
@@ -31,7 +19,7 @@
 =>(add [1 2 3] 5 [3 4 5]) // append elements to vector
 [1 2 3 5 [3 4 5]]
 
-=>(add {:key1 value1 :key2 value2} {:key3 value3})// add key value to hashmap
+=>(add {:key1 value1 :key2 value2} :key3 value3)// add key value to hashmap
 {:key1 value1 :key2 value2 :key3 value3}
 
 ```
