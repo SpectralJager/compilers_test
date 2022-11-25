@@ -1,4 +1,16 @@
 # EBNF
+digit = 0 | 1 | 2 | ... | 9 ;
+letter = 'a' | ... | 'z' | 'A' | ... | 'Z' ;
+
+symbol = {letter}['_']{letter};
+string = '"' anything '"'
+number = {digit};
+float = {digit}'.'{digit};
+
+atom = string | number | float ;
+
+
+
 
 
 # Syntax
