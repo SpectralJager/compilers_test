@@ -23,5 +23,6 @@ s-expr      = "(" prefix-op {atom|s-expr} ")"
             | "(" symbol {atom|s-expr} ")" 
             | "(" do {s-expr} ")" 
             | "(" def symbol atom^empty|s-expr ")"
-            | "(" fn vector [string] s-expr ")" ;
+            | "(" fn vector [string] s-expr ")" 
+            | "(" atom ")" ;
 ```

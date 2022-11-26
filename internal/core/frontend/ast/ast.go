@@ -33,35 +33,32 @@ func (program *Program) TokenLiteral() string {
 // Number atom
 type Number struct {
 	Token tokens.Token
-	Value int
 }
 
 func (number *Number) TokenLiteral() string {
-	return fmt.Sprintf("%s %d", number.Token.String(), number.Value)
+	return number.Token.String()
 }
-func (number *Number) atom()
+func (number *Number) atom() {}
 
 // String atom
 type String struct {
 	Token tokens.Token
-	Value string
 }
 
 func (str *String) TokenLiteral() string {
-	return fmt.Sprintf("%s %s", str.Token.String(), str.Value)
+	return str.Token.String()
 }
-func (str *String) atom()
+func (str *String) atom() {}
 
 // Bool atom
 type Bool struct {
 	Token tokens.Token
-	Value bool
 }
 
 func (bl *Bool) TokenLiteral() string {
-	return fmt.Sprintf("%s %v", bl.Token.String(), bl.Value)
+	return bl.Token.String()
 }
-func (bl *Bool) atom()
+func (bl *Bool) atom() {}
 
 // Nil atom
 type Nil struct {
@@ -69,9 +66,9 @@ type Nil struct {
 }
 
 func (nl *Nil) TokenLiteral() string {
-	return ""
+	return nl.Token.String()
 }
-func (nl *Nil) atom()
+func (nl *Nil) atom() {}
 
 // Symbol atom
 type Symbol struct {
@@ -82,36 +79,30 @@ type Symbol struct {
 func (symbol *Symbol) TokenLiteral() string {
 	return fmt.Sprintf("%s %s", symbol.Token.String(), symbol.Value.TokenLiteral())
 }
-func (symbol *Symbol) atom()
+func (symbol *Symbol) atom() {}
 
 // List atom
 type List struct {
-	TokL  tokens.Token
-	TokR  tokens.Token
 	Atoms []Atom
 }
 
 func (list *List) TokenLiteral() string {
 	return fmt.Sprintf("'(%s ... %s)", list.Atoms[0], list.Atoms[len(list.Atoms)-1])
 }
-func (list *List) atom()
+func (list *List) atom() {}
 
 // Vector atom
 type Vector struct {
-	TokL  tokens.Token
-	TokR  tokens.Token
 	Atoms []Atom
 }
 
 func (vector *Vector) TokenLiteral() string {
 	return fmt.Sprintf("[%v ... %v]", vector.Atoms[0], vector.Atoms[len(vector.Atoms)-1])
 }
-func (vector *Vector) atom()
+func (vector *Vector) atom() {}
 
 // List atom
 type HashMap struct {
-	TokSt  tokens.Token
-	TokEn  tokens.Token
 	Keys   []Atom // string or number
 	Values []Atom
 }
@@ -119,38 +110,41 @@ type HashMap struct {
 func (hashmap *HashMap) TokenLiteral() string {
 	return fmt.Sprintf("{%v %v ...}", hashmap.Keys[0], hashmap.Values[0])
 }
-func (hashmap *HashMap) atom()
+func (hashmap *HashMap) atom() {}
 
 // Prefix-op s-expr
-type PrefixOp struct {
+type PrefixExpr struct {
 	Operator tokens.Token
 	Args     []Node
 }
 
-func (prefixOp *PrefixOp) sexpr()
+func (prefixExpr *PrefixExpr) TokenLiteral() string {
+	return "(" + prefixExpr.Operator.Value + ")"
+}
+func (prefixExpr *PrefixExpr) sexpr() {}
 
-// Prefix-op s-expr
-type UnaryOp struct {
+// Unary-op s-expr
+type UnaryExpr struct {
 	Operator tokens.Token
 	Arg      Node
 }
 
-func (unaryOp *UnaryOp) TokenLiteral() string {
-	return "(" + unaryOp.Operator.String() + ")"
+func (unaryExpr *UnaryExpr) TokenLiteral() string {
+	return "(" + unaryExpr.Operator.String() + ")"
 }
-func (unaryOp *UnaryOp) sexpr()
+func (unaryExpr *UnaryExpr) sexpr() {}
 
-// Prefix-op s-expr
-type BinOp struct {
+// Bin-op s-expr
+type BinExpr struct {
 	Operator tokens.Token
 	Arg1     Node
 	Arg2     Node
 }
 
-func (binOp *BinOp) TokenLiteral() string {
-	return "(" + binOp.Operator.String() + ")"
+func (binExpr *BinExpr) TokenLiteral() string {
+	return "(" + binExpr.Operator.String() + ")"
 }
-func (binOp *BinOp) sexpr()
+func (binExpr *BinExpr) sexpr() {}
 
 // SymbolExpr
 type SymbolExpr struct {
@@ -161,7 +155,7 @@ type SymbolExpr struct {
 func (s *SymbolExpr) TokenLiteral() string {
 	return "(" + s.Symb.Token.String() + ")"
 }
-func (s *SymbolExpr) sexpr()
+func (s *SymbolExpr) sexpr() {}
 
 // Def expr
 type DefExpr struct {
@@ -173,7 +167,7 @@ type DefExpr struct {
 func (defexpr *DefExpr) TokenLiteral() string {
 	return "(" + defexpr.DefToken.String() + ")"
 }
-func (defexpr *DefExpr) sexpr()
+func (defexpr *DefExpr) sexpr() {}
 
 // Fn expr
 type FnExpr struct {
@@ -186,7 +180,7 @@ type FnExpr struct {
 func (fnexpr *FnExpr) TokenLiteral() string {
 	return "(" + fnexpr.FnTok.String() + ")"
 }
-func (fnexpr *FnExpr) sexpr()
+func (fnexpr *FnExpr) sexpr() {}
 
 // Do expr
 type DoExpr struct {
@@ -197,4 +191,14 @@ type DoExpr struct {
 func (doexpr *DoExpr) TokenLiteral() string {
 	return "(" + doexpr.DoTok.String() + ")"
 }
-func (doexpr *DoExpr) sexpr()
+func (doexpr *DoExpr) sexpr() {}
+
+// Atom expr
+type AtomExpr struct {
+	Atm Atom
+}
+
+func (atom *AtomExpr) TokenLiteral() string {
+	return "(" + atom.Atm.TokenLiteral() + ")"
+}
+func (atom *AtomExpr) sexpr() {}

@@ -21,4 +21,5 @@ func main() {
 			repl.PrintHelp()
 		}
 	}
+	repl.RunRepl()
 }

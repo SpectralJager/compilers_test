@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"grimlang/internal/core/frontend/lexer"
+	"grimlang/internal/core/frontend/parser"
 	"os"
 )
 
@@ -30,7 +31,9 @@ func Compile(src string) {}
 func run(req string) {
 	lex := lexer.NewLexer(req)
 	toks := lex.Run()
-	for _, tok := range toks {
-		fmt.Printf("%v\n", tok.String())
+	prs := parser.NewParser(toks)
+	tree := prs.Run()
+	for _, expr := range tree.Expresions {
+		fmt.Printf("%+v\n", expr)
 	}
 }

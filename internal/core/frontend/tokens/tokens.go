@@ -27,6 +27,7 @@ const (
 	Def // defenition
 	Fn  // function definition
 	Not
+	Neg
 	And
 	Or
 	Nil
@@ -36,6 +37,10 @@ const (
 	Sub
 	Mul
 	Div
+	Lt
+	Gt
+	Leq
+	Geq
 )
 
 // Representation of TokenType as String
@@ -54,6 +59,7 @@ var tokenTypeString = map[TokenType]string{
 	Def:      "Def",
 	Fn:       "Fn",
 	Not:      "Not",
+	Neg:      "Neg",
 	And:      "And",
 	Or:       "Or",
 	Nil:      "Nil",
@@ -63,12 +69,17 @@ var tokenTypeString = map[TokenType]string{
 	Sub:      "Sub",
 	Mul:      "Mul",
 	Div:      "Div",
+	Lt:       "Lt",
+	Gt:       "Gt",
+	Leq:      "Leq",
+	Geq:      "Geq",
 }
 
 var keywords = map[string]TokenType{
 	"def":   Def,
 	"fn":    Fn,
 	"not":   Not,
+	"neg":   Neg,
 	"and":   And,
 	"or":    Or,
 	"nil":   Nil,
@@ -78,6 +89,10 @@ var keywords = map[string]TokenType{
 	"sub":   Sub,
 	"mul":   Mul,
 	"div":   Div,
+	"lt":    Lt,
+	"gt":    Gt,
+	"leq":   Leq,
+	"geq":   Geq,
 }
 
 func LookupSymbolType(ident string) TokenType {
