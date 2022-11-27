@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"grimlang/internal/core/frontend/ast"
 	"grimlang/internal/core/frontend/tokens"
 )
@@ -28,7 +29,7 @@ func (p *Parser) Run() *ast.Program {
 		case tokens.LParen:
 			program.Expresions = append(program.Expresions, p.parseSExpr())
 		default:
-			panic("Incorect expression")
+			fmt.Println("Cant parse expresion. Should start with '(', get: " + tok.String())
 		}
 	}
 	return &program
@@ -38,42 +39,16 @@ func (p *Parser) parseSExpr() ast.SExpr {
 	var sexpr ast.SExpr
 	tok := p.nextToken()
 	switch tok.Type {
-	case tokens.Not, tokens.Neg:
-		sexpr = p.parseUnaryExpr()
-	case tokens.Add, tokens.Sub, tokens.Mul, tokens.Div, tokens.And, tokens.Or:
+	case tokens.Add, tokens.Sub:
 		sexpr = p.parsePrefixExpr()
-	// case tokens.Lt, tokens.Gt, tokens.Leq, tokens.Geq:
-	// sexpr = p.parseBinExpr()
-	// case tokens.Symbol:
-	// sexpr = p.parseSymbolExpr()
-	// case tokens.Def:
-	// sexpr = p.parseDefExpr()
-	// case tokens.Fn:
-	// sexpr = p.parseFnExpr()
 	case tokens.Number, tokens.Float, tokens.String:
 		sexpr = p.parseAtomExpr()
 	case tokens.LParen:
 		sexpr = p.parseSExpr()
 	default:
-		panic("Unixpected token")
+		fmt.Println("Unixpected token " + tok.String())
 	}
 	return sexpr
-}
-
-func (p *Parser) parseUnaryExpr() ast.SExpr {
-	sexpr := ast.UnaryExpr{}
-	sexpr.Operator = p.peek(0)
-	tok := p.nextToken()
-	switch tok.Type {
-	case tokens.Number:
-		sexpr.Arg = &ast.Number{Token: tok}
-	case tokens.True, tokens.False:
-		sexpr.Arg = &ast.Bool{Token: tok}
-	default:
-		panic("Unixpected token")
-	}
-	p.nextToken()
-	return &sexpr
 }
 
 func (p *Parser) parsePrefixExpr() ast.SExpr {
@@ -87,7 +62,7 @@ func (p *Parser) parsePrefixExpr() ast.SExpr {
 		case tokens.LParen:
 			sexpr.Args = append(sexpr.Args, p.parseSExpr())
 		default:
-			panic("Unixpected token")
+			fmt.Println("Unixpected token " + tok.String())
 		}
 	}
 	p.nextToken()
@@ -101,8 +76,9 @@ func (p *Parser) parseAtomExpr() ast.SExpr {
 	case tokens.Number:
 		sexpr.Atm = &ast.Number{Token: tok}
 	default:
-		panic("Unixpected token")
+		fmt.Println("Unixpected token " + tok.String())
 	}
+	p.nextToken()
 	return &sexpr
 }
 

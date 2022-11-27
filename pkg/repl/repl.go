@@ -33,7 +33,5 @@ func run(req string) {
 	toks := lex.Run()
 	prs := parser.NewParser(toks)
 	tree := prs.Run()
-	for _, expr := range tree.Expresions {
-		fmt.Printf("%+v\n", expr)
-	}
+	fmt.Println(tree.String())
 }
