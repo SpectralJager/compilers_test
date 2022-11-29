@@ -40,5 +40,5 @@ func (repl *Repl) run(req string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("%v\n%v\n", result, repl.replEnv)
+	fmt.Printf("%v\n", result)
 }

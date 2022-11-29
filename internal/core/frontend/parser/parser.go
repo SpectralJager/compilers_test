@@ -65,6 +65,10 @@ func (p *Parser) parseDefExpr() ast.SExpr {
 	switch tok.Type {
 	case tokens.Number:
 		sexpr.Value = &ast.Number{Token: tok}
+	case tokens.Float:
+		sexpr.Value = &ast.Float{Token: tok}
+	case tokens.String:
+		sexpr.Value = &ast.String{Token: tok}
 	}
 	p.nextToken()
 	return &sexpr

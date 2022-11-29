@@ -8,7 +8,7 @@ import (
 
 func TestEval(t *testing.T) {
 	code := `
-	(add 1 2.2)
+	(add 1 2)
 	(add 3 2)
 	(add 3 (add 2 3))
 	(add (add 12 8) (add 55 45 100) 200)
@@ -45,7 +45,7 @@ func TestEval(t *testing.T) {
 	for i, expRes := range tests {
 		res, err := Eval(prog.Expresions[i], &env)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("[%d] %s", i, err)
 		}
 		if res != expRes.result {
 			t.Fatalf("[%d] want: %v, got %v", i, expRes, res)

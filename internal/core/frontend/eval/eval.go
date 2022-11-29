@@ -49,42 +49,13 @@ func evalPrefix(node ast.PrefixExpr, env *Env) (interface{}, error) {
 
 	switch node.Operator.Type {
 	case tokens.Add:
-		res := 0.0
-		for _, val := range values {
-			temp := val
-			res += temp
-		}
-		return res, nil
+		return Add(values)
 	case tokens.Sub:
-		res := 0
-		for i, val := range values {
-			if i == 0 {
-				res = val.(int)
-				continue
-			}
-			res -= val.(int)
-		}
-		return res, nil
+		return Sub(values)
 	case tokens.Mul:
-		res := 0
-		for i, val := range values {
-			if i == 0 {
-				res = val.(int)
-				continue
-			}
-			res *= val.(int)
-		}
-		return res, nil
+		return Mul(values)
 	case tokens.Div:
-		res := 0
-		for i, val := range values {
-			if i == 0 {
-				res = val.(int)
-				continue
-			}
-			res /= val.(int)
-		}
-		return res, nil
+		return Div(values)
 	default:
 		return nil, fmt.Errorf("wrong prefix expression symbol")
 	}

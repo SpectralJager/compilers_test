@@ -107,7 +107,7 @@ func (l *Lexer) readString() string {
 		l.advance()
 	}
 	l.advance()
-	literal := l.source[l.start:l.current]
+	literal := l.source[l.start+1 : l.current-1]
 	return literal
 }
 
