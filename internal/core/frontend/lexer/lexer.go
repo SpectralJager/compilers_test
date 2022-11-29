@@ -90,6 +90,14 @@ func (l *Lexer) readDigit() (tokens.TokenType, string) {
 	for isDigit(l.peek(0)) && !l.isAtEnd() {
 		l.advance()
 	}
+	if l.peek(0) == '.' {
+		l.advance()
+		for isDigit(l.peek(0)) && !l.isAtEnd() {
+			l.advance()
+		}
+		literal := l.source[l.start:l.current]
+		return tokens.Float, literal
+	}
 	literal := l.source[l.start:l.current]
 	return tokens.Number, literal
 }

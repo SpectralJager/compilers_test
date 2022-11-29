@@ -28,8 +28,11 @@ func Test(t *testing.T) {
 	false
 	true
 
+	symb
+
 	123
 	"123"
+	123.123
 	`
 
 	tests := []struct {
@@ -60,8 +63,11 @@ func Test(t *testing.T) {
 		{tokens.False, "false"},
 		{tokens.True, "true"},
 
+		{tokens.Symbol, "symb"},
+
 		{tokens.Number, "123"},
 		{tokens.String, "\"123\""},
+		{tokens.Float, "123.123"},
 
 		{tokens.EOF, "EOF"},
 	}

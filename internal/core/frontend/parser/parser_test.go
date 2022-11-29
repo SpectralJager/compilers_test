@@ -10,6 +10,8 @@ func TestParser(t *testing.T) {
 	(add 1 2)
 	(add 1 (add 1 1))
 	(1)
+	(def a 12)
+	(add a 12)
 	`
 	tests := []struct {
 		ExpectedLiteral string
@@ -17,6 +19,8 @@ func TestParser(t *testing.T) {
 		{"add"},
 		{"add"},
 		{"1"},
+		{"def"},
+		{"add"},
 	}
 	lex := lexer.NewLexer(code)
 	toks := lex.Run()

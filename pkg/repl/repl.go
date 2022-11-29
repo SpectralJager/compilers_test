@@ -3,17 +3,20 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"grimlang/internal/core/frontend/eval"
 	"grimlang/internal/core/frontend/lexer"
 	"grimlang/internal/core/frontend/parser"
 	"os"
 )
 
 type Repl struct {
+	replEnv eval.Env
 }
 
 func PrintHelp() {}
 
-func RunRepl() {
+func (repl *Repl) RunRepl() {
+	repl.replEnv = make(eval.Env)
 	prompt := bufio.NewReader(os.Stdout)
 	for {
 		fmt.Print("repl-> ")
@@ -21,17 +24,21 @@ func RunRepl() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		run(req)
+		repl.run(req)
 		fmt.Print("\n")
 	}
 }
 
-func Compile(src string) {}
+func (repl *Repl) Compile(src string) {}
 
-func run(req string) {
+func (repl *Repl) run(req string) {
 	lex := lexer.NewLexer(req)
 	toks := lex.Run()
 	prs := parser.NewParser(toks)
 	tree := prs.Run()
-	fmt.Println(tree.String())
+	result, err := eval.Eval(tree.Expresions[0], &repl.replEnv)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("%v\n%v\n", result, repl.replEnv)
 }
