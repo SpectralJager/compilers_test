@@ -99,7 +99,7 @@ func (l *Lexer) readDigit() (tokens.TokenType, string) {
 		return tokens.Float, literal
 	}
 	literal := l.source[l.start:l.current]
-	return tokens.Number, literal
+	return tokens.Int, literal
 }
 
 func (l *Lexer) readString() string {

@@ -8,42 +8,20 @@ import (
 
 func TestEval(t *testing.T) {
 	code := `
-	(add 1 2)
-	(add 3 2)
-	(add 3 (add 2 3))
-	(add (add 12 8) (add 55 45 100) 200)
-	(sub 10 5)
-	(mul 10 10)
-	(div 15 5)
-	(def a 12)
-	(a)
-	(add a 18)
-	(def pi 3.14)
-	(pi)
+	12
 	`
 
 	tests := []struct {
 		result interface{}
 	}{
-		{3},
-		{5},
-		{8},
-		{420},
-		{5},
-		{100},
-		{3},
-		{"a"},
 		{12},
-		{30},
-		{"pi"},
-		{3.14},
 	}
 	env := make(Env)
 	lex := lexer.NewLexer(code)
 	pars := parser.NewParser(lex.Run())
 	prog := pars.Run()
 	for i, expRes := range tests {
-		res, err := Eval(prog.Expresions[i], &env)
+		res, err := Eval(prog.Body[i], &env)
 		if err != nil {
 			t.Fatalf("[%d] %s", i, err)
 		}

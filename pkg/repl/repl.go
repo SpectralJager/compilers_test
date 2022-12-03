@@ -36,7 +36,7 @@ func (repl *Repl) run(req string) {
 	toks := lex.Run()
 	prs := parser.NewParser(toks)
 	tree := prs.Run()
-	result, err := eval.Eval(tree.Expresions[0], &repl.replEnv)
+	result, err := eval.Eval(tree.Body[0], &repl.replEnv)
 	if err != nil {
 		fmt.Println(err)
 	}
