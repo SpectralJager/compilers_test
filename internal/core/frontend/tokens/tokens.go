@@ -19,13 +19,15 @@ const (
 	// delimiters
 	LParen   // (
 	RParen   // )
-	LBrace   // {
-	RBrace   // }
 	LBracket // [
 	RBracket // ]
 
 	// keywords
 	Def // binding symbol to something
+	Set // change symbol value
+	Fn  // define function
+	Ret // return from function
+
 )
 
 // Representation of TokenType as String
@@ -36,17 +38,22 @@ var tokenTypeString = map[TokenType]string{
 	Float:    "Float",
 	String:   "String",
 	Bool:     "Bool",
+	Symbol:   "Symbol",
 	LParen:   "(",
 	RParen:   ")",
-	LBrace:   "{",
-	RBrace:   "}",
 	LBracket: "[",
 	RBracket: "]",
 	Def:      "Def",
+	Set:      "Set",
+	Fn:       "Fn",
+	Ret:      "Ret",
 }
 
 var keywords = map[string]TokenType{
 	"def": Def,
+	"set": Set,
+	"fn":  Fn,
+	"ret": Ret,
 }
 
 func LookupSymbolType(ident string) TokenType {
@@ -60,7 +67,7 @@ func (tt *TokenType) String() string {
 	if val, ok := tokenTypeString[*tt]; ok {
 		return val
 	}
-	panic("Undefined TokenType")
+	panic("Undefined TokenType ")
 }
 
 // -----------------------------------------

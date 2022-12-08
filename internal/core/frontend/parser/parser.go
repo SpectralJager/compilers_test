@@ -23,13 +23,47 @@ func (p *Parser) Run() *ast.Program {
 	for p.peek(0).Type != tokens.EOF {
 		tok := p.nextToken()
 		switch tok.Type {
-		case tokens.Int:
-			program.Body = append(program.Body, &ast.Int{Token: tok})
+		case tokens.Int, tokens.Float:
+			program.Body = append(program.Body, &ast.Number{Token: tok})
+		case tokens.LParen:
+			program.Body = append(program.Body, p.parseLExpr())
 		default:
 			fmt.Println("Cant parse Statement. Should start with '(' or should be Atom, got: " + tok.String())
 		}
 	}
 	return &program
+}
+
+func (p *Parser) parseLExpr() ast.Node {
+	tok := p.nextToken()
+	switch tok.Type {
+	case tokens.Def:
+		return p.parseDef()
+	default:
+		panic("unsupported opperation " + tok.Type.String())
+	}
+}
+
+func (p *Parser) parseDef() ast.SPForm {
+	var def ast.DefSF
+
+	tok := p.nextToken()
+	if tok.Type != tokens.Symbol {
+		return nil
+	}
+	def.Symb = tok
+
+	tok = p.nextToken()
+	switch tok.Type {
+	case tokens.Int, tokens.Float:
+		def.Value = &ast.Number{Token: tok}
+	case tokens.String:
+		def.Value = &ast.String{Token: tok}
+	default:
+		fmt.Println("Cant parse def value, got: " + tok.String())
+	}
+	p.nextToken()
+	return &def
 }
 
 func (p *Parser) nextToken() tokens.Token {

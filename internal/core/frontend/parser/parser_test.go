@@ -8,15 +8,15 @@ import (
 func TestParser(t *testing.T) {
 	code := `
 	12
-	224
-	123123
+	12.2
+	(def a 12)
 	`
 	tests := []struct {
 		ExpectedLiteral string
 	}{
 		{"12"},
-		{"224"},
-		{"123123"},
+		{"12.2"},
+		{"def a"},
 	}
 	lex := lexer.NewLexer(code)
 	toks := lex.Run()

@@ -2,7 +2,6 @@ package ast
 
 import (
 	"encoding/json"
-	"grimlang/internal/core/frontend/tokens"
 	"log"
 )
 
@@ -21,12 +20,18 @@ type SExpr interface {
 	sexpr()
 }
 
+type SPForm interface {
+	Node
+	spform()
+}
+
 // --------------- Starting point ---------------
 // Program node
 type Program struct {
 	Body []Node `json:"body"`
 }
 
+func (program *Program) TokenLiteral() string { return "program" }
 func (program *Program) String() string {
 	out, err := json.MarshalIndent(program, "", "-")
 	if err != nil {
@@ -35,13 +40,3 @@ func (program *Program) String() string {
 	}
 	return string(out)
 }
-
-// ---------------- Atoms ------------------------
-// Number atom
-type Int struct {
-	Token tokens.Token `json:"token"`
-}
-
-func (atm *Int) atom()                {}
-func (atm *Int) TokenLiteral() string { return atm.Token.Value }
-func (atm *Int) String() string       { return atm.Token.Value }

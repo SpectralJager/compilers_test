@@ -33,10 +33,6 @@ func (l *Lexer) Run() []tokens.Token {
 			l.addToken(tokens.LBracket, "")
 		case ']':
 			l.addToken(tokens.RBracket, "")
-		case '{':
-			l.addToken(tokens.LBrace, "")
-		case '}':
-			l.addToken(tokens.RBrace, "")
 		case '"':
 			literal := l.readString()
 			l.addToken(tokens.String, literal)

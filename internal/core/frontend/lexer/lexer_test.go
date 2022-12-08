@@ -7,18 +7,75 @@ import (
 
 func Test(t *testing.T) {
 	code := `
-	5
-	6
-	12
+	123
+	123.123
+	(add 123 123.123)
+	(add (add 123 123) sym)
+	(def sym 123)
+	(def sym (add 123 123))
+	(set sym 123.123)
+	(fn sym [sl al] (
+		(ret (add sl al))
+	))
 	`
 
 	tests := []struct {
 		expectedType  tokens.TokenType
 		expectedValue string
 	}{
-		{tokens.Int, "5"},
-		{tokens.Int, "6"},
-		{tokens.Int, "12"},
+		{tokens.Int, "123"},
+		{tokens.Float, "123.123"},
+		{tokens.LParen, "("},
+		{tokens.Symbol, "add"},
+		{tokens.Int, "123"},
+		{tokens.Float, "123.123"},
+		{tokens.RParen, ")"},
+		{tokens.LParen, "("},
+		{tokens.Symbol, "add"},
+		{tokens.LParen, "("},
+		{tokens.Symbol, "add"},
+		{tokens.Int, "123"},
+		{tokens.Int, "123"},
+		{tokens.RParen, ")"},
+		{tokens.Symbol, "sym"},
+		{tokens.RParen, ")"},
+		{tokens.LParen, "("},
+		{tokens.Def, "def"},
+		{tokens.Symbol, "sym"},
+		{tokens.Int, "123"},
+		{tokens.RParen, ")"},
+		{tokens.LParen, "("},
+		{tokens.Def, "def"},
+		{tokens.Symbol, "sym"},
+		{tokens.LParen, "("},
+		{tokens.Symbol, "add"},
+		{tokens.Int, "123"},
+		{tokens.Int, "123"},
+		{tokens.RParen, ")"},
+		{tokens.RParen, ")"},
+		{tokens.LParen, "("},
+		{tokens.Set, "set"},
+		{tokens.Symbol, "sym"},
+		{tokens.Float, "123.123"},
+		{tokens.RParen, ")"},
+		{tokens.LParen, "("},
+		{tokens.Fn, "fn"},
+		{tokens.Symbol, "sym"},
+		{tokens.LBracket, "["},
+		{tokens.Symbol, "sl"},
+		{tokens.Symbol, "al"},
+		{tokens.RBracket, "]"},
+		{tokens.LParen, "("},
+		{tokens.LParen, "("},
+		{tokens.Ret, "ret"},
+		{tokens.LParen, "("},
+		{tokens.Symbol, "add"},
+		{tokens.Symbol, "sl"},
+		{tokens.Symbol, "al"},
+		{tokens.RParen, ")"},
+		{tokens.RParen, ")"},
+		{tokens.RParen, ")"},
+		{tokens.RParen, ")"},
 	}
 
 	lex := NewLexer(code)
