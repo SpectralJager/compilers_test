@@ -6,32 +6,21 @@ import (
 )
 
 type Node interface {
-	TokenLiteral() string
+	Type() string
 	String() string
 }
 
-type Atom interface {
+type Expr interface {
 	Node
-	atom()
+	expr()
 }
 
-type SExpr interface {
-	Node
-	sexpr()
-}
-
-type SPForm interface {
-	Node
-	spform()
-}
-
-// --------------- Starting point ---------------
 // Program node
 type Program struct {
 	Body []Node `json:"body"`
 }
 
-func (program *Program) TokenLiteral() string { return "program" }
+func (program *Program) Type() string { return "program" }
 func (program *Program) String() string {
 	out, err := json.MarshalIndent(program, "", "-")
 	if err != nil {

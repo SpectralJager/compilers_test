@@ -7,24 +7,30 @@ import (
 
 func TestParser(t *testing.T) {
 	code := `
-	12
-	12.2
 	(def a 12)
+	(set a (add a 12))
+	(fn test [] (
+		(ret 12)
+	))
+	(test)
+	(def b (add 12 (mul a 2)))
 	`
 	tests := []struct {
 		ExpectedLiteral string
 	}{
-		{"12"},
-		{"12.2"},
-		{"def a"},
+		{"def"},
+		{"set"},
+		{"fn"},
+		{"s-expr"},
+		{"def"},
 	}
 	lex := lexer.NewLexer(code)
 	toks := lex.Run()
 	pars := NewParser(toks)
 	prog := pars.Run()
 	for i, test := range tests {
-		if test.ExpectedLiteral != prog.Body[i].TokenLiteral() {
-			t.Fatalf("[#%d] Want %v, got %v", i, test.ExpectedLiteral, prog.Body[i].TokenLiteral())
+		if test.ExpectedLiteral != prog.Body[i].Type() {
+			t.Fatalf("[#%d] Want %v, got %v", i, test.ExpectedLiteral, prog.Body[i].Type())
 		}
 	}
 }

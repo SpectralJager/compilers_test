@@ -6,13 +6,18 @@ import (
 )
 
 // ---------------- Atoms ------------------------
-// Number atom (int, float)
-type Number struct {
-	Token tokens.Token `json:"token"`
+type Atom interface {
+	Node
+	atom()
 }
 
-func (atm *Number) atom()                {}
-func (atm *Number) TokenLiteral() string { return atm.Token.Value }
+// Number atom (int, float)
+type Number struct {
+	Token tokens.Token `json:"number"`
+}
+
+func (atm *Number) atom()        {}
+func (atm *Number) Type() string { return "number" }
 func (atm *Number) String() string {
 	res, err := json.Marshal(atm)
 	if err != nil {
@@ -23,11 +28,11 @@ func (atm *Number) String() string {
 
 // String atom
 type String struct {
-	Token tokens.Token `json:"token"`
+	Token tokens.Token `json:"string"`
 }
 
-func (atm *String) atom()                {}
-func (atm *String) TokenLiteral() string { return atm.Token.Value }
+func (atm *String) atom()        {}
+func (atm *String) Type() string { return "string" }
 func (atm *String) String() string {
 	res, err := json.Marshal(atm)
 	if err != nil {
@@ -38,12 +43,27 @@ func (atm *String) String() string {
 
 // Bool atom
 type Bool struct {
-	Token tokens.Token `json:"token"`
+	Token tokens.Token `json:"bool"`
 }
 
-func (atm *Bool) atom()                {}
-func (atm *Bool) TokenLiteral() string { return atm.Token.Value }
+func (atm *Bool) atom()        {}
+func (atm *Bool) Type() string { return "bool" }
 func (atm *Bool) String() string {
+	res, err := json.Marshal(atm)
+	if err != nil {
+		return ""
+	}
+	return string(res)
+}
+
+// Symbol atom
+type Symbol struct {
+	Token tokens.Token `json:"symbol"`
+}
+
+func (atm *Symbol) atom()        {}
+func (atm *Symbol) Type() string { return "symbol" }
+func (atm *Symbol) String() string {
 	res, err := json.Marshal(atm)
 	if err != nil {
 		return ""
