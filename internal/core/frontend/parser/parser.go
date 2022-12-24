@@ -65,7 +65,6 @@ func (p *Parser) parseSExpr() ast.Expr {
 		tok := p.peek(0)
 		switch tok.Type {
 		case tokens.LParen:
-			p.nextToken()
 			se.Args = append(se.Args, p.parseSExpr())
 		case tokens.Int, tokens.Float, tokens.String, tokens.Bool, tokens.Symbol:
 			se.Args = append(se.Args, p.parseAtom())

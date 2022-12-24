@@ -7,6 +7,7 @@ import (
 
 func TestParser(t *testing.T) {
 	code := `
+	(add 12 (mul 2 2))
 	(def a 12)
 	(set a (add a 12))
 	(fn test [] (
@@ -18,6 +19,7 @@ func TestParser(t *testing.T) {
 	tests := []struct {
 		ExpectedLiteral string
 	}{
+		{"s-expr"},
 		{"def"},
 		{"set"},
 		{"fn"},
