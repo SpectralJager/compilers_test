@@ -1,3 +1,12 @@
 package object
 
-type Object map[string]interface{}
+type ObjectType int
+
+const (
+	Float ObjectType = iota
+	Bool
+)
+
+type Object struct {
+	Bytes []byte
+}

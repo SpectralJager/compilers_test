@@ -1,8 +1,14 @@
 package bytecode
 
-import "fmt"
+import (
+	"fmt"
+	"grimlang/internal/core/backend/object"
+)
 
-type Value float64
+type Value struct {
+	Type   object.ObjectType
+	Object []byte
+}
 
 const (
 	OP_RETURN byte = iota

@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"grimlang/internal/core/backend/bytecode"
+	"grimlang/internal/core/backend/object"
 	"grimlang/internal/core/backend/vm"
 	"grimlang/internal/core/frontend/ast"
 	"grimlang/internal/core/frontend/lexer"
@@ -44,7 +47,26 @@ func Compile(node ast.Node, chunk *bytecode.Chunk) {
 		if err != nil {
 			panic(err)
 		}
-		val_ind := chunk.WriteData(bytecode.Value(val))
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		enc.Encode(val)
+		val_ind := chunk.WriteData(bytecode.Value{Type: object.Float, Object: buf.Bytes()})
+		chunk.WriteChunk(bytecode.OP_CONSTANT)
+		chunk.WriteChunk(val_ind)
+	case *ast.Bool:
+		var val bool
+		switch node.Token.Value {
+		case "true":
+			val = true
+		case "false":
+			val = true
+		default:
+			panic("unexpected bool value: " + node.Token.Value)
+		}
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		enc.Encode(val)
+		val_ind := chunk.WriteData(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
 		chunk.WriteChunk(bytecode.OP_CONSTANT)
 		chunk.WriteChunk(val_ind)
 	case *ast.SymbolExpr:
