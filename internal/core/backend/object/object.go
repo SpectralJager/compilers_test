@@ -5,8 +5,5 @@ type ObjectType int
 const (
 	Float ObjectType = iota
 	Bool
+	String
 )
-
-type Object struct {
-	Bytes []byte
-}

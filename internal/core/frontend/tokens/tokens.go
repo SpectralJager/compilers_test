@@ -54,6 +54,9 @@ var keywords = map[string]TokenType{
 	"set": Set,
 	"fn":  Fn,
 	"ret": Ret,
+	// bool values
+	"true":  Bool,
+	"false": Bool,
 }
 
 func LookupSymbolType(ident string) TokenType {

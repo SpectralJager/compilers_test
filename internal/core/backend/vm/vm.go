@@ -41,34 +41,19 @@ func (vm *VM) RunChunk(chunk *bytecode.Chunk) error {
 			if err != nil {
 				panic(err)
 			}
-			switch val.Type {
-			case object.Bool:
-				var el bool
-				err := dec.Decode(&el)
-				if err != nil {
-					panic(err)
-				}
-				el = !el
-				err = enc.Encode(&el)
-				if err != nil {
-					panic(err)
-				}
-				val.Object = buf.Bytes()
-				vm.Push(val)
-			case object.Float:
-				var el float64
-				err := dec.Decode(&el)
-				if err != nil {
-					panic(err)
-				}
-				el = -el
-				err = enc.Encode(&el)
-				if err != nil {
-					panic(err)
-				}
-				val.Object = buf.Bytes()
-				vm.Push(val)
+			var el float64
+			err = dec.Decode(&el)
+			if err != nil {
+				panic(err)
 			}
+			el = -el
+			err = enc.Encode(&el)
+			if err != nil {
+				panic(err)
+			}
+			val.Object = buf.Bytes()
+			vm.Push(val)
+
 		case bytecode.OP_ADD:
 			a := vm.Pop()
 			b := vm.Pop()
@@ -80,27 +65,23 @@ func (vm *VM) RunChunk(chunk *bytecode.Chunk) error {
 			if err != nil {
 				panic(err)
 			}
-			if a.Type == object.Float && a.Type == b.Type {
-				var el_a, el_b float64
-				err := dec.Decode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				err = dec.Decode(&el_b)
-				if err != nil {
-					panic(err)
-				}
-				el_a += el_b
-				buf.Reset()
-				err = enc.Encode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				a.Object = buf.Bytes()
-				vm.Push(a)
-			} else {
-				panic("unsupported type of arg for addition")
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
 			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			el_a += el_b
+			buf.Reset()
+			err = enc.Encode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			a.Object = buf.Bytes()
+			vm.Push(a)
 		case bytecode.OP_SUB:
 			a := vm.Pop()
 			b := vm.Pop()
@@ -112,27 +93,23 @@ func (vm *VM) RunChunk(chunk *bytecode.Chunk) error {
 			if err != nil {
 				panic(err)
 			}
-			if a.Type == object.Float && a.Type == b.Type {
-				var el_a, el_b float64
-				err := dec.Decode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				err = dec.Decode(&el_b)
-				if err != nil {
-					panic(err)
-				}
-				el_a -= el_b
-				buf.Reset()
-				err = enc.Encode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				a.Object = buf.Bytes()
-				vm.Push(a)
-			} else {
-				panic("unsupported type of arg for addition")
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
 			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			el_a -= el_b
+			buf.Reset()
+			err = enc.Encode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			a.Object = buf.Bytes()
+			vm.Push(a)
 		case bytecode.OP_MUL:
 			a := vm.Pop()
 			b := vm.Pop()
@@ -144,27 +121,23 @@ func (vm *VM) RunChunk(chunk *bytecode.Chunk) error {
 			if err != nil {
 				panic(err)
 			}
-			if a.Type == object.Float && a.Type == b.Type {
-				var el_a, el_b float64
-				err := dec.Decode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				err = dec.Decode(&el_b)
-				if err != nil {
-					panic(err)
-				}
-				el_a *= el_b
-				buf.Reset()
-				err = enc.Encode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				a.Object = buf.Bytes()
-				vm.Push(a)
-			} else {
-				panic("unsupported type of arg for addition")
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
 			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			el_a *= el_b
+			buf.Reset()
+			err = enc.Encode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			a.Object = buf.Bytes()
+			vm.Push(a)
 		case bytecode.OP_DIV:
 			a := vm.Pop()
 			b := vm.Pop()
@@ -176,27 +149,267 @@ func (vm *VM) RunChunk(chunk *bytecode.Chunk) error {
 			if err != nil {
 				panic(err)
 			}
-			if a.Type == object.Float && a.Type == b.Type {
-				var el_a, el_b float64
-				err := dec.Decode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				err = dec.Decode(&el_b)
-				if err != nil {
-					panic(err)
-				}
-				el_a /= el_b
-				buf.Reset()
-				err = enc.Encode(&el_a)
-				if err != nil {
-					panic(err)
-				}
-				a.Object = buf.Bytes()
-				vm.Push(a)
-			} else {
-				panic("unsupported type of arg for addition")
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
 			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			el_a /= el_b
+			buf.Reset()
+			err = enc.Encode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			a.Object = buf.Bytes()
+			vm.Push(a)
+		case bytecode.OP_NOT:
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a bool
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			el_a = !el_a
+			err = enc.Encode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			a.Object = buf.Bytes()
+			vm.Push(a)
+		case bytecode.OP_LT:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a < el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_GT:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a > el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_LEQ:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a <= el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_GEQ:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a >= el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_EQ:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b float64
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a == el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_AND:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b bool
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a && el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_OR:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b bool
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			temp := el_a || el_b
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Bool, Object: buf.Bytes()})
+		case bytecode.OP_CONCAT:
+			b := vm.Pop()
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			_, err = buf.Write(b.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a, el_b string
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			err = dec.Decode(&el_b)
+			if err != nil {
+				panic(err)
+			}
+			el_a += el_b
+			err = enc.Encode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			a.Object = buf.Bytes()
+			vm.Push(a)
+		case bytecode.OP_LEN:
+			a := vm.Pop()
+			_, err := buf.Write(a.Object)
+			if err != nil {
+				panic(err)
+			}
+			var el_a string
+			err = dec.Decode(&el_a)
+			if err != nil {
+				panic(err)
+			}
+			temp := float64(len(el_a))
+			err = enc.Encode(&temp)
+			if err != nil {
+				panic(err)
+			}
+			vm.Push(bytecode.Value{Type: object.Float, Object: buf.Bytes()})
 		}
 	}
 	return nil
@@ -222,9 +435,22 @@ func (vm *VM) PrintTopStack() {
 	if err != nil {
 		panic(err)
 	}
-	dec := gob.NewDecoder(&buf)
-	var val float64
-	err = dec.Decode(&val)
+	switch temp.Type {
+	case object.Float:
+		decode[float64](&buf)
+	case object.Bool:
+		decode[bool](&buf)
+	case object.String:
+		decode[string](&buf)
+	default:
+		panic("unsupported value type: " + fmt.Sprint(temp.Type))
+	}
+}
+
+func decode[T any](buf *bytes.Buffer) {
+	var val T
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(&val)
 	if err != nil {
 		panic(err)
 	}

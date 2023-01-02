@@ -15,6 +15,7 @@ func TestParser(t *testing.T) {
 	))
 	(test)
 	(def b (add 12 (mul a 2)))
+	(not true)
 	`
 	tests := []struct {
 		ExpectedLiteral string
@@ -25,6 +26,7 @@ func TestParser(t *testing.T) {
 		{"fn"},
 		{"s-expr"},
 		{"def"},
+		{"s-expr"},
 	}
 	lex := lexer.NewLexer(code)
 	toks := lex.Run()
