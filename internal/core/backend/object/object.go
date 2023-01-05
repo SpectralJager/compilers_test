@@ -6,4 +6,5 @@ const (
 	Float ObjectType = iota
 	Bool
 	String
+	Pointer
 )

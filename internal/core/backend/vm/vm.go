@@ -410,6 +410,28 @@ func (vm *VM) RunChunk(chunk *bytecode.Chunk) error {
 				panic(err)
 			}
 			vm.Push(bytecode.Value{Type: object.Float, Object: buf.Bytes()})
+		case bytecode.OP_DEF:
+			vm.Pop()
+			ip += 1
+		case bytecode.OP_PRINT:
+			var buf bytes.Buffer
+			temp := vm.Pop()
+			_, err := buf.Write(temp.Object)
+			if err != nil {
+				panic(err)
+			}
+			res := ""
+			switch temp.Type {
+			case object.Float:
+				res = decode[float64](&buf)
+			case object.Bool:
+				res = decode[bool](&buf)
+			case object.String:
+				res = decode[string](&buf)
+			default:
+				panic("unsupported value type: " + fmt.Sprint(temp.Type))
+			}
+			fmt.Println(res)
 		}
 	}
 	return nil
@@ -435,24 +457,26 @@ func (vm *VM) PrintTopStack() {
 	if err != nil {
 		panic(err)
 	}
+	res := ""
 	switch temp.Type {
 	case object.Float:
-		decode[float64](&buf)
+		res = decode[float64](&buf)
 	case object.Bool:
-		decode[bool](&buf)
+		res = decode[bool](&buf)
 	case object.String:
-		decode[string](&buf)
+		res = decode[string](&buf)
 	default:
 		panic("unsupported value type: " + fmt.Sprint(temp.Type))
 	}
+	fmt.Println(res)
 }
 
-func decode[T any](buf *bytes.Buffer) {
+func decode[T any](buf *bytes.Buffer) string {
 	var val T
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(&val)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(val)
+	return fmt.Sprint(val)
 }

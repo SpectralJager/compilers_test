@@ -39,17 +39,22 @@ const (
 	OP_LEQ
 	OP_CONCAT
 	OP_LEN
+	OP_DEF
+	OP_SET
+	OP_PRINT
 )
 
 type Chunk struct {
-	Name string
-	Code []byte
-	Data []Value
+	Name    string
+	Code    []byte
+	Data    []Value
+	Symbols map[string]byte
 }
 
 func (c *Chunk) InitChunk(name string) {
 	c.FreeChunk()
 	c.FreeData()
+	c.FreeSymbols()
 	c.Name = name
 }
 
@@ -75,10 +80,29 @@ func (c *Chunk) WriteData(data Value) byte {
 	return byte(len(c.Data) - 1)
 }
 
+func (c *Chunk) FreeSymbols() {
+	c.Symbols = make(map[string]byte)
+}
+
+func (c *Chunk) WriteSymbol(symb string, pt byte) byte {
+	c.Symbols[symb] = pt
+	return byte(len(c.Symbols) - 1)
+}
+func (c *Chunk) ptToSymb(pt byte) string {
+	i := 0
+	for k := range c.Symbols {
+		if byte(i) == pt {
+			return k
+		}
+		i++
+	}
+	return ""
+}
+
 func (c *Chunk) DisassemblingChunk() {
 	fmt.Printf("----%s----\n", c.Name)
 	for offset := 0; offset < len(c.Code); offset++ {
-		fmt.Printf("%04x\t", offset)
+		fmt.Printf("%04x \t", offset)
 		instr := c.Code[offset]
 		switch instr {
 		case OP_RETURN:
@@ -87,7 +111,7 @@ func (c *Chunk) DisassemblingChunk() {
 			offset += 1
 			fmt.Printf("load_const $%d, // %s\n", c.Code[offset], c.getValue(c.Code[offset]))
 		case OP_NEG:
-			fmt.Printf("neg,\n")
+			fmt.Printf("neg, \n")
 		case OP_LT:
 			fmt.Printf("lt,\n")
 		case OP_GT:
@@ -103,23 +127,35 @@ func (c *Chunk) DisassemblingChunk() {
 		case OP_SUB:
 			fmt.Printf("sub,\n")
 		case OP_MUL:
-			fmt.Printf("mul,\n ")
+			fmt.Printf("mul,\n")
 		case OP_DIV:
-			fmt.Printf("div,\n ")
+			fmt.Printf("div,\n")
 		case OP_NOT:
-			fmt.Printf("not,\n ")
+			fmt.Printf("not,\n")
 		case OP_AND:
-			fmt.Printf("and,\n ")
+			fmt.Printf("and,\n")
 		case OP_OR:
-			fmt.Printf("or,\n ")
+			fmt.Printf("or,\n")
 		case OP_LEN:
-			fmt.Printf("len,\n ")
+			fmt.Printf("len,\n")
 		case OP_CONCAT:
-			fmt.Printf("concat,\n ")
+			fmt.Printf("concat,\n")
+		case OP_PRINT:
+			fmt.Printf("print,\n")
+		case OP_DEF:
+			offset += 1
+			symb := c.ptToSymb(c.Code[offset])
+			val_pt := c.Symbols[symb]
+			fmt.Printf("def %s, $%d, // %s = %s\n", symb, val_pt, symb, c.getValue(val_pt))
 		default:
 			fmt.Printf("Undefined instruction %x\n", instr)
 		}
 	}
+	fmt.Println("\nSymbols:")
+	for k, v := range c.Symbols {
+		fmt.Printf("%s: %s\n", k, c.getValue(v))
+	}
+	fmt.Printf("----end of %s----\n", c.Name)
 	fmt.Println()
 }
 
