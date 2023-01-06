@@ -26,5 +26,5 @@ func (c *Chunk) Disassembly() {
 		fmt.Printf("%04x\t%s\n", offset, bt.String())
 		offset += uint16(bt.GetWidth() + 1)
 	}
-	fmt.Printf("-----end of %s----\n", c.Name)
+	fmt.Printf("-----end of %s----\n\n", c.Name)
 }

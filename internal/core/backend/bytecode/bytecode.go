@@ -4,17 +4,18 @@ import "fmt"
 
 type Bytecode struct {
 	opcode Opcode
-	args   interface{}
+	args   any
 }
 
-func NewBytecode(opcode Opcode, args interface{}) *Bytecode {
+func NewBytecode(opcode Opcode, args any) *Bytecode {
 	return &Bytecode{opcode: opcode, args: args}
 }
 
 func (b *Bytecode) GetOpcode() Opcode {
 	return b.opcode
 }
-func (b *Bytecode) GetwArgs() interface{} {
+
+func (b *Bytecode) GetwArgs() any {
 	return b.args
 }
 
@@ -23,6 +24,8 @@ func (b *Bytecode) GetWidth() int {
 	case nil:
 		return 0
 	case string, float64, bool:
+		return 1
+	case map[string]any:
 		return 1
 	default:
 		panic("unsupported args type: " + fmt.Sprintf("%T", args))
@@ -36,15 +39,15 @@ func (b *Bytecode) String() string {
 	case OP_LOAD_CONST:
 		ret = "ldc $c,"
 	case OP_LOAD_NAME:
-		ret = "ldn $n,"
+		ret = "ldn $s,"
 	case OP_SAVE_NAME:
-		ret = "svn $n, $c,"
-	case OP_JUMP:
-		ret = "jmp $p,"
+		ret = "svn $s,"
 	case OP_CALL:
-		ret = "call $n,"
+		ret = "call $s"
+	case OP_SAVE_FN:
+		ret = "svf $s,"
 	case OP_RET:
-		ret = "ret,"
+		ret = "ret $c,"
 	case OP_HLT:
 		ret = "hlt,"
 	default:
@@ -62,8 +65,8 @@ const (
 	OP_LOAD_NAME
 	OP_SAVE_NAME
 
-	OP_JUMP
 	OP_CALL
+	OP_SAVE_FN
 	OP_RET
 
 	OP_HLT
