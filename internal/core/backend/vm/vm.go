@@ -110,6 +110,18 @@ func (vm *VM) ExecuteChunk(ch chunk.Chunk) {
 			}
 			val := vm.Pop()
 			vm.Env[symb] = val
+		case bytecode.OP_SET_NAME:
+			symb := bt.GetwArgs().(string)
+			_, ok := buildins[symb]
+			if ok {
+				panic(fmt.Sprintf("symbol %s is buildin function! use another name", symb))
+			}
+			_, ok = vm.Env[symb]
+			if !ok {
+				panic(fmt.Sprintf("symbol %s undefined!", symb))
+			}
+			val := vm.Pop()
+			vm.Env[symb] = val
 		case bytecode.OP_LOAD_NAME:
 			symb := bt.GetwArgs().(string)
 			_, ok := buildins[symb]

@@ -42,6 +42,8 @@ func (b *Bytecode) String() string {
 		ret = "ldn $s,"
 	case OP_SAVE_NAME:
 		ret = "svn $s,"
+	case OP_SET_NAME:
+		ret = "stn $s,"
 	case OP_CALL:
 		ret = "call $s"
 	case OP_SAVE_FN:
@@ -64,6 +66,7 @@ const (
 	OP_LOAD_CONST
 	OP_LOAD_NAME
 	OP_SAVE_NAME
+	OP_SET_NAME
 
 	OP_CALL
 	OP_SAVE_FN

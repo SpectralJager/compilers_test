@@ -21,6 +21,8 @@ func main() {
 	(def r 10)
 	(def s (mul 2 pi (pow r)))
 	(println s)
+	(set s (pow r))
+	(println s)
 	`
 	programm := parser.NewParser(
 		lexer.NewLexer(code).Run(),
@@ -31,10 +33,10 @@ func main() {
 	}
 	hltBt := bytecode.NewBytecode(bytecode.OP_HLT, nil)
 	mainChunk.WriteBytecode(*hltBt)
-	mainChunk.Disassembly()
+	// mainChunk.Disassembly()
 	vir := vm.NewVM()
 	vir.ExecuteChunk(*mainChunk)
-	vir.TraiceStack()
+	// vir.TraiceStack()
 }
 
 func Compile(node ast.Node, c *chunk.Chunk) {
@@ -59,6 +61,10 @@ func Compile(node ast.Node, c *chunk.Chunk) {
 		Compile(node.Value, c)
 		bt := bytecode.NewBytecode(bytecode.OP_SAVE_NAME, node.Symb.Token.Value)
 		c.WriteBytecode(*bt)
+	case *ast.SetSF:
+		Compile(node.Value, c)
+		bt := bytecode.NewBytecode(bytecode.OP_SET_NAME, node.Symb.Token.Value)
+		c.WriteBytecode(*bt)
 	case *ast.RetSF:
 		Compile(node.Value, c)
 		bt := bytecode.NewBytecode(bytecode.OP_RET, nil)
@@ -74,7 +80,7 @@ func Compile(node ast.Node, c *chunk.Chunk) {
 		for _, nd := range node.Body {
 			Compile(nd, symbChunk)
 		}
-		symbChunk.Disassembly()
+		// symbChunk.Disassembly()
 		bt := bytecode.NewBytecode(bytecode.OP_SAVE_FN, map[string]any{"symbol": node.Symb.Token.Value, "body": symbChunk})
 		c.WriteBytecode(*bt)
 	default:
