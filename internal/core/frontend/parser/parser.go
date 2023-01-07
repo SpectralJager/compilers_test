@@ -86,14 +86,60 @@ func (p *Parser) parseSpForm() ast.Expr {
 		return p.parseFn()
 	case tokens.Ret:
 		return p.parseRet()
+	case tokens.If:
+		return p.parseIf()
 	default:
 		panic("Unsupported sp-form opperation " + tok.Type.String())
 	}
 }
 
+func (p *Parser) parseIf() ast.Expr {
+	var ifsf ast.IfSF
+
+	if p.peek(0).Type == tokens.LParen {
+		ifsf.Log = p.parseSExpr()
+	} else if p.peek(0).Type == tokens.Bool {
+		ifsf.Log = p.parseAtom()
+	} else {
+		tok := p.peek(0)
+		panic("Expected bool, get: " + tok.Type.String())
+	}
+
+	p.nextToken() // (
+	for p.peek(0).Type != tokens.RParen {
+		tok := p.peek(0)
+		switch tok.Type {
+		case tokens.LParen:
+			ifsf.TrueValue = append(ifsf.TrueValue, p.parseExpr())
+		default:
+			panic("should be atom or expression, got " + tok.String())
+		}
+	}
+	p.nextToken() // )
+
+	if p.peek(0).Type == tokens.LParen {
+		p.nextToken() // (
+		for p.peek(0).Type != tokens.RParen {
+			tok := p.peek(0)
+			switch tok.Type {
+			case tokens.LParen:
+				ifsf.FalseValue = append(ifsf.FalseValue, p.parseExpr())
+			default:
+				panic("should be atom or expression, got " + tok.String())
+			}
+		}
+		p.nextToken() // )
+	}
+
+	p.nextToken() // )
+	return &ifsf
+}
+
 func (p *Parser) parseRet() ast.Expr {
 	var ret ast.RetSF
-	ret.Value = p.parseAtom()
+	if p.peek(0).Type != tokens.RParen {
+		ret.Value = p.parseAtom()
+	}
 	p.nextToken() // consume ')'
 	return &ret
 }
@@ -131,16 +177,15 @@ func (p *Parser) parseSet() ast.Expr {
 
 	set.Symb = p.getSymbol()
 
-	for p.peek(0).Type != tokens.RParen {
-		tok := p.peek(0)
-		switch tok.Type {
-		case tokens.LParen:
-			set.Value = p.parseSExpr()
-		case tokens.Int, tokens.Float, tokens.String, tokens.Bool, tokens.Symbol:
-			set.Value = p.parseAtom()
-		default:
-			panic("argument for set should be atom or expression, got " + tok.String())
-		}
+	tok := p.peek(0)
+
+	switch tok.Type {
+	case tokens.LParen:
+		set.Value = p.parseSExpr()
+	case tokens.Int, tokens.Float, tokens.String, tokens.Bool, tokens.Symbol:
+		set.Value = p.parseAtom()
+	default:
+		panic("argument for set should be atom or expression, got " + tok.String())
 	}
 	p.nextToken() // consume ')'
 
@@ -152,16 +197,14 @@ func (p *Parser) parseDef() ast.Expr {
 
 	def.Symb = p.getSymbol()
 
-	for p.peek(0).Type != tokens.RParen {
-		tok := p.peek(0)
-		switch tok.Type {
-		case tokens.LParen:
-			def.Value = p.parseSExpr()
-		case tokens.Int, tokens.Float, tokens.String, tokens.Bool, tokens.Symbol:
-			def.Value = p.parseAtom()
-		default:
-			panic("argument for def should be atom or expression, got " + tok.String())
-		}
+	tok := p.peek(0)
+	switch tok.Type {
+	case tokens.LParen:
+		def.Value = p.parseSExpr()
+	case tokens.Int, tokens.Float, tokens.String, tokens.Bool, tokens.Symbol:
+		def.Value = p.parseAtom()
+	default:
+		panic("argument for def should be atom or expression, got " + tok.String())
 	}
 	p.nextToken() //consume ')'
 	return &def

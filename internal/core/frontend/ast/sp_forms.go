@@ -81,3 +81,22 @@ func (ret *RetSF) String() string {
 	}
 	return string(res)
 }
+
+type IfSF struct {
+	Log        Node   `json:"log"`
+	TrueValue  []Node `json:"TrueValue"`
+	FalseValue []Node `json:"FalseValue"`
+}
+
+func (ifsf *IfSF) expr()   {}
+func (ifsf *IfSF) spform() {}
+func (ifsf *IfSF) Type() string {
+	return "if"
+}
+func (ret *IfSF) String() string {
+	res, err := json.Marshal(ret)
+	if err != nil {
+		return ""
+	}
+	return string(res)
+}

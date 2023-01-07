@@ -29,6 +29,10 @@ package     = "(" "package" symbol ")";
     (def r 10) ; bind 10 to r
     (def sqrt (mul 2 pi (pow r 2))) ; 2 * pi * r * r = 628.32 to sqrt
     (printf "\t%f\n" sqrt) ; "628.32"
+    (if (< r pi) 
+        (println "oh no")
+        (println "haha")
+    )
 ))
 
 ; call main

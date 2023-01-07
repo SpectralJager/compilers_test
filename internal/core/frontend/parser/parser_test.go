@@ -13,9 +13,18 @@ func TestParser(t *testing.T) {
 	(fn test [] (
 		(ret 12)
 	))
+	(if true (
+		(println 1)
+	)(
+		(println 2)
+	))
+	(if true (
+		(println 1)
+	))
 	(test)
 	(def b (add 12 (mul a 2)))
 	(not true)
+	(ret)
 	`
 	tests := []struct {
 		ExpectedLiteral string
@@ -24,6 +33,8 @@ func TestParser(t *testing.T) {
 		{"def"},
 		{"set"},
 		{"fn"},
+		{"if"},
+		{"if"},
 		{"s-expr"},
 		{"def"},
 		{"s-expr"},

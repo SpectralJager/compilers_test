@@ -26,7 +26,7 @@ func (b *Bytecode) GetWidth() int {
 	case string, float64, bool:
 		return 1
 	case map[string]any:
-		return 1
+		return 3
 	default:
 		panic("unsupported args type: " + fmt.Sprintf("%T", args))
 
@@ -45,13 +45,15 @@ func (b *Bytecode) String() string {
 	case OP_SET_NAME:
 		ret = "stn $s,"
 	case OP_CALL:
-		ret = "call $s"
+		ret = "call $s,"
 	case OP_SAVE_FN:
 		ret = "svf $s,"
 	case OP_RET:
 		ret = "ret $c,"
 	case OP_HLT:
 		ret = "hlt,"
+	case OP_IF:
+		ret = "if,"
 	default:
 		panic("unecpected opcode: " + fmt.Sprint(b.opcode))
 	}
@@ -71,6 +73,8 @@ const (
 	OP_CALL
 	OP_SAVE_FN
 	OP_RET
+
+	OP_IF
 
 	OP_HLT
 )

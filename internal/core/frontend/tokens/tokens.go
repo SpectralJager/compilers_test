@@ -25,6 +25,7 @@ const (
 	// keywords
 	Def // binding symbol to something
 	Set // change symbol value
+	If
 	Fn  // define function
 	Ret // return from function
 
@@ -47,6 +48,7 @@ var tokenTypeString = map[TokenType]string{
 	Set:      "Set",
 	Fn:       "Fn",
 	Ret:      "Ret",
+	If:       "If",
 }
 
 var keywords = map[string]TokenType{
@@ -54,6 +56,7 @@ var keywords = map[string]TokenType{
 	"set": Set,
 	"fn":  Fn,
 	"ret": Ret,
+	"if":  If,
 	// bool values
 	"true":  Bool,
 	"false": Bool,

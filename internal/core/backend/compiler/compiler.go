@@ -13,16 +13,16 @@ import (
 
 func main() {
 	code := `
-	(fn pow [x] (
-		(def res (mul x x))
-		(ret res)
+	(fn recur [c] (
+		(if (leq c 0) (
+			(ret)
+		))
+		(println c)
+		(recur (sub c 1))
+
 	))
-	(def pi 3.14)
-	(def r 10)
-	(def s (mul 2 pi (pow r)))
-	(println s)
-	(set s (pow r))
-	(println s)
+	(def cnt 10)
+	(recur cnt)
 	`
 	programm := parser.NewParser(
 		lexer.NewLexer(code).Run(),
@@ -33,10 +33,10 @@ func main() {
 	}
 	hltBt := bytecode.NewBytecode(bytecode.OP_HLT, nil)
 	mainChunk.WriteBytecode(*hltBt)
-	// mainChunk.Disassembly()
+	mainChunk.Disassembly()
 	vir := vm.NewVM()
 	vir.ExecuteChunk(*mainChunk)
-	// vir.TraiceStack()
+	vir.TraiceStack()
 }
 
 func Compile(node ast.Node, c *chunk.Chunk) {
@@ -45,6 +45,16 @@ func Compile(node ast.Node, c *chunk.Chunk) {
 		val, err := strconv.ParseFloat(node.Token.Value, 64)
 		if err != nil {
 			panic(err)
+		}
+		bt := bytecode.NewBytecode(bytecode.OP_LOAD_CONST, val)
+		c.WriteBytecode(*bt)
+	case *ast.Bool:
+		var val bool
+		switch node.Token.Value {
+		case "true":
+			val = true
+		case "false":
+			val = false
 		}
 		bt := bytecode.NewBytecode(bytecode.OP_LOAD_CONST, val)
 		c.WriteBytecode(*bt)
@@ -66,8 +76,11 @@ func Compile(node ast.Node, c *chunk.Chunk) {
 		bt := bytecode.NewBytecode(bytecode.OP_SET_NAME, node.Symb.Token.Value)
 		c.WriteBytecode(*bt)
 	case *ast.RetSF:
-		Compile(node.Value, c)
-		bt := bytecode.NewBytecode(bytecode.OP_RET, nil)
+		bt := bytecode.NewBytecode(bytecode.OP_RET, false)
+		if node.Value != nil {
+			Compile(node.Value, c)
+			bt = bytecode.NewBytecode(bytecode.OP_RET, true)
+		}
 		c.WriteBytecode(*bt)
 	case *ast.FnSF:
 		symb := node.Symb.Token.Value
@@ -80,8 +93,22 @@ func Compile(node ast.Node, c *chunk.Chunk) {
 		for _, nd := range node.Body {
 			Compile(nd, symbChunk)
 		}
-		// symbChunk.Disassembly()
+		symbChunk.Disassembly()
 		bt := bytecode.NewBytecode(bytecode.OP_SAVE_FN, map[string]any{"symbol": node.Symb.Token.Value, "body": symbChunk})
+		c.WriteBytecode(*bt)
+	case *ast.IfSF:
+		Compile(node.Log, c)
+		TrueChunk := chunk.NewChunk("trueChunk", 0x0000)
+		for _, nd := range node.TrueValue {
+			Compile(nd, TrueChunk)
+		}
+		// TrueChunk.Disassembly()
+		FalseChunk := chunk.NewChunk("falseChunk", 0x0000)
+		for _, nd := range node.FalseValue {
+			Compile(nd, FalseChunk)
+		}
+		// FalseChunk.Disassembly()
+		bt := bytecode.NewBytecode(bytecode.OP_IF, map[string]any{"true": TrueChunk, "false": FalseChunk})
 		c.WriteBytecode(*bt)
 	default:
 		panic("unexpected node type" + fmt.Sprintf("%T", node))
