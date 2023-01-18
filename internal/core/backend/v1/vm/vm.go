@@ -2,8 +2,8 @@ package vm
 
 import (
 	"fmt"
-	"grimlang/internal/core/backend/bytecode"
-	"grimlang/internal/core/backend/chunk"
+	"grimlang/internal/core/backend/v1/bytecode"
+	"grimlang/internal/core/backend/v1/chunk"
 )
 
 var buildins = map[string]func(args []any) any{

@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"grimlang/internal/core/backend/bytecode"
-	"grimlang/internal/core/backend/chunk"
-	"grimlang/internal/core/backend/vm"
+	"grimlang/internal/core/backend/v1/bytecode"
+	"grimlang/internal/core/backend/v1/chunk"
+	"grimlang/internal/core/backend/v1/vm"
 	"grimlang/internal/core/frontend/ast"
 	"grimlang/internal/core/frontend/lexer"
 	"grimlang/internal/core/frontend/parser"

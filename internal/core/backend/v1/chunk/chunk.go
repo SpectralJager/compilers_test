@@ -2,7 +2,7 @@ package chunk
 
 import (
 	"fmt"
-	"grimlang/internal/core/backend/bytecode"
+	"grimlang/internal/core/backend/v1/bytecode"
 )
 
 type Chunk struct {
