@@ -1,40 +1,44 @@
-# EBNF
-```ebnf
-atom        = number
-            | string 
-            | "true" | "false" 
-            | symbol
-            | empty;
-program     = package {expr} ;
-expr        = s-expr | sp-form ;
-s-expr      = "(" symbol {s-expr|atom} ")";
-sp-forms    = def | set | fn | ret;
-def         = "(" "def" symbol atom|s-expr ")" ;
-set         = "(" "set" symbol atom|s-expr ")" ;
-ret         = "(" "ret" atom ")" ;
-fn          = "(" "fn" symbol "["{symbol}"]" "("{expr^fn}")" ")" ;
-package     = "(" "package" symbol ")";
-```
-# Syntax
+# Specification
 
-```clj
-(package main)
+Grimlang is: 
 
-; main function, entry point
-(fn main [] (
-    ; call function from imported package
-    (printf "hello world") ; -> "Hello World"
-    ; define varible
-    (def pi 3.1415) ; bind 3.1415 to pi
-    (def r 10) ; bind 10 to r
-    (def sqrt (mul 2 pi (pow r 2))) ; 2 * pi * r * r = 628.32 to sqrt
-    (printf "\t%f\n" sqrt) ; "628.32"
-    (if (< r pi) 
-        (println "oh no")
-        (println "haha")
-    )
-))
+- general-purpose language, designed for backend development. 
+- staticly typed. 
 
-; call main
-(main)
-```
+
+## Build-in types
+
+### Primitive types
+
+A primitive value is one that cannot be decomposed into simpler values:
+
+- Integer - i8, i16, i32, ui8, ui16, ui32:
+- Float - f32:
+- Rune - rune:
+- Bool - bool:
+- Any - any;
+
+### Composite types
+
+A composite value is a value that is composed from simpler values:
+
+- List - list<*type*>;
+- Map - map<*type*>;
+- Enum;
+- Struct; 
+- String;
+
+## Keywords
+
+- const - define constant value
+- glob - define global varible
+- let - define local varible
+- fn - function declaration
+- clojure - clojure block declaration
+- if - if command
+- ret - return command
+- foreach - for each loop
+- for - for loop
+
+## Project structure
+
