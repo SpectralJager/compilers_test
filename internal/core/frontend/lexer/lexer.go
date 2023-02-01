@@ -10,11 +10,13 @@ type Lexer struct {
 
 	start   int
 	current int
+	row     int
 }
 
 func NewLexer(src string) *Lexer {
 	return &Lexer{
 		source: src,
+		row:    1,
 	}
 }
 
@@ -23,16 +25,21 @@ func (l *Lexer) Run() []tokens.Token {
 		l.start = l.current
 		ch := l.advance()
 		switch ch {
-		case ' ', '\t', '\r', '\n': // skip whitespace
+		case ' ', '\t', '\r': // skip whitespace
 			continue
+		case '\n':
+			l.row += 1
+			continue
+		case ':':
+			l.addToken(tokens.Colon, ":")
 		case '(':
-			l.addToken(tokens.LParen, "")
+			l.addToken(tokens.LParen, "(")
 		case ')':
-			l.addToken(tokens.RParen, "")
+			l.addToken(tokens.RParen, ")")
 		case '[':
-			l.addToken(tokens.LBracket, "")
+			l.addToken(tokens.LBracket, "[")
 		case ']':
-			l.addToken(tokens.RBracket, "")
+			l.addToken(tokens.RBracket, "]")
 		case '"':
 			literal := l.readString()
 			l.addToken(tokens.String, literal)
@@ -70,11 +77,11 @@ func (l *Lexer) addToken(tt tokens.TokenType, literal string) {
 	if literal == "" {
 		literal = l.source[l.start:l.current]
 	}
-	l.tokens = append(l.tokens, *tokens.NewToken(tt, literal))
+	l.tokens = append(l.tokens, *tokens.NewToken(tt, literal, l.row))
 }
 
 func (l *Lexer) readSymbol() (tokens.TokenType, string) {
-	for isLetter(l.peek(0)) && !l.isAtEnd() {
+	for (isLetter(l.peek(0)) || isDigit(l.peek(0)) || l.peek(0) == '_') && !l.isAtEnd() {
 		l.advance()
 	}
 	literal := l.source[l.start:l.current]
@@ -108,7 +115,7 @@ func (l *Lexer) readString() string {
 }
 
 func isLetter(ch byte) bool {
-	res := 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+	res := 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
 	return res
 }
 

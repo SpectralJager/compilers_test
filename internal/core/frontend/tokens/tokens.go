@@ -15,6 +15,7 @@ const (
 	Symbol // abc ab_c
 	String // "string"
 	Bool   // true false
+	Nil    // null
 
 	// delimiters
 	LParen   // (
@@ -22,12 +23,23 @@ const (
 	LBracket // [
 	RBracket // ]
 
+	Colon // :
+
 	// keywords
-	Def // binding symbol to something
-	Set // change symbol value
-	If
-	Fn  // define function
-	Ret // return from function
+	Let      // binding symbol to something
+	Set      // change symbol value
+	Fn       // define function
+	Begin    // begin block
+	Const    // define constant value
+	Glob     // define global varible
+	If       // if command
+	Cond     // multiple condition expresions
+	While    // while loop
+	Import   // import
+	Dotimes  // dotimes loop
+	Ret      // return command
+	Break    // break current loop command
+	Continue // next iteration of current loop command
 
 )
 
@@ -39,27 +51,48 @@ var tokenTypeString = map[TokenType]string{
 	Float:    "Float",
 	String:   "String",
 	Bool:     "Bool",
+	Nil:      "Nil",
 	Symbol:   "Symbol",
-	LParen:   "(",
-	RParen:   ")",
-	LBracket: "[",
-	RBracket: "]",
-	Def:      "Def",
+	Colon:    "Colon",
+	LParen:   "LParen",
+	RParen:   "RParen",
+	LBracket: "LBracket",
+	RBracket: "RBracket",
+	Let:      "Let",
 	Set:      "Set",
 	Fn:       "Fn",
+	Begin:    "Begin",
+	Break:    "Break",
+	Continue: "Continue",
 	Ret:      "Ret",
+	Dotimes:  "Dotimes",
+	While:    "While",
+	Cond:     "Cond",
 	If:       "If",
+	Const:    "Const",
+	Glob:     "Glob",
+	Import:   "Import",
 }
 
 var keywords = map[string]TokenType{
-	"def": Def,
-	"set": Set,
-	"fn":  Fn,
-	"ret": Ret,
-	"if":  If,
+	"let":      Let,
+	"set":      Set,
+	"fn":       Fn,
+	"begin":    Begin,
+	"break":    Break,
+	"continue": Continue,
+	"ret":      Ret,
+	"dotimes":  Dotimes,
+	"while":    While,
+	"cond":     Cond,
+	"if":       If,
+	"const":    Const,
+	"glob":     Glob,
+	"import":   Import,
 	// bool values
 	"true":  Bool,
 	"false": Bool,
+	"nil":   Nil,
 }
 
 func LookupSymbolType(ident string) TokenType {
@@ -82,14 +115,15 @@ func (tt *TokenType) String() string {
 type Token struct {
 	Type  TokenType
 	Value string
+	Row   int
 }
 
-func NewToken(tt TokenType, val string) *Token {
-	return &Token{Type: tt, Value: val}
+func NewToken(tt TokenType, val string, row int) *Token {
+	return &Token{Type: tt, Value: val, Row: row}
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("{Type: %v, Value: %v}", t.Type.String(), t.Value)
+	return fmt.Sprintf("{Type: %v, Value: %v, Row: %d}", t.Type.String(), t.Value, t.Row)
 }
 
 // -----------------------------------------
