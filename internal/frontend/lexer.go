@@ -14,13 +14,18 @@ var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: `Begin`, Pattern: `begin`},
 	{Name: `Let`, Pattern: `let`},
 	{Name: `Set`, Pattern: `set`},
+	{Name: `Glob`, Pattern: `glob`},
+	{Name: `Const`, Pattern: `const`},
+	{Name: `If`, Pattern: `if`},
+	{Name: `Cond`, Pattern: `cond`},
 	{Name: `Bool`, Pattern: `true|false`},
 	{Name: `Nil`, Pattern: `nil`},
 	// atoms
 	{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z0-9_]*`},
-	{Name: `String`, Pattern: `"[^"]*"`},
+	{Name: `String`, Pattern: `"(\\"|[^"])*"`},
 	{Name: `Float`, Pattern: `[-]?[0-9]+[.][0-9]+`},
 	{Name: `Int`, Pattern: `[-]?[0-9]+`},
 	// whitespace
 	{Name: "whitespace", Pattern: `[\t\n\r ]+`},
+	{Name: "comment", Pattern: `(?is);[^\n]*`},
 })

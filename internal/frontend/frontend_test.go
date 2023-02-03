@@ -6,24 +6,40 @@ import (
 
 func TestLexer(t *testing.T) {
 	code := `
+	; comment
 	(fn Greeting:void [name:string]
 		"document string"
 		(begin
 			(println name)
 			nil)
 	)
-	(fn test:i32 [] 0)
+	(fn test:i32 [] 0) ; comment
 
-	(fn main:i32 [] 
-		(begin
+	(glob lala:f32 12.2)
+	(const lulu:string "Hello")
+
+	(fn main:void [] ; comment
+		(begin ; comment
 			(let a:i32 10)
 			(let b:bool false)
 			(let c:f32 12.2)
 			(let d:string "some string")
 			(set a (iadd a 12))
-
-
-			0)		
+			(const e:string "world\"")
+			(println (concat lulu e))
+			(let x:i32 10)
+			(if (leq x 10)
+				(println (string x))
+				(set x 10))
+			(cond 
+				((lt x 10) 
+					(println (string x)))
+				((lt x 10) 
+					(begin 
+						(let y:i32 256)
+						(set x (mul x y))))
+				(println "default"))
+			nil)		
 	)
 
 	`

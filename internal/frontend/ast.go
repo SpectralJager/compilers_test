@@ -13,14 +13,14 @@ type FnBody interface {
 type BeginBody interface {
 	beginBody()
 }
+type IfBody interface {
+	ifBody()
+}
 type ExprArgs interface {
 	exprArgs()
 }
 type Atom interface {
 	atom()
-}
-type Command interface {
-	command()
 }
 
 // Programm
@@ -34,7 +34,23 @@ type VarSymb struct {
 	Type Symbol `":" @@`
 }
 
+type Case struct {
+	BoolExpr Expression `"(" @@`
+	Body     IfBody     `@@ ")"`
+}
+
 // Commands
+// Constant value
+type Constant struct {
+	Var   VarSymb `"(" "const" @@ `
+	Value Atom    `@@ ")"`
+}
+
+func (glCom *Constant) globalCom() {}
+func (bgBd *Constant) beginBody()  {}
+
+// Global commands
+// Function declaration
 type FnCom struct {
 	Name      Symbol    `"(" "fn" @@`
 	RetType   Symbol    `":" @@`
@@ -45,12 +61,23 @@ type FnCom struct {
 
 func (glCom *FnCom) globalCom() {}
 
+// global varible
+type GlobVar struct {
+	Var   VarSymb `"(" "glob" @@ `
+	Value Atom    `@@ ")"`
+}
+
+func (glCom *GlobVar) globalCom() {}
+
+// Local commands
+// begin block
 type Begin struct {
 	BegBody []BeginBody `"(" "begin" @@+ `
 	Atm     Atom        `@@? ")"`
 }
 
 func (fnBd *Begin) fnBody() {}
+func (ifBd *Begin) ifBody() {}
 
 type Let struct {
 	Varible VarSymb  `"(" "let" @@`
@@ -65,6 +92,24 @@ type Set struct {
 }
 
 func (bgBd *Set) beginBody() {}
+func (ifBd *Set) ifBody()    {}
+
+type IfCom struct {
+	BoolExpr Expression `"(" "if" @@`
+	ThenBody IfBody     `@@`
+	ElseBody IfBody     `@@ ")"`
+}
+
+func (bgBd *IfCom) beginBody() {}
+func (ifBd *IfCom) ifBody()    {}
+
+type CondCom struct {
+	Cases   []Case `"(" "cond" @@+`
+	Default IfBody `@@ ")"`
+}
+
+func (bgBd *CondCom) beginBody() {}
+func (ifBd *CondCom) ifBody()    {}
 
 // Expression
 type Expression struct {
@@ -74,6 +119,7 @@ type Expression struct {
 
 func (exAr *Expression) exprArgs()  {}
 func (bgBd *Expression) beginBody() {}
+func (ifBd *Expression) ifBody()    {}
 
 // Atoms---------------------
 // Symbol
