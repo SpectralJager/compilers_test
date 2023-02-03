@@ -10,8 +10,6 @@ func TestLexer(t *testing.T) {
 	(fn Greeting:void [name:string]
 		"document string"
 		(begin
-			(let lst:[]i32 [ 2 3 4 5 ])
-			(let mp:{}i32 { "1"::1 "2"::3 })
 			(println name)
 			nil)
 	)
@@ -29,10 +27,12 @@ func TestLexer(t *testing.T) {
 			(set a (iadd a 12))
 			(const e:string "world\"")
 			(println (concat lulu e))
+
 			(let x:i32 10)
 			(if (leq x 10)
 				(println (string x))
 				(set x 10))
+
 			(cond 
 				((lt x 10) 
 					(println (string x)))
@@ -41,6 +41,17 @@ func TestLexer(t *testing.T) {
 						(let y:i32 256)
 						(set x (mul x y))))
 				(println "default"))
+
+			(let lst:[][]i32 [ [ 2 3 4 5 ] ])
+			(let mp:{}i32 { "1"::1 "2"::3 })
+
+			(dotimes i 5
+				(println (string i)))
+
+			(while (lt x 10)
+				(begin
+					(inc x)
+					(println x)))
 			nil)		
 	)
 

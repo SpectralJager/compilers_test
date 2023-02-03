@@ -43,7 +43,7 @@ type SimpleType struct {
 func (tp *SimpleType) typE() {}
 
 type SequenceType struct {
-	Tp Symbol `(("[" "]") | ("{" "}")) @@ `
+	Tp Type `(("[" "]") | ("{" "}")) @@ `
 }
 
 func (tp *SequenceType) typE() {}
@@ -130,6 +130,23 @@ type CondCom struct {
 func (bgBd *CondCom) beginBody() {}
 func (ifBd *CondCom) ifBody()    {}
 
+type Dotimes struct {
+	Symb  Symbol `"(" "dotimes" @@`
+	Times Int    `@@ `
+	Body  IfBody `@@ ")"`
+}
+
+func (bgBd *Dotimes) beginBody() {}
+func (ifBd *Dotimes) ifBody()    {}
+
+type While struct {
+	Expr Expression `"(" "while" @@`
+	Body IfBody     `@@ ")"`
+}
+
+func (bgBd *While) beginBody() {}
+func (ifBd *While) ifBody()    {}
+
 // Expression
 type Expression struct {
 	Op   Symbol     `"(" @@`
@@ -187,7 +204,7 @@ func (atm *Bool) atom()      {}
 
 // List
 type List struct {
-	Value []Atom `"[" @@* "]"`
+	Value []ExprArgs `"[" @@* "]"`
 }
 
 func (fnBd *List) fnBody()   {}
