@@ -22,6 +22,9 @@ type ExprArgs interface {
 type Atom interface {
 	atom()
 }
+type Type interface {
+	typE()
+}
 
 // Programm
 type Programm struct {
@@ -31,12 +34,28 @@ type Programm struct {
 // Utils
 type VarSymb struct {
 	Symb Symbol `@@`
-	Type Symbol `":" @@`
+	Tp   Type   `":" @@`
 }
+type SimpleType struct {
+	Symb Symbol `@@`
+}
+
+func (tp *SimpleType) typE() {}
+
+type SequenceType struct {
+	Tp Symbol `(("[" "]") | ("{" "}")) @@ `
+}
+
+func (tp *SequenceType) typE() {}
 
 type Case struct {
 	BoolExpr Expression `"(" @@`
 	Body     IfBody     `@@ ")"`
+}
+
+type MapItem struct {
+	Key   String `@@`
+	Value Atom   `":"":" @@`
 }
 
 // Commands
@@ -165,6 +184,24 @@ type Bool struct {
 func (fnBd *Bool) fnBody()   {}
 func (exAr *Bool) exprArgs() {}
 func (atm *Bool) atom()      {}
+
+// List
+type List struct {
+	Value []Atom `"[" @@* "]"`
+}
+
+func (fnBd *List) fnBody()   {}
+func (exAr *List) exprArgs() {}
+func (atm *List) atom()      {}
+
+// Map
+type Map struct {
+	Value []MapItem `"{" @@* "}"`
+}
+
+func (fnBd *Map) fnBody()   {}
+func (exAr *Map) exprArgs() {}
+func (atm *Map) atom()      {}
 
 // Nil
 type Nil struct {

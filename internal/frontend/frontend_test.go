@@ -10,6 +10,8 @@ func TestLexer(t *testing.T) {
 	(fn Greeting:void [name:string]
 		"document string"
 		(begin
+			(let lst:[]i32 [ 2 3 4 5 ])
+			(let mp:{}i32 { "1"::1 "2"::3 })
 			(println name)
 			nil)
 	)

@@ -8,7 +8,10 @@ var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: `RParen`, Pattern: `\)`},
 	{Name: `LBracket`, Pattern: `\[`},
 	{Name: `RBracket`, Pattern: `\]`},
+	{Name: `LCurB`, Pattern: `\{`},
+	{Name: `RCurB`, Pattern: `\}`},
 	{Name: `Colon`, Pattern: `\:`},
+	{Name: `,`, Pattern: `\,`},
 	// keywords
 	{Name: `Fn`, Pattern: `fn`},
 	{Name: `Begin`, Pattern: `begin`},
