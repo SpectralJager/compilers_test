@@ -1,229 +1,158 @@
 package frontend
 
-// unions
-type GlobalCom interface {
-	globalCom()
+// ------------Unions-----------------
+
+// body for global context
+type GlobalBody interface {
+	global()
 }
-type LocalCom interface {
-	localCom()
+
+// body for local context (functions, loops, condition statements, etc.)
+type LocalBody interface {
+	local()
 }
-type FnBody interface {
-	fnBody()
-}
-type BeginBody interface {
-	beginBody()
-}
-type IfBody interface {
-	ifBody()
-}
-type ExprArgs interface {
-	exprArgs()
-}
+
+// atom union for strings, numbers, symbols, lists, structs, maps.
 type Atom interface {
 	atom()
 }
-type Type interface {
-	typE()
+
+// expression arguments
+type ExpressionArguments interface {
+	exprArg()
 }
 
 // Programm
 type Programm struct {
-	Body []GlobalCom `@@*`
+	Package string       `parser:"" json:"package"`
+	Body    []GlobalBody `parser:"@@*" json:"body"`
 }
 
-// Utils
-type VarSymb struct {
-	Symb Symbol `@@`
-	Tp   Type   `":" @@`
-}
-type SimpleType struct {
-	Symb Symbol `@@`
-}
+// ------------Commands-----------------
 
-func (tp *SimpleType) typE() {}
-
-type SequenceType struct {
-	Tp Type `(("[" "]") | ("{" "}")) @@ `
+// Function command
+type FunctionCom struct {
+	Symbol    SymbolDecl   `parser:"'(' 'fn' @@" json:"symbol"`
+	Args      []SymbolDecl `parser:"'[' @@* ']'" jons:"args"`
+	DocString string       `parser:"@String?" json:"docString"`
+	Body      []LocalBody  `parser:"@@+ ')'" json:"body"`
 }
 
-func (tp *SequenceType) typE() {}
+func (gb *FunctionCom) global() {}
 
-type Case struct {
-	BoolExpr Expression `"(" @@`
-	Body     IfBody     `@@ ")"`
+// Return command
+type ReturnCom struct {
+	Ret Atom `parser:"'(' 'ret' @@ ')'" json:"ret"`
 }
 
-type MapItem struct {
-	Key   String `@@`
-	Value Atom   `":"":" @@`
+func (lb *ReturnCom) local() {}
+
+// Constant command
+type ConstantCom struct {
+	Symbol SymbolDecl `parser:"'(' 'const' @@" json:"symbol"`
+	Value  Atom       `parser:"@@ ')'" json:"value"`
 }
 
-// Commands
-// Constant value
-type Constant struct {
-	Var   VarSymb `"(" "const" @@ `
-	Value Atom    `@@ ")"`
+func (gb *ConstantCom) global() {}
+func (lb *ConstantCom) local()  {}
+
+// Global varible command
+type GlobalVaribleCom struct {
+	Symbol SymbolDecl `parser:"'(' 'var' @@" json:"symbol"`
+	Value  Atom       `parser:"@@ ')'" json:"value"`
 }
 
-func (glCom *Constant) globalCom() {}
-func (bgBd *Constant) beginBody()  {}
+func (gb *GlobalVaribleCom) global() {}
 
-// Global commands
-// Function declaration
-type FnCom struct {
-	Name      Symbol    `"(" "fn" @@`
-	RetType   Symbol    `":" @@`
-	Params    []VarSymb `"[" @@* "]"`
-	DocString String    `@@?`
-	Body      FnBody    `@@ ")"`
+// local varible command
+type LocalVaribleCom struct {
+	Symbol SymbolDecl          `parser:"'(' 'let' @@" json:"symbol"`
+	Value  ExpressionArguments `parser:"@@ ')'" json:"value"`
 }
 
-func (glCom *FnCom) globalCom() {}
+func (lb *LocalVaribleCom) local() {}
 
-// global varible
-type GlobVar struct {
-	Var   VarSymb `"(" "glob" @@ `
-	Value Atom    `@@ ")"`
-}
-
-func (glCom *GlobVar) globalCom() {}
-
-// Local commands
-// begin block
-type Begin struct {
-	BegBody []BeginBody `"(" "begin" @@+ `
-	Atm     Atom        `@@? ")"`
-}
-
-func (fnBd *Begin) fnBody() {}
-func (ifBd *Begin) ifBody() {}
-
-type Let struct {
-	Varible VarSymb  `"(" "let" @@`
-	Value   ExprArgs `@@ ")"`
-}
-
-func (bgBd *Let) beginBody() {}
-
-type Set struct {
-	Varible Symbol   `"(" "set" @@`
-	Value   ExprArgs `@@ ")"`
-}
-
-func (bgBd *Set) beginBody() {}
-func (ifBd *Set) ifBody()    {}
-
-type IfCom struct {
-	BoolExpr Expression `"(" "if" @@`
-	ThenBody IfBody     `@@`
-	ElseBody IfBody     `@@ ")"`
-}
-
-func (bgBd *IfCom) beginBody() {}
-func (ifBd *IfCom) ifBody()    {}
-
-type CondCom struct {
-	Cases   []Case `"(" "cond" @@+`
-	Default IfBody `@@ ")"`
-}
-
-func (bgBd *CondCom) beginBody() {}
-func (ifBd *CondCom) ifBody()    {}
-
-type Dotimes struct {
-	Symb  Symbol `"(" "dotimes" @@`
-	Times Int    `@@ `
-	Body  IfBody `@@ ")"`
-}
-
-func (bgBd *Dotimes) beginBody() {}
-func (ifBd *Dotimes) ifBody()    {}
-
-type While struct {
-	Expr Expression `"(" "while" @@`
-	Body IfBody     `@@ ")"`
-}
-
-func (bgBd *While) beginBody() {}
-func (ifBd *While) ifBody()    {}
-
-// Expression
+// ------------Expression-----------------
 type Expression struct {
-	Op   Symbol     `"(" @@`
-	Args []ExprArgs `@@* ")"`
+	Function Symbol              `parser:"'(' @@" json:"function"`
+	Args     ExpressionArguments `parser:"@@* ')'" json:"args"`
 }
 
-func (exAr *Expression) exprArgs()  {}
-func (bgBd *Expression) beginBody() {}
-func (ifBd *Expression) ifBody()    {}
+func (lb *Expression) local()   {}
+func (ea *Expression) exprArg() {}
 
-// Atoms---------------------
-// Symbol
-type Symbol struct {
-	Value string `@Ident`
+// ------------Atoms-----------------
+
+// Integer
+type Integer struct {
+	Value string `parser:"@Int" json:"value"`
 }
 
-func (exAr *Symbol) exprArgs() {}
-func (atm *Symbol) atom()      {}
+func (at *Integer) atom()    {}
+func (ea *Integer) exprArg() {}
 
-// Int
-type Int struct {
-	Value string `@Int`
+// Double
+type Double struct {
+	Value string `parser:"@Double" json:"value"`
 }
 
-func (fnBd *Int) fnBody()   {}
-func (exAr *Int) exprArgs() {}
-func (atm *Int) atom()      {}
-
-// Float
-type Float struct {
-	Value string `@Float`
-}
-
-func (fnBd *Float) fnBody()   {}
-func (exAr *Float) exprArgs() {}
-func (atm *Float) atom()      {}
+func (at *Double) atom()    {}
+func (ea *Double) exprArg() {}
 
 // String
 type String struct {
-	Value string `@String`
+	Value string `parser:"@String" json:"value"`
 }
 
-func (fnBd *String) fnBody()   {}
-func (exAr *String) exprArgs() {}
-func (atm *String) atom()      {}
+func (at *String) atom()    {}
+func (ea *String) exprArg() {}
 
 // Bool
 type Bool struct {
-	Value string `@Bool`
+	Value string `parser:"@Bool" json:"value"`
 }
 
-func (fnBd *Bool) fnBody()   {}
-func (exAr *Bool) exprArgs() {}
-func (atm *Bool) atom()      {}
+func (at *Bool) atom()    {}
+func (ea *Bool) exprArg() {}
+
+// Symbol
+type Symbol struct {
+	Value string `parser:"@Ident" json:"value"`
+}
+
+func (at *Symbol) atom()    {}
+func (ea *Symbol) exprArg() {}
 
 // List
 type List struct {
-	Value []ExprArgs `"[" @@* "]"`
+	Items []Atom `parser:"'[' @@* ']'" json:"items"`
 }
 
-func (fnBd *List) fnBody()   {}
-func (exAr *List) exprArgs() {}
-func (atm *List) atom()      {}
+func (at *List) atom()    {}
+func (ea *List) exprArg() {}
 
-// Map
+// List
 type Map struct {
-	Value []MapItem `"{" @@* "}"`
+	Items []MapPair `parser:"'{' @@* '}'" json:"items"`
 }
 
-func (fnBd *Map) fnBody()   {}
-func (exAr *Map) exprArgs() {}
-func (atm *Map) atom()      {}
+func (at *Map) atom()    {}
+func (ea *Map) exprArg() {}
 
-// Nil
-type Nil struct {
-	Value string `"nil"`
+// ------------Utils-----------------
+
+// symbol declaration
+type SymbolDecl struct {
+	Name            string                 `parser:"@Ident" json:"name"`
+	CompositionType []CompositionTypeIdent `parser:"':' @@*" json:"compositionType"`
+	PrimitiveType   string                 `parser:"@Ident" json:"primitiveType"`
 }
 
-func (fnBd *Nil) fnBody() {}
-func (atm *Nil) atom()    {}
+type CompositionTypeIdent struct {
+	Identifier string `parser:"@('['']')|@('{''}')" json:"identifier"`
+}
+
+type MapPair struct {
+	Key   string `parser:"@String" json:"key"`
+	Value Atom   `parser:"':'':' @@" json:"value"`
+}
