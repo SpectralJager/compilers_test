@@ -18,6 +18,12 @@ func TestLexer(t *testing.T) {
 		(let list_of_maps:[]{}int [{"1"::1} {"1"::1 "2"::2}])
 		(println str)
 		(println (string (iadd bazz i)))
+		(cond 
+			((lt i 10)
+				(add i 10))
+			((eq i 10)
+				(println (string i)))
+			(sub i 10))
 		(ret 0)			
 	)
 
