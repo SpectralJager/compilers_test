@@ -20,10 +20,23 @@ func TestLexer(t *testing.T) {
 		(println (string (iadd bazz i)))
 		(cond 
 			((lt i 10)
-				(add i 10))
+				(iadd i 10))
 			((eq i 10)
 				(println (string i)))
 			(sub i 10))
+		(dotimes l 10
+			(println (string l))
+			(iadd i l))
+		(while (lt i 0)
+			(println (string i))
+			(isub i 1))
+		((lambda [x:int] (println (string x)))
+			i)
+		(let isum:function (lambda [values:[]int] 
+			(let res:int 0)
+			(dotimes i (len values)
+				(iadd res (lget values i)))
+			(ret res)))
 		(ret 0)			
 	)
 

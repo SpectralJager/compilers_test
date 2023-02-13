@@ -22,6 +22,16 @@ type ExpressionArguments interface {
 	exprArg()
 }
 
+// union for callable
+type Callable interface {
+	call()
+}
+
+// union for times
+type Times interface {
+	times()
+}
+
 // Programm
 type Programm struct {
 	Package string       `parser:"" json:"package"`
@@ -72,13 +82,48 @@ type LocalVaribleCom struct {
 
 func (lb *LocalVaribleCom) local() {}
 
+// condition command
+type ConditionCom struct {
+	Conditions       []Condition `parser:"'(' 'cond'  @@+ " json:"conditions"`
+	DefaultCondition []LocalBody `parser:"@@* ')'" json:""`
+}
+
+func (lb *ConditionCom) local() {}
+
+// dotimes command
+type DotimesCom struct {
+	Index Symbol      `parser:"'(' 'dotimes' @@ " json:"index"`
+	Time  Times       `parser:" @@ " json:"times"`
+	Body  []LocalBody `parser:" @@+ ')'" json:"body"`
+}
+
+func (lb *DotimesCom) local() {}
+
+// while command
+type WhileCom struct {
+	LogicExpr Expression  `parser:"'(' 'while' @@ " json:"logic"`
+	Body      []LocalBody `parser:" @@+ ')'" json:"body"`
+}
+
+func (lb *WhileCom) local() {}
+
+// lambda command
+type LambdaCom struct {
+	Args []SymbolDecl `parser:"'(' 'lambda' '[' @@* ']'" jons:"args"`
+	Body []LocalBody  `parser:"@@+ ')'" json:"body"`
+}
+
+func (cl *LambdaCom) call()    {}
+func (ea *LambdaCom) exprArg() {}
+
 // ------------Expression-----------------
 type Expression struct {
-	Function Symbol              `parser:"'(' @@" json:"function"`
-	Args     ExpressionArguments `parser:"@@* ')'" json:"args"`
+	Function Callable              `parser:"'(' @@" json:"function"`
+	Args     []ExpressionArguments `parser:" @@* ')'" json:"args"`
 }
 
 func (lb *Expression) local()   {}
+func (tm *Expression) times()   {}
 func (ea *Expression) exprArg() {}
 
 // ------------Atoms-----------------
@@ -89,6 +134,7 @@ type Integer struct {
 }
 
 func (at *Integer) atom()    {}
+func (tm *Integer) times()   {}
 func (ea *Integer) exprArg() {}
 
 // Double
@@ -120,6 +166,7 @@ type Symbol struct {
 	Value string `parser:"@Ident" json:"value"`
 }
 
+func (cl *Symbol) call()    {}
 func (at *Symbol) atom()    {}
 func (ea *Symbol) exprArg() {}
 
@@ -141,7 +188,6 @@ func (ea *Map) exprArg() {}
 
 // ------------Utils-----------------
 
-// symbol declaration
 type SymbolDecl struct {
 	Name            string                 `parser:"@Ident" json:"name"`
 	CompositionType []CompositionTypeIdent `parser:"':' @@*" json:"compositionType"`
@@ -155,4 +201,9 @@ type CompositionTypeIdent struct {
 type MapPair struct {
 	Key   string `parser:"@String" json:"key"`
 	Value Atom   `parser:"':'':' @@" json:"value"`
+}
+
+type Condition struct {
+	LogicExpr Expression  `parser:"'(' @@" json:"logic"`
+	Body      []LocalBody `parser:"@@+ ')'" json:"body"`
 }

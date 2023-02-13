@@ -19,10 +19,10 @@ var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: `Set`, Pattern: `set`},
 	{Name: `Var`, Pattern: `var`},
 	{Name: `Const`, Pattern: `const`},
-	{Name: `If`, Pattern: `if`},
 	{Name: `Cond`, Pattern: `cond`},
 	{Name: `Dotimes`, Pattern: `dotimes`},
 	{Name: `While`, Pattern: `while`},
+	{Name: `Lambda`, Pattern: `lambda`},
 	{Name: `Nil`, Pattern: `nil`},
 	{Name: `Bool`, Pattern: `true|false`},
 	// atoms

@@ -15,6 +15,9 @@ var Parser = participle.MustBuild[Programm](
 		&ConstantCom{},
 		&LocalVaribleCom{},
 		&Expression{},
+		&ConditionCom{},
+		&DotimesCom{},
+		&WhileCom{},
 	),
 	participle.Union[Atom](
 		&Integer{},
@@ -34,5 +37,14 @@ var Parser = participle.MustBuild[Programm](
 		&Symbol{},
 		&List{},
 		&Map{},
+		&LambdaCom{},
+	),
+	participle.Union[Callable](
+		&Symbol{},
+		&LambdaCom{},
+	),
+	participle.Union[Times](
+		&Integer{},
+		&Expression{},
 	),
 )
