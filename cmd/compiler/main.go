@@ -22,12 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	// str, _ := json.MarshalIndent(res, "", " ")
-	// fmt.Println(string(str))
 	var buf bytes.Buffer
-	err = backend.GenerateCode(&buf, *res)
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
+	backend.GenerateProgram(&buf, res)
 	fmt.Println(buf.String())
 }
