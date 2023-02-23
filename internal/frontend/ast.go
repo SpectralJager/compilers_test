@@ -1,209 +1,102 @@
 package frontend
 
-// ------------Unions-----------------
-
-// body for global context
-type GlobalBody interface {
-	global()
+// Package Context
+type PackageContext interface {
+	pkg()
 }
 
-// body for local context (functions, loops, condition statements, etc.)
-type LocalBody interface {
-	local()
+type Package struct {
+	Filename  string
+	Name      string           `parser:"'package' @Ident ';'"`
+	Variables PackageVariables `parser:"@@?"`
+	Body      []PackageContext `parser:"@@*"`
 }
 
-// atom union for strings, numbers, symbols, lists, structs, maps.
+type PackageVariables struct {
+	Variables []PackageVariable `parser:"'var' @@+ 'end' ';'"`
+}
+
+type PackageVariable struct {
+	Symbol SymbolDeclaration `parser:"@@"`
+	Value  Atom              `parser:"@@ ';'"`
+}
+
+type FunctionCommand struct {
+	Symbol    SymbolDeclaration   `parser:"'fn' @@"`
+	Args      []SymbolDeclaration `parser:"'(' @@* ')'"`
+	DocString string              `parser:"@String"`
+	Body      []BlockContext      `parser:"@@+ 'end' ';'"`
+}
+
+func (pkgCtx *FunctionCommand) pkg() {}
+
+// Block Context
+type BlockContext interface {
+	blk()
+}
+
+type ReturnCommand struct {
+	ReturnValue string `parser:"'ret' @Int ';'"`
+}
+
+func (blkCtx *ReturnCommand) blk() {}
+
+type LetCommand struct {
+	Symbol SymbolDeclaration   `parser:"'let' @@ "`
+	Value  ExpressionArguments `parser:" @@ ';'"`
+}
+
+func (blkCtx *LetCommand) blk() {}
+
+// Expression Arguments
+type ExpressionArguments interface {
+	expr()
+}
+
+type Expression struct {
+	Symbol string                `parser:"'(' @Ident"`
+	Args   []ExpressionArguments `parser:" @@* ')'"`
+}
+
+func (blkCtx *Expression) blk() {}
+func (e *Expression) expr()     {}
+
+// Atom
 type Atom interface {
 	atom()
 }
 
-// expression arguments
-type ExpressionArguments interface {
-	exprArg()
+type Int struct {
+	Value string `parser:" @Int "`
 }
 
-// union for callable
-type Callable interface {
-	call()
-}
+func (at *Int) atom() {}
+func (e *Int) expr()  {}
 
-// union for times
-type Times interface {
-	times()
-}
-
-// Programm
-type Programm struct {
-	Package string       `parser:"" json:"package"`
-	Body    []GlobalBody `parser:"@@*" json:"body"`
-}
-
-// ------------Commands-----------------
-
-// Function command
-type FunctionCom struct {
-	Symbol    SymbolDecl   `parser:"'(' 'fn' @@" json:"symbol"`
-	Args      []SymbolDecl `parser:"'[' @@* ']'" jons:"args"`
-	DocString string       `parser:"@String?" json:"docString"`
-	Body      []LocalBody  `parser:"@@+ ')'" json:"body"`
-}
-
-func (gb *FunctionCom) global() {}
-
-// Return command
-type ReturnCom struct {
-	Ret Atom `parser:"'(' 'ret' @@ ')'" json:"ret"`
-}
-
-func (lb *ReturnCom) local() {}
-
-// Constant command
-type ConstantCom struct {
-	Symbol SymbolDecl `parser:"'(' 'const' @@" json:"symbol"`
-	Value  Atom       `parser:"@@ ')'" json:"value"`
-}
-
-func (gb *ConstantCom) global() {}
-func (lb *ConstantCom) local()  {}
-
-// Global varible command
-type GlobalVaribleCom struct {
-	Symbol SymbolDecl `parser:"'(' 'var' @@" json:"symbol"`
-	Value  Atom       `parser:"@@ ')'" json:"value"`
-}
-
-func (gb *GlobalVaribleCom) global() {}
-
-// local varible command
-type LocalVaribleCom struct {
-	Symbol SymbolDecl          `parser:"'(' 'let' @@" json:"symbol"`
-	Value  ExpressionArguments `parser:"@@ ')'" json:"value"`
-}
-
-func (lb *LocalVaribleCom) local() {}
-
-// condition command
-type ConditionCom struct {
-	Conditions       []Condition `parser:"'(' 'cond'  @@+ " json:"conditions"`
-	DefaultCondition []LocalBody `parser:"@@* ')'" json:""`
-}
-
-func (lb *ConditionCom) local() {}
-
-// dotimes command
-type DotimesCom struct {
-	Index Symbol      `parser:"'(' 'dotimes' @@ " json:"index"`
-	Time  Times       `parser:" @@ " json:"times"`
-	Body  []LocalBody `parser:" @@+ ')'" json:"body"`
-}
-
-func (lb *DotimesCom) local() {}
-
-// while command
-type WhileCom struct {
-	LogicExpr Expression  `parser:"'(' 'while' @@ " json:"logic"`
-	Body      []LocalBody `parser:" @@+ ')'" json:"body"`
-}
-
-func (lb *WhileCom) local() {}
-
-// lambda command
-type LambdaCom struct {
-	Args []SymbolDecl `parser:"'(' 'lambda' '[' @@* ']'" jons:"args"`
-	Body []LocalBody  `parser:"@@+ ')'" json:"body"`
-}
-
-func (cl *LambdaCom) call()    {}
-func (ea *LambdaCom) exprArg() {}
-
-// ------------Expression-----------------
-type Expression struct {
-	Function Callable              `parser:"'(' @@" json:"function"`
-	Args     []ExpressionArguments `parser:" @@* ')'" json:"args"`
-}
-
-func (lb *Expression) local()   {}
-func (tm *Expression) times()   {}
-func (ea *Expression) exprArg() {}
-
-// ------------Atoms-----------------
-
-// Integer
-type Integer struct {
-	Value string `parser:"@Int" json:"value"`
-}
-
-func (at *Integer) atom()    {}
-func (tm *Integer) times()   {}
-func (ea *Integer) exprArg() {}
-
-// Double
-type Double struct {
-	Value string `parser:"@Double" json:"value"`
-}
-
-func (at *Double) atom()    {}
-func (ea *Double) exprArg() {}
-
-// String
-type String struct {
-	Value string `parser:"@String" json:"value"`
-}
-
-func (at *String) atom()    {}
-func (ea *String) exprArg() {}
-
-// Bool
-type Bool struct {
-	Value string `parser:"@Bool" json:"value"`
-}
-
-func (at *Bool) atom()    {}
-func (ea *Bool) exprArg() {}
-
-// Symbol
 type Symbol struct {
-	Value string `parser:"@Ident" json:"value"`
+	Value string `parser:" @Ident "`
 }
 
-func (cl *Symbol) call()    {}
-func (at *Symbol) atom()    {}
-func (ea *Symbol) exprArg() {}
+func (at *Symbol) atom() {}
+func (e *Symbol) expr()  {}
 
-// List
-type List struct {
-	Items []Atom `parser:"'[' @@* ']'" json:"items"`
+type Float struct {
+	Value string `parser:" @Float "`
 }
 
-func (at *List) atom()    {}
-func (ea *List) exprArg() {}
+func (at *Float) atom() {}
+func (e *Float) expr()  {}
 
-// List
-type Map struct {
-	Items []MapPair `parser:"'{' @@* '}'" json:"items"`
+type String struct {
+	Value string `parser:" @String "`
 }
 
-func (at *Map) atom()    {}
-func (ea *Map) exprArg() {}
+func (at *String) atom() {}
+func (e *String) expr()  {}
 
-// ------------Utils-----------------
+// Utils
 
-type SymbolDecl struct {
-	Name            string                 `parser:"@Ident" json:"name"`
-	CompositionType []CompositionTypeIdent `parser:"':' @@*" json:"compositionType"`
-	PrimitiveType   string                 `parser:"@Ident" json:"primitiveType"`
-}
-
-type CompositionTypeIdent struct {
-	Identifier string `parser:"@('['']')|@('{''}')" json:"identifier"`
-}
-
-type MapPair struct {
-	Key   string `parser:"@String" json:"key"`
-	Value Atom   `parser:"':'':' @@" json:"value"`
-}
-
-type Condition struct {
-	LogicExpr Expression  `parser:"'(' @@" json:"logic"`
-	Body      []LocalBody `parser:"@@+ ')'" json:"body"`
+type SymbolDeclaration struct {
+	Name string `parser:"@Ident"`
+	Type string `parser:"':' @Ident"`
 }

@@ -2,49 +2,28 @@ package frontend
 
 import "github.com/alecthomas/participle/v2"
 
-var Parser = participle.MustBuild[Programm](
+var Parser = participle.MustBuild[Package](
 	participle.Lexer(lex),
 	participle.Unquote("String"),
-	participle.Union[GlobalBody](
-		&FunctionCom{},
-		&ConstantCom{},
-		&GlobalVaribleCom{},
+	participle.Union[PackageContext](
+		&FunctionCommand{},
 	),
-	participle.Union[LocalBody](
-		&ReturnCom{},
-		&ConstantCom{},
-		&LocalVaribleCom{},
+	participle.Union[BlockContext](
+		&ReturnCommand{},
+		&LetCommand{},
 		&Expression{},
-		&ConditionCom{},
-		&DotimesCom{},
-		&WhileCom{},
-	),
-	participle.Union[Atom](
-		&Integer{},
-		&Double{},
-		&String{},
-		&Bool{},
-		&Symbol{},
-		&List{},
-		&Map{},
 	),
 	participle.Union[ExpressionArguments](
 		&Expression{},
-		&Integer{},
-		&Double{},
+		&Int{},
+		&Symbol{},
 		&String{},
-		&Bool{},
-		&Symbol{},
-		&List{},
-		&Map{},
-		&LambdaCom{},
+		&Float{},
 	),
-	participle.Union[Callable](
+	participle.Union[Atom](
+		&Int{},
 		&Symbol{},
-		&LambdaCom{},
-	),
-	participle.Union[Times](
-		&Integer{},
-		&Expression{},
+		&String{},
+		&Float{},
 	),
 )
