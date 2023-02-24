@@ -11,7 +11,9 @@ var Parser = participle.MustBuild[Package](
 	participle.Union[BlockContext](
 		&ReturnCommand{},
 		&LetCommand{},
+		&SetCommand{},
 		&Expression{},
+		&IfCommand{},
 	),
 	participle.Union[ExpressionArguments](
 		&Expression{},

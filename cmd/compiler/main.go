@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"grimlang/internal/frontend"
+	"grimlang/internal/frontend/ir"
 	"log"
 
 	"github.com/alecthomas/participle/v2"
@@ -18,12 +19,17 @@ func main() {
 		y:int 12;
 	end;
 
+	fn Sum:int(a:int b:int)
+		ret (add a b);
+	end;
+
 	fn main:void()
 		"doc string"
-		let i:int 10;
-		let j:float 10.1;
-		let str:string "some string";
-		let temp:int (add i (sub 20 12));
+		if (lt temp 20) 
+			(println (string temp))
+		else
+			set temp 20;
+		end;
 	end;
 
 	`
@@ -39,6 +45,6 @@ func main() {
 	bts, _ := json.MarshalIndent(res, "", " ")
 	log.Printf("#Parse Tree:\n%s", string(bts))
 	// log.Printf("#BNF:\n%s", frontend.Parser.String())
-	pChunk := frontend.NewPackageChunk(res)
+	pChunk := ir.NewPackageChunk(res)
 	log.Println(pChunk.Meta())
 }
