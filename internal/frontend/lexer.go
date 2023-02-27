@@ -19,6 +19,7 @@ var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: `If`, Pattern: `if`},
 	{Name: `Elif`, Pattern: `elif`},
 	{Name: `Else`, Pattern: `else`},
+	{Name: `While`, Pattern: `while`},
 	// atoms
 	{Name: `Bool`, Pattern: `true|false`},
 	{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z_]*`},

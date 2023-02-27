@@ -13,6 +13,7 @@ const (
 	OP_RET  = "ret"
 	OP_JMC  = "jmc"
 	OP_JMP  = "jmp"
+	OP_INC  = "inc"
 )
 
 type Instruction struct {

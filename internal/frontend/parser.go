@@ -14,6 +14,7 @@ var Parser = participle.MustBuild[Package](
 		&SetCommand{},
 		&Expression{},
 		&IfCommand{},
+		&WhileCommand{},
 	),
 	participle.Union[ExpressionArguments](
 		&Expression{},

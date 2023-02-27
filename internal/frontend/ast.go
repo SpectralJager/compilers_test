@@ -64,6 +64,13 @@ type IfCommand struct {
 
 func (blkCtx *IfCommand) blk() {}
 
+type WhileCommand struct {
+	Condition Expression     `parser:"'while' @@ "`
+	Body      []BlockContext `parser:" @@+ 'end'';'"`
+}
+
+func (blkCtx *WhileCommand) blk() {}
+
 // Expression Arguments
 type ExpressionArguments interface {
 	expr()

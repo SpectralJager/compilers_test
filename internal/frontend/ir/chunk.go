@@ -175,6 +175,24 @@ func genInstructions(instrs *[]Instruction, node any) {
 		*instrs = append(*instrs, ThenInstr...)
 		*instrs = append(*instrs, ElIfInstr...)
 		*instrs = append(*instrs, ElseInstr...)
+	case *frontend.WhileCommand:
+		var whileCond, whileBody []Instruction
+		genInstructions(&whileCond, &node.Condition)
+		for _, v := range node.Body {
+			genInstructions(&whileBody, v)
+		}
+		CondInstr := Instruction{
+			Op:  OP_JMC,
+			Arg: fmt.Sprint(len(whileBody) + 1),
+		}
+		whileCond = append(whileCond, CondInstr)
+		whileCond = append(whileCond, whileBody...)
+		LoopInstr := Instruction{
+			Op:  OP_JMP,
+			Arg: fmt.Sprint(-(len(whileCond) - 1)),
+		}
+		whileCond = append(whileCond, LoopInstr)
+		*instrs = append(*instrs, whileCond...)
 	case *frontend.Expression:
 		for i := len(node.Args) - 1; i >= 0; i-- {
 			genInstructions(instrs, node.Args[i])

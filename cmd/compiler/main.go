@@ -14,24 +14,12 @@ func main() {
 	code := `
 	package main;
 
-	var
-		x:int 10;
-		y:int 12;
-	end;
-
-	fn Sum:int(a:int b:int)
-		ret (add a b);
-	end;
-
 	fn main:void()
-		"doc string"
-		if (lt temp 20) 
-			(println (string temp))
-		else
-			set temp 20;
+		while (lt i (len str))
+			(println (string i))	
+			(inc i)	
 		end;
 	end;
-
 	`
 
 	var buf bytes.Buffer
