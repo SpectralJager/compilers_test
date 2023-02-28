@@ -12,13 +12,13 @@ import (
 
 func main() {
 	code := `
-	package main;
+	var 
+		i:int[][] 10;
+	end;
 
-	fn main:void()
-		while (lt i (len str))
-			(println (string i))	
-			(inc i)	
-		end;
+	struct Test
+		fieldFirst:int
+		fieldSecond:string[]
 	end;
 	`
 
@@ -30,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s\n%s", err, buf.String())
 	}
+	res.Filename = "TestFile"
 	bts, _ := json.MarshalIndent(res, "", " ")
 	log.Printf("#Parse Tree:\n%s", string(bts))
 	// log.Printf("#BNF:\n%s", frontend.Parser.String())

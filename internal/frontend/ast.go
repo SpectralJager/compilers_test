@@ -7,7 +7,6 @@ type PackageContext interface {
 
 type Package struct {
 	Filename  string
-	Name      string           `parser:"'package' @Ident ';'"`
 	Variables PackageVariables `parser:"@@?"`
 	Body      []PackageContext `parser:"@@*"`
 }
@@ -20,6 +19,13 @@ type PackageVariable struct {
 	Symbol SymbolDeclaration `parser:"@@"`
 	Value  Atom              `parser:"@@ ';'"`
 }
+
+type StructCommand struct {
+	Symbol Symbol              `parser:"'struct' @@"`
+	Fields []SymbolDeclaration `parser:"@@+ 'end'';'"`
+}
+
+func (pkgCtx *StructCommand) pkg() {}
 
 type FunctionCommand struct {
 	Symbol    SymbolDeclaration   `parser:"'fn' @@"`
@@ -146,8 +152,21 @@ func (e *String) expr() {}
 // Utils
 
 type SymbolDeclaration struct {
-	Name string `parser:"@Ident"`
-	Type string `parser:"':' @Ident"`
+	Name     string     `parser:"@Ident"`
+	Type     string     `parser:"':' @Ident"`
+	Composit []Composit `parser:"@@*"`
+}
+
+func (sd *SymbolDeclaration) String() string {
+	temp := sd.Name + " " + sd.Type
+	for _, v := range sd.Composit {
+		temp += v.Types
+	}
+	return temp
+}
+
+type Composit struct {
+	Types string `parser:"@(('['']')|('{''}'))"`
 }
 
 type ElseIf struct {

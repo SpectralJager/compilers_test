@@ -14,13 +14,21 @@ type Chunk interface {
 type PackageChunk struct {
 	Name      string
 	Variables frontend.PackageVariables
+	Structs   []frontend.StructCommand
 	Chunks    []Chunk
 }
 
 func (m PackageChunk) Meta() string {
-	temp := fmt.Sprintf("Package name: %s\nVariables:\n", m.Name)
+	temp := fmt.Sprintf("Filename name: %s\nVariables:\n", m.Name)
 	for _, v := range m.Variables.Variables {
-		temp += fmt.Sprintf("\t%s %s %v\n", v.Symbol.Name, v.Symbol.Type, v.Value.AtomValue())
+		temp += fmt.Sprintf("\t%s %v\n", v.Symbol.String(), v.Value.AtomValue())
+	}
+	temp += "Structs:\n"
+	for _, v := range m.Structs {
+		temp += fmt.Sprintf("\t%s:\n", v.Symbol.AtomValue())
+		for _, v := range v.Fields {
+			temp += fmt.Sprintf("\t  %s\n", v.String())
+		}
 	}
 	temp += "Chunks:\n"
 	for _, ch := range m.Chunks {
@@ -31,13 +39,15 @@ func (m PackageChunk) Meta() string {
 
 func NewPackageChunk(p *frontend.Package) *PackageChunk {
 	ch := PackageChunk{
-		Name:      p.Name,
+		Name:      p.Filename,
 		Variables: p.Variables,
 	}
 	for _, v := range p.Body {
 		switch v := v.(type) {
 		case *frontend.FunctionCommand:
 			ch.Chunks = append(ch.Chunks, NewFunctionChunk(v))
+		case *frontend.StructCommand:
+			ch.Structs = append(ch.Structs, *v)
 		default:
 			log.Fatalf("unknown node: %v", v)
 		}

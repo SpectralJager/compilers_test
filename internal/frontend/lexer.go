@@ -15,6 +15,7 @@ var lex = lexer.MustSimple([]lexer.SimpleRule{
 	// keywords
 	{Name: `Package`, Pattern: `package`},
 	{Name: `Fn`, Pattern: `fn`},
+	{Name: `Struct`, Pattern: `struct`},
 	{Name: `Var`, Pattern: `var`},
 	{Name: `If`, Pattern: `if`},
 	{Name: `Elif`, Pattern: `elif`},

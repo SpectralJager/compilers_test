@@ -7,6 +7,7 @@ var Parser = participle.MustBuild[Package](
 	participle.Unquote("String"),
 	participle.Union[PackageContext](
 		&FunctionCommand{},
+		&StructCommand{},
 	),
 	participle.Union[BlockContext](
 		&ReturnCommand{},
