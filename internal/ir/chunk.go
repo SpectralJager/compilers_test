@@ -15,7 +15,7 @@ type PackageChunk struct {
 	Name      string
 	Variables frontend.PackageVariables
 	Structs   []frontend.StructCommand
-	Chunks    []Chunk
+	Chunks    []FunctionChunk
 }
 
 func (m PackageChunk) Meta() string {
@@ -45,7 +45,7 @@ func NewPackageChunk(p *frontend.Package) *PackageChunk {
 	for _, v := range p.Body {
 		switch v := v.(type) {
 		case *frontend.FunctionCommand:
-			ch.Chunks = append(ch.Chunks, NewFunctionChunk(v))
+			ch.Chunks = append(ch.Chunks, *NewFunctionChunk(v))
 		case *frontend.StructCommand:
 			ch.Structs = append(ch.Structs, *v)
 		default:

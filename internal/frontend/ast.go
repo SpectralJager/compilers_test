@@ -145,7 +145,7 @@ func (at *String) AtomType() string {
 	return "string"
 }
 func (at *String) AtomValue() string {
-	return at.Value
+	return "\"" + at.Value + "\""
 }
 func (e *String) expr() {}
 

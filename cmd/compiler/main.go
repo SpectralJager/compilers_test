@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"grimlang/internal/frontend"
-	"grimlang/internal/frontend/ir"
+	"grimlang/internal/ir"
 	"log"
 
 	"github.com/alecthomas/participle/v2"
@@ -13,13 +13,9 @@ import (
 func main() {
 	code := `
 	var 
-		i:int[][] 10;
+		i:int 10;
 	end;
 
-	struct Test
-		fieldFirst:int
-		fieldSecond:string[]
-	end;
 	`
 
 	var buf bytes.Buffer
@@ -34,6 +30,6 @@ func main() {
 	bts, _ := json.MarshalIndent(res, "", " ")
 	log.Printf("#Parse Tree:\n%s", string(bts))
 	// log.Printf("#BNF:\n%s", frontend.Parser.String())
-	pChunk := ir.NewPackageChunk(res)
-	log.Println(pChunk.Meta())
+	cCode := ir.NewPackageChunk(res)
+	log.Println(cCode.Meta())
 }
