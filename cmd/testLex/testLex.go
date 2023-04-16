@@ -7,10 +7,21 @@ import (
 
 func main() {
 	source := `
-some test
-token
-12
-12.1
+@import "std" as std;
+@import "http" as http;
+
+const a:i32 = 1;
+
+pub fn main() void {
+	@var server:http/Server = (http/NewServer);
+	@set server/address = "localhost";
+	@set server/port = 8080;
+
+	@var index:http/Handler = (http/NewHandler "/" );
+
+	(server/serve)
+}
+
 `
 	lexer := syntax.InitLexer(source)
 	tokens := lexer.Run()

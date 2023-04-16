@@ -4,12 +4,6 @@ import (
 	"fmt"
 )
 
-/*
-symbol = [a-zA-Z_]+
-number = [0-9]+(\.[0-9]+)?
-string = \"[[:ascii:]]\"
-*/
-
 type Lexer struct {
 	source string
 	tokens []Token
@@ -36,6 +30,11 @@ func (l *Lexer) Run() []Token {
 			l.column = 0
 		case ' ', '\t':
 			l.column += 1
+		case '"':
+			result := l.readString()
+			if result != nil {
+				l.tokens = append(l.tokens, *result)
+			}
 		default:
 			if l.isDigit(char) {
 				result := l.readNumber()
@@ -45,7 +44,7 @@ func (l *Lexer) Run() []Token {
 			} else if l.isChar(char) {
 				l.tokens = append(l.tokens, *l.readSymbol())
 			} else {
-				l.errors = append(l.errors, fmt.Errorf("unknown character: %c", char))
+				l.errors = append(l.errors, fmt.Errorf("unknown character: %c at %d:%d", char, l.line, l.column))
 			}
 		}
 	}
@@ -72,6 +71,22 @@ func (l *Lexer) peekChar(n int) byte {
 	return 0
 }
 
+func (l *Lexer) readString() *Token {
+	start := l.pos
+	startLine := l.line
+	startColumn := l.column
+	for l.peekChar(0) != '"' && !l.isEOF(0) && l.peekChar(0) != '\n' {
+		l.readChar()
+	}
+	if l.isEOF(0) || l.peekChar(0) == '\n' {
+		l.errors = append(l.errors, fmt.Errorf("unterminated string at %d:%d", startLine, startColumn))
+		return nil
+	}
+	value := l.source[start:l.pos]
+	l.readChar()
+	return NewToken(TokenString, value, startLine, startColumn)
+}
+
 func (l *Lexer) readNumber() *Token {
 	l.unreadChar()
 	start := l.pos
@@ -83,7 +98,7 @@ func (l *Lexer) readNumber() *Token {
 	if l.peekChar(0) == '.' {
 		l.readChar()
 		if !l.isDigit(l.peekChar(0)) {
-			l.errors = append(l.errors, fmt.Errorf("invalid number: %s", l.source[start:l.pos]))
+			l.errors = append(l.errors, fmt.Errorf("invalid number: %s at %d:%d", l.source[start:l.pos], startLine, startColumn))
 			return nil
 		}
 		for l.isDigit(l.peekChar(0)) {
