@@ -30,6 +30,49 @@ func (l *Lexer) Run() []Token {
 			l.column = 0
 		case ' ', '\t':
 			l.column += 1
+		case '(':
+			l.tokens = append(l.tokens, *NewToken(TokenLParen, "(", l.line, l.column))
+		case ')':
+			l.tokens = append(l.tokens, *NewToken(TokenRParen, ")", l.line, l.column))
+		case '[':
+			l.tokens = append(l.tokens, *NewToken(TokenLBracket, "[", l.line, l.column))
+		case ']':
+			l.tokens = append(l.tokens, *NewToken(TokenRBracket, "]", l.line, l.column))
+		case '{':
+			l.tokens = append(l.tokens, *NewToken(TokenLCBracket, "{", l.line, l.column))
+		case '}':
+			l.tokens = append(l.tokens, *NewToken(TokenRCBracket, "}", l.line, l.column))
+		case '<':
+			l.tokens = append(l.tokens, *NewToken(TokenLess, "<", l.line, l.column))
+		case '>':
+			l.tokens = append(l.tokens, *NewToken(TokenMore, ">", l.line, l.column))
+		case ';':
+			l.tokens = append(l.tokens, *NewToken(TokenSemicolon, ";", l.line, l.column))
+		case '=':
+			l.tokens = append(l.tokens, *NewToken(TokenAssign, "=", l.line, l.column))
+		case '@':
+			tempToken := *NewToken(TokenIllegal, "@", l.line, l.column)
+			if l.isChar(l.readChar()) {
+				symbolToken := l.readSymbol()
+				tempToken.Value += symbolToken.Value
+				if tp, ok := keywords[tempToken.Value]; ok {
+					tempToken.Type = tp
+					l.tokens = append(l.tokens, tempToken)
+					continue
+				}
+				l.errors = append(l.errors, fmt.Errorf("unexpected keyword: %s", tempToken))
+				continue
+			}
+			l.errors = append(l.errors, fmt.Errorf("expected keyword, got: %c at %d:%d", l.peekChar(-1), l.line, l.column))
+		case '/':
+			l.tokens = append(l.tokens, *NewToken(TokenSlash, "/", l.line, l.column))
+		case ':':
+			if l.peekChar(0) == ':' {
+				l.tokens = append(l.tokens, *NewToken(TokenDColon, "::", l.line, l.column))
+				l.readChar()
+			} else {
+				l.tokens = append(l.tokens, *NewToken(TokenColon, ":", l.line, l.column))
+			}
 		case '"':
 			result := l.readString()
 			if result != nil {
