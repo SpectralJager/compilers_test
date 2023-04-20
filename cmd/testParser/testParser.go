@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"gl/src/syntax"
 )
@@ -46,13 +47,22 @@ func main() {
 	lexer := syntax.InitLexer(source)
 	tokens := lexer.Run()
 	if lexer.Errors() != nil {
-		fmt.Println("----------Errors----------")
+		fmt.Println("----------Lexer Errors----------")
 		for _, err := range lexer.Errors() {
 			fmt.Println(err)
 		}
-		fmt.Println("--------------------------")
+		fmt.Println("--------------------------------")
 	}
-	for _, token := range tokens {
-		fmt.Println(token)
+	parser := syntax.NewParser(tokens)
+	programm := parser.Run()
+	if parser.Errors() != nil {
+		fmt.Println("----------Parser Errors----------")
+		for _, err := range parser.Errors() {
+			fmt.Println(err)
+		}
+		fmt.Println("---------------------------------")
 	}
+	res, _ := json.MarshalIndent(programm, "", " ")
+	fmt.Printf("%s\n", res)
+
 }
