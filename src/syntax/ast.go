@@ -1,76 +1,49 @@
 package syntax
 
-// ------------- Interfaces for all syntax nodes
-// General interface for all syntax nodes.
-type Node interface {
-	NodeType() string
+/*
+programm 	= globalUnion* ;
+globalUnion	= const | func ;
+const		= '@const' symbolDef '=' LITTERAL ';' ;
+func		= '@fn' SYMBOL '(' symbolDef* ')' [SYMBOL] '{' localUnion* '}' ;
+
+symbolDef	= SYMBOL ':' SYMBOL ;
+*/
+
+// Programm main node
+type Program struct {
+	Filename string        `json:"filename"`
+	Body     []GlobalUnion `json:"body"`
 }
 
-// Interface for global expressions.
-type GlobalExpression interface {
-	global()
+// Unions
+type GlobalUnion interface {
+	glob()
 }
 
-// Interface for local expressions.
-type LocalExpression interface {
+type LocalUnion interface {
 	local()
 }
 
-// Interface for litterals
-type Litteral interface {
-	litteral()
+// ConstNode
+type ConstNode struct {
+	Symbol SymbolDef `json:"symbol_def"`
+	Value  Token     `json:"value"`
 }
 
-// ------------- Nodes
-// Program root node
-type Programm struct {
-	FileName    string             `json:"file_name"`
-	GlobalNodes []GlobalExpression `json:"globals`
+func (c *ConstNode) glob() {}
+
+// Function node
+type FunctionNode struct {
+	Symbol     Token        `json:"symbol"`
+	ReturnType Token        `json:"return_type"`
+	Args       []SymbolDef  `json:"args"`
+	Body       []LocalUnion `json:"body"`
 }
 
-// ------------- Keyword Nodes
-// @import expression
-type ImportExpression struct {
-	Sybol      SymbolLitteral `json:"import_sybol"`
-	ModuleName StringLitteral `json:"module_name"`
+func (f *FunctionNode) glob() {}
+
+// Utils
+type SymbolDef struct {
+	Symbol Token `json:"symbol"`
+	Type   Token `json:"type"`
 }
-
-func (e *ImportExpression) global()          {}
-func (n *ImportExpression) NodeType() string { return "import_expression" }
-
-// @const expression
-type ConstExpression struct {
-	Sybol    SymbolLitteral `json:"const_sybol"`
-	DataType SequenceSymbol `json:"const_type"`
-	Value    Litteral       `json:"value"`
-}
-
-func (e *ConstExpression) global()          {}
-func (n *ConstExpression) NodeType() string { return "const_expression" }
-
-// ------------- Litteral Nodes
-// Symbol litteral
-type SymbolLitteral struct {
-	Value string `json:"value"`
-}
-
-func (l *SymbolLitteral) litteral()        {}
-func (n *SymbolLitteral) NodeType() string { return "symbol_litteral" }
-
-// symbol/symbol/.../symbol litteral
-type SequenceSymbol struct {
-	Symbols []SymbolLitteral `json:"symbols"`
-}
-
-func (l *SequenceSymbol) litteral()        {}
-func (n *SequenceSymbol) NodeType() string { return "sequance_litteral" }
-
-// String literal
-type StringLitteral struct {
-	Value string `json:"value"`
-}
-
-func (l *StringLitteral) litteral()        {}
-func (n *StringLitteral) NodeType() string { return "string_litteral" }
-
-// ------------- Utiles Nodes

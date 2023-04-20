@@ -30,26 +30,18 @@ func (l *Lexer) Run() []Token {
 			l.column = 0
 		case ' ', '\t':
 			l.column += 1
-		case '(':
-			l.tokens = append(l.tokens, *NewToken(TokenLParen, "(", l.line, l.column))
-		case ')':
-			l.tokens = append(l.tokens, *NewToken(TokenRParen, ")", l.line, l.column))
-		case '[':
-			l.tokens = append(l.tokens, *NewToken(TokenLBracket, "[", l.line, l.column))
-		case ']':
-			l.tokens = append(l.tokens, *NewToken(TokenRBracket, "]", l.line, l.column))
-		case '{':
-			l.tokens = append(l.tokens, *NewToken(TokenLCBracket, "{", l.line, l.column))
-		case '}':
-			l.tokens = append(l.tokens, *NewToken(TokenRCBracket, "}", l.line, l.column))
-		case '<':
-			l.tokens = append(l.tokens, *NewToken(TokenLess, "<", l.line, l.column))
-		case '>':
-			l.tokens = append(l.tokens, *NewToken(TokenMore, ">", l.line, l.column))
 		case ';':
 			l.tokens = append(l.tokens, *NewToken(TokenSemicolon, ";", l.line, l.column))
 		case '=':
 			l.tokens = append(l.tokens, *NewToken(TokenAssign, "=", l.line, l.column))
+		case '(':
+			l.tokens = append(l.tokens, *NewToken(TokenLeftParen, "(", l.line, l.column))
+		case ')':
+			l.tokens = append(l.tokens, *NewToken(TokenRightParen, "(", l.line, l.column))
+		case '{':
+			l.tokens = append(l.tokens, *NewToken(TokenLeftBrace, "{", l.line, l.column))
+		case '}':
+			l.tokens = append(l.tokens, *NewToken(TokenRightBrace, "}", l.line, l.column))
 		case '@':
 			tempToken := *NewToken(TokenIllegal, "@", l.line, l.column)
 			if l.isChar(l.readChar()) {
@@ -64,20 +56,8 @@ func (l *Lexer) Run() []Token {
 				continue
 			}
 			l.errors = append(l.errors, fmt.Errorf("expected keyword, got: %c at %d:%d", l.peekChar(-1), l.line, l.column))
-		case '/':
-			l.tokens = append(l.tokens, *NewToken(TokenSlash, "/", l.line, l.column))
 		case ':':
-			if l.peekChar(0) == ':' {
-				l.tokens = append(l.tokens, *NewToken(TokenDColon, "::", l.line, l.column))
-				l.readChar()
-			} else {
-				l.tokens = append(l.tokens, *NewToken(TokenColon, ":", l.line, l.column))
-			}
-		case '"':
-			result := l.readString()
-			if result != nil {
-				l.tokens = append(l.tokens, *result)
-			}
+			l.tokens = append(l.tokens, *NewToken(TokenColon, ":", l.line, l.column))
 		default:
 			if l.isDigit(char) {
 				result := l.readNumber()
@@ -114,22 +94,6 @@ func (l *Lexer) peekChar(n int) byte {
 	return 0
 }
 
-func (l *Lexer) readString() *Token {
-	start := l.pos
-	startLine := l.line
-	startColumn := l.column
-	for l.peekChar(0) != '"' && !l.isEOF(0) && l.peekChar(0) != '\n' {
-		l.readChar()
-	}
-	if l.isEOF(0) || l.peekChar(0) == '\n' {
-		l.errors = append(l.errors, fmt.Errorf("unterminated string at %d:%d", startLine, startColumn))
-		return nil
-	}
-	value := l.source[start:l.pos]
-	l.readChar()
-	return NewToken(TokenString, value, startLine, startColumn)
-}
-
 func (l *Lexer) readNumber() *Token {
 	l.unreadChar()
 	start := l.pos
@@ -147,9 +111,12 @@ func (l *Lexer) readNumber() *Token {
 		for l.isDigit(l.peekChar(0)) {
 			l.readChar()
 		}
+		value := l.source[start:l.pos]
+		return NewToken(TokenFloat, value, startLine, startColumn)
+	} else {
+		value := l.source[start:l.pos]
+		return NewToken(TokenInteger, value, startLine, startColumn)
 	}
-	value := l.source[start:l.pos]
-	return NewToken(TokenNumber, value, startLine, startColumn)
 }
 
 func (l *Lexer) readSymbol() *Token {

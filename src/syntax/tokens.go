@@ -9,47 +9,31 @@ const (
 	TokenIllegal           = "ILLEGAL"
 
 	// Delimeters
-	TokenLParen    = "LPAREN"
-	TokenRParen    = "RPAREN"
-	TokenLBracket  = "LBRACKET"
-	TokenRBracket  = "RBRACKET"
-	TokenLCBracket = "LCBRACKET"
-	TokenRCBracket = "RCBRACKET"
-	TokenLess      = "LESS"
-	TokenMore      = "MORE"
+	TokenLeftParen   = "("
+	TokenRightParen  = ")"
+	TokenLeftBrace   = "{"
+	TokenRightBrace  = "}"
+	TokenLeftSquare  = "["
+	TokenRightSquare = "]"
 
 	// Symbols
 	TokenColon     = "COLON"
-	TokenDColon    = "DOUBLECOLON"
 	TokenSemicolon = "SEMiCOLON"
 	TokenAssign    = "ASSIGN"
-	TokenSlash     = "SLASH"
 
 	// Data tokens
-	TokenString = "STRING"
-	TokenNumber = "NUMBER"
-	TokenSymbol = "SYMBOL"
+	TokenInteger = "INT"
+	TokenFloat   = "FLOAT"
+	TokenSymbol  = "SYMBOL"
 
 	// Keywords
-	TokenImport = "IMPORT"
-	TokenFn     = "FUNCTION"
-	TokenIf     = "IF"
-	TokenEach   = "EACH"
-	TokenVar    = "VAR"
-	TokenSet    = "SET"
-	TokenConst  = "CONST"
-	TokenReturn = "RETURN"
+	TokenConst = "CONST"
+	TokenFunc  = "FUNC"
 )
 
 var keywords = map[string]TokenType{
-	"@import": TokenImport,
-	"@fn":     TokenFn,
-	"@if":     TokenIf,
-	"@each":   TokenEach,
-	"@var":    TokenVar,
-	"@set":    TokenSet,
-	"@const":  TokenConst,
-	"@return": TokenReturn,
+	"@const": TokenConst,
+	"@fn":    TokenFunc,
 }
 
 type Token struct {
