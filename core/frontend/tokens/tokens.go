@@ -96,7 +96,7 @@ var keywordMap = map[string]TokenType{
 	"@while":  TokenWhile,
 }
 
-func isKeyword(val string) (TokenType, bool) {
+func IsKeyword(val string) (TokenType, bool) {
 	tt, ok := keywordMap[val]
 	return tt, ok
 }
@@ -110,7 +110,7 @@ var reservedMap = map[string]TokenType{
 	"as":    TokenAs,
 }
 
-func isReserved(val string) (TokenType, bool) {
+func IsReserved(val string) (TokenType, bool) {
 	tt, ok := reservedMap[val]
 	return tt, ok
 }
