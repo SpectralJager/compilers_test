@@ -151,7 +151,7 @@ func (l *Lexer) isDigit(ch byte) bool {
 }
 
 func (l *Lexer) isPrintable(ch byte) bool {
-	return 0x21 <= ch && ch <= 0x7E && ch != '"'
+	return 0x20 <= ch && ch <= 0x7E && ch != '"'
 }
 
 func (l *Lexer) Error() []error {
