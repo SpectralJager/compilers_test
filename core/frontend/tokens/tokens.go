@@ -21,6 +21,7 @@ const (
 	TokenDoubleColon
 	TokenSemicolon
 	TokenAssign
+	TokenSlash
 
 	// keywords
 	TokenConst
@@ -61,6 +62,7 @@ var tokenTypeMap = map[TokenType]string{
 	TokenDoubleColon: "::",
 	TokenSemicolon:   ";",
 	TokenAssign:      "=",
+	TokenSlash:       "/",
 
 	TokenConst:  "@const",
 	TokenVar:    "@var",
@@ -124,7 +126,7 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%d:%d %s:%s", t.Line, t.Column, tokenTypeMap[t.Type], t.Value)
+	return fmt.Sprintf("%d:%d(Type %10s, Value %s)", t.Line, t.Column, tokenTypeMap[t.Type], t.Value)
 }
 
 func NewToken(tt TokenType, v string, lp, cp int) *Token {

@@ -3,10 +3,7 @@
 Basic types:
 
 - strings 
-    - unicode
 - integers
-    - i8, i16, i32, i64
-    - u8, u16, u32, u64
 - bool
 - float
     - f64

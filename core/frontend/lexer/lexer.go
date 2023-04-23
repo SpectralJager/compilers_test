@@ -22,7 +22,7 @@ func NewLexer(input string) *Lexer {
 }
 
 func (l *Lexer) Lex() *[]tokens.Token {
-	for l.isEOF() {
+	for !l.isEOF() {
 		ch := l.peek(0)
 		switch ch {
 		case '\n':
@@ -33,15 +33,16 @@ func (l *Lexer) Lex() *[]tokens.Token {
 			l.next()
 		case ' ', '\t':
 			l.next()
-			l.column++
 		case '@':
+			tok := tokens.NewToken(tokens.TokenIllegal, "", l.line, l.column)
 			startPos := l.pos
-			tok := tokens.NewToken(tokens.TokenIllegal, string(l.next()), l.line, l.column)
+			l.next()
 			for {
-				ch := l.next()
+				ch = l.peek(0)
 				if !(ch >= 'a' && ch <= 'z') {
 					break
 				}
+				l.next()
 			}
 			tok.Value += l.input[startPos:l.pos]
 			tt, ok := tokens.IsKeyword(tok.Value)
@@ -51,43 +52,47 @@ func (l *Lexer) Lex() *[]tokens.Token {
 			tok.Type = tt
 			l.tokens = append(l.tokens, *tok)
 		case '(':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenLeftParen, string(l.next()), l.line, l.column))
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenLeftParen, string(l.next()), l.line, l.column-1))
 		case ')':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenRightParen, string(l.next()), l.line, l.column))
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenRightParen, string(l.next()), l.line, l.column-1))
 		case '{':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenLeftBrace, string(l.next()), l.line, l.column))
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenLeftBrace, string(l.next()), l.line, l.column-1))
 		case '}':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenRightBrace, string(l.next()), l.line, l.column))
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenRightBrace, string(l.next()), l.line, l.column-1))
 		case '=':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenAssign, string(l.next()), l.line, l.column))
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenAssign, string(l.next()), l.line, l.column-1))
+		case '/':
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenSlash, string(l.next()), l.line, l.column-1))
 		case ':':
 			if l.peek(1) == ':' {
 				tok := tokens.NewToken(tokens.TokenDoubleColon, string(l.next()), l.line, l.column)
 				tok.Value += string(l.next())
 				l.tokens = append(l.tokens, *tok)
 			} else {
-				l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenColon, string(l.next()), l.line, l.column))
+				l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenColon, string(l.next()), l.line, l.column-1))
 			}
 		case ';':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenSemicolon, string(l.next()), l.line, l.column))
+			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenSemicolon, string(l.next()), l.line, l.column-1))
 		case '"':
+			tok := tokens.NewToken(tokens.TokenString, "", l.line, l.column)
 			startPos := l.pos
-			tok := tokens.NewToken(tokens.TokenString, string(l.next()), l.line, l.column)
-			for l.isPrintable(l.peek(0)) && l.isEOF() && l.peek(0) != '\n' {
+			l.next() // eat "
+			for l.isPrintable(l.peek(0)) && !l.isEOF() && l.peek(0) != '\n' {
 				l.next()
 			}
 			if l.isEOF() || l.peek(0) == '\n' {
 				l.errors = append(l.errors, fmt.Errorf("unterminated string at %d:%d", l.line, l.column))
 				continue
 			}
-			l.next()
+			l.next() // eat "
 			tok.Value += l.input[startPos:l.pos]
 			l.tokens = append(l.tokens, *tok)
 		default:
 			if l.isChar(ch) {
+				tok := tokens.NewToken(tokens.TokenIllegal, "", l.line, l.column)
 				startPos := l.pos
-				tok := tokens.NewToken(tokens.TokenIllegal, string(l.next()), l.line, l.column)
-				for l.isChar(l.peek(0)) && l.isEOF() {
+				l.next()
+				for l.isChar(l.peek(0)) && !l.isEOF() {
 					l.next()
 				}
 				tok.Value += l.input[startPos:l.pos]
@@ -99,14 +104,15 @@ func (l *Lexer) Lex() *[]tokens.Token {
 				}
 				l.tokens = append(l.tokens, *tok)
 			} else if l.isDigit(ch) {
-				tok := tokens.NewToken(tokens.TokenNumber, string(l.next()), l.line, l.column)
+				tok := tokens.NewToken(tokens.TokenNumber, "", l.line, l.column)
 				startPos := l.pos
-				for l.isDigit(l.peek(0)) && l.isEOF() {
+				l.next()
+				for l.isDigit(l.peek(0)) && !l.isEOF() {
 					l.next()
 				}
 				if l.peek(0) == '.' {
 					l.next()
-					for l.isDigit(l.peek(0)) && l.isEOF() {
+					for l.isDigit(l.peek(0)) && !l.isEOF() {
 						l.next()
 					}
 				}
@@ -135,6 +141,7 @@ func (l *Lexer) next() byte {
 	}
 	c := l.input[l.pos]
 	l.pos++
+	l.column++
 	return c
 }
 
