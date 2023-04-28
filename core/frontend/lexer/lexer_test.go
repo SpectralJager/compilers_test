@@ -7,12 +7,14 @@ func TestLexer(t *testing.T) {
 @import "std" as std;
 
 @const pi:float = 3.14;
+
 @fn main:void() {
 	@var x:int = 2;
 	@set x = (std/floatToInt (add (std/intToFloat x) pi))
 	@if (eq x 10) {
 		(std/println (std/intToString x))
 	}
+	
 }
 `
 	lexer := NewLexer(code)

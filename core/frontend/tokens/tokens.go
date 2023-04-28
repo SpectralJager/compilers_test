@@ -126,7 +126,7 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%d:%d(Type %10s, Value %s)", t.Line, t.Column, tokenTypeMap[t.Type], t.Value)
+	return fmt.Sprintf("%d:%d(Type %s, Value %s)", t.Line, t.Column, tokenTypeMap[t.Type], t.Value)
 }
 
 func NewToken(tt TokenType, v string, lp, cp int) *Token {

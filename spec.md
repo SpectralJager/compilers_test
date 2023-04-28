@@ -4,17 +4,10 @@ Basic types:
 
 - strings 
 - integers
-- bool
+- boolean
 - float
-    - f64
 
 Data types:
-
-- List
-- Maps
-- Turple
-- Enum
-- Struct
 
 Keywords:
 
