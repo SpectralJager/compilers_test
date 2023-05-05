@@ -14,7 +14,6 @@ func TestLexer(t *testing.T) {
 	@if (eq x 10) {
 		(std/println (std/intToString x))
 	}
-	
 }
 `
 	lexer := NewLexer(code)
