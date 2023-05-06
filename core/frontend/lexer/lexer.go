@@ -125,6 +125,7 @@ func (l *Lexer) Lex() *[]tokens.Token {
 			}
 		}
 	}
+	l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenEOF, "", l.line, l.column))
 	return &l.tokens
 }
 

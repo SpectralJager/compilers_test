@@ -27,5 +27,5 @@ func TestLexer(t *testing.T) {
 	for _, tok := range *tokens {
 		t.Logf("%s\n", tok.String())
 	}
-	// t.FailNow()
+	t.FailNow()
 }
