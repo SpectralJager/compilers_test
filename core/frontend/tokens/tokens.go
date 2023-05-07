@@ -8,6 +8,11 @@ const (
 	TokenIllegal TokenType = iota
 	TokenEOF
 
+	// literals
+	TokenNumber
+	TokenString
+	TokenSymbol
+
 	// delimeters
 	TokenLeftParen
 	TokenRightParen
@@ -40,11 +45,8 @@ const (
 	TokenFalse
 	TokenTrue
 	TokenAs
-
-	// literals
-	TokenNumber
-	TokenString
-	TokenSymbol
+	TokenTo
+	TokenFrom
 )
 
 var tokenTypeMap = map[TokenType]string{
@@ -79,6 +81,8 @@ var tokenTypeMap = map[TokenType]string{
 	TokenFalse: "false",
 	TokenTrue:  "true",
 	TokenAs:    "as",
+	TokenTo:    "to",
+	TokenFrom:  "from",
 
 	TokenNumber: "NUMBER",
 	TokenString: "STRING",
@@ -110,6 +114,8 @@ var reservedMap = map[string]TokenType{
 	"false": TokenFalse,
 	"true":  TokenTrue,
 	"as":    TokenAs,
+	"to":    TokenTo,
+	"from":  TokenFrom,
 }
 
 func IsReserved(val string) (TokenType, bool) {

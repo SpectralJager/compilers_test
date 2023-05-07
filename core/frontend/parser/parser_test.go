@@ -13,6 +13,26 @@ func TestParser(t *testing.T) {
 
 	@fn sum:void(a:int b:int) {
 		@var res:int = (add a b);
+		@set res = (add res 2);
+		@if (eq res 10) {
+			(printf "res = 10")
+		} elif (eq res 15) {
+			(printf "res = 15")
+		} elif (eq res 20) {
+			(printf "res = 20")
+		} else {
+			(printf "res = %d" res)
+		}
+
+		@while false {
+			(printf "while")
+		} else {
+			(printf "else")
+		}
+
+		@for i from 0 to 10 {
+			(printf "%d" i)
+		}
 	}
 	`
 	lex := lexer.NewLexer(code)

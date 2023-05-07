@@ -52,9 +52,290 @@ func (p *Parser) parseLocal() ast.Locals {
 		return p.parseConst()
 	case tokens.TokenVar:
 		return p.parseVar()
+	case tokens.TokenSet:
+		return p.parseSet()
+	case tokens.TokenIf:
+		return p.parseIf()
+	case tokens.TokenLeftParen:
+		return p.parserExpression()
+	case tokens.TokenWhile:
+		return p.parseWhile()
+	case tokens.TokenFor:
+		return p.parseFor()
 	}
 	p.errors = append(p.errors, fmt.Errorf("unexpected token %v", tok.String()))
 	return nil
+}
+
+func (p *Parser) parseFor() *ast.ForSP {
+	forSP := new(ast.ForSP)
+
+	if !p.match(tokens.TokenFor) {
+		p.errors = append(p.errors, fmt.Errorf("expected @for, got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenSymbol) {
+		p.errors = append(p.errors, fmt.Errorf("expected SYMBOL, got %s", p.peek(0)))
+		return nil
+	}
+	forSP.Iterator = p.next()
+
+	if !p.match(tokens.TokenFrom) {
+		p.errors = append(p.errors, fmt.Errorf("expected 'from', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenNumber) {
+		p.errors = append(p.errors, fmt.Errorf("expected NUMBER, got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenTo) {
+		p.errors = append(p.errors, fmt.Errorf("expected 'to', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenNumber) {
+		p.errors = append(p.errors, fmt.Errorf("expected NUMBER, got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '{', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	for !p.match(tokens.TokenRightBrace) {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		forSP.Body = append(forSP.Body, res)
+	}
+
+	if !p.match(tokens.TokenRightBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '}', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	return forSP
+}
+
+func (p *Parser) parseWhile() *ast.WhileSP {
+	whileSP := new(ast.WhileSP)
+
+	if !p.match(tokens.TokenWhile) {
+		p.errors = append(p.errors, fmt.Errorf("expected @while, got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	exprArg := p.parseExprArg()
+	if exprArg == nil {
+		p.errors = append(p.errors, fmt.Errorf("expected ExpressionArg, got %s", p.peek(0)))
+		return nil
+	}
+	whileSP.Then = exprArg
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '{', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	for !p.match(tokens.TokenRightBrace) {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		whileSP.Body = append(whileSP.Body, res)
+	}
+
+	if !p.match(tokens.TokenRightBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '}', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if p.match(tokens.TokenElse) {
+		res := p.parseElse()
+		if res == nil {
+			return nil
+		}
+		whileSP.Else = res
+	}
+
+	return whileSP
+}
+
+func (p *Parser) parseIf() *ast.IfSP {
+	ifSP := new(ast.IfSP)
+
+	if !p.match(tokens.TokenIf) {
+		p.errors = append(p.errors, fmt.Errorf("expected @if, got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	exprArg := p.parseExprArg()
+	if exprArg == nil {
+		p.errors = append(p.errors, fmt.Errorf("expected ExpressionArg, got %s", p.peek(0)))
+		return nil
+	}
+	ifSP.Then = exprArg
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '{', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	for !p.match(tokens.TokenRightBrace) {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		ifSP.Body = append(ifSP.Body, res)
+	}
+
+	if !p.match(tokens.TokenRightBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '}', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	for p.match(tokens.TokenElif) {
+		res := p.parseElIf()
+		if res == nil {
+			return nil
+		}
+		ifSP.ElIf = append(ifSP.ElIf, *res)
+	}
+
+	if p.match(tokens.TokenElse) {
+		res := p.parseElse()
+		if res == nil {
+			return nil
+		}
+		ifSP.Else = res
+	}
+
+	return ifSP
+}
+
+func (p *Parser) parseElIf() *ast.ElIfSP {
+	elifSP := new(ast.ElIfSP)
+
+	if !p.match(tokens.TokenElif) {
+		p.errors = append(p.errors, fmt.Errorf("expected 'elif', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	exprArg := p.parseExprArg()
+	if exprArg == nil {
+		p.errors = append(p.errors, fmt.Errorf("expected ExpressionArg, got %s", p.peek(0)))
+		return nil
+	}
+	elifSP.Then = exprArg
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '{', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	for !p.match(tokens.TokenRightBrace) {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		elifSP.Body = append(elifSP.Body, res)
+	}
+
+	if !p.match(tokens.TokenRightBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '}', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	return elifSP
+}
+
+func (p *Parser) parseElse() *ast.ElseSP {
+	elseSP := new(ast.ElseSP)
+
+	if !p.match(tokens.TokenElse) {
+		p.errors = append(p.errors, fmt.Errorf("expected 'else', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '{', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	for !p.match(tokens.TokenRightBrace) {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		elseSP.Body = append(elseSP.Body, res)
+	}
+
+	if !p.match(tokens.TokenRightBrace) {
+		p.errors = append(p.errors, fmt.Errorf("expected '}', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	return elseSP
+}
+func (p *Parser) parseSet() *ast.SetSP {
+	setSP := new(ast.SetSP)
+
+	if !p.match(tokens.TokenSet) {
+		p.errors = append(p.errors, fmt.Errorf("expected @set, got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	if !p.match(tokens.TokenSymbol) {
+		p.errors = append(p.errors, fmt.Errorf("expected SYMBOL, got %s", p.peek(0)))
+		return nil
+	}
+	setSP.Symbol = p.next()
+
+	if !p.match(tokens.TokenAssign) {
+		p.errors = append(p.errors, fmt.Errorf("expected '=', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	exprArg := p.parseExprArg()
+	if exprArg == nil {
+		p.errors = append(p.errors, fmt.Errorf("expected ExpressionArg, got %s", p.peek(0)))
+		return nil
+	}
+	setSP.Value = exprArg
+
+	if !p.match(tokens.TokenSemicolon) {
+		p.errors = append(p.errors, fmt.Errorf("expected ';', got %s", p.peek(0)))
+		return nil
+	}
+	p.next()
+
+	return setSP
 }
 
 func (p *Parser) parseFn() *ast.FnSP {

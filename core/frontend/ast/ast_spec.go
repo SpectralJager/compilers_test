@@ -35,3 +35,55 @@ type FnSP struct {
 
 func (sp *FnSP) spec()   {}
 func (g *FnSP) globals() {}
+
+type SetSP struct {
+	Symbol tokens.Token
+	Value  ExpressionArg
+}
+
+func (sp *SetSP) spec()  {}
+func (l *SetSP) locals() {}
+
+type IfSP struct {
+	Then ExpressionArg
+	Body []Locals
+	ElIf []ElIfSP
+	Else *ElseSP
+}
+
+func (sp *IfSP) spec()  {}
+func (l *IfSP) locals() {}
+
+type ElIfSP struct {
+	Then ExpressionArg
+	Body []Locals
+}
+
+func (sp *ElIfSP) spec()  {}
+func (l *ElIfSP) locals() {}
+
+type ElseSP struct {
+	Body []Locals
+}
+
+func (sp *ElseSP) spec()  {}
+func (l *ElseSP) locals() {}
+
+type WhileSP struct {
+	Then ExpressionArg
+	Body []Locals
+	Else *ElseSP
+}
+
+func (sp *WhileSP) spec()  {}
+func (l *WhileSP) locals() {}
+
+type ForSP struct {
+	Iterator tokens.Token
+	From     tokens.Token
+	To       tokens.Token
+	Body     []Locals
+}
+
+func (sp *ForSP) spec()  {}
+func (l *ForSP) locals() {}

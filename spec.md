@@ -24,8 +24,8 @@ Keywords:
 - @lambda: 
   - `'@lambda' type '(' (SYMBOL ':' type)* ')' '{' locals+ '}'`
 - @if: 
-  - `'@if' expr '{' locals+ '}' ('elif' expr '{' locals+ '}')* ('else' expr '{' locals+ '}')?`
+  - `'@if' exprArg '{' locals+ '}' ('elif' exprArg '{' locals+ '}')* ('else' '{' locals+ '}')?`
 - @for: 
   - `'@for' SYMBOL ':' type 'from' atom 'to' atom '{' locals+ '}'`
 - @while: 
-  - `'@while' expr '{' locals+ '}'`
+  - `'@while' expr '{' locals+ '}' ('else' '{' locals+ '}')?`
