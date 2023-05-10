@@ -13,6 +13,7 @@ type Integer struct {
 }
 
 func (a *Integer) atom()     {}
+func (a *Integer) ast()      {}
 func (ex *Integer) exprArg() {}
 func (a *Integer) GetValue() string {
 	return a.Token.Value
@@ -24,6 +25,7 @@ type Float struct {
 }
 
 func (a *Float) atom()     {}
+func (a *Float) ast()      {}
 func (ex *Float) exprArg() {}
 func (a *Float) GetValue() string {
 	return a.Token.Value
@@ -35,6 +37,7 @@ type Boolean struct {
 }
 
 func (a *Boolean) atom()     {}
+func (a *Boolean) ast()      {}
 func (ex *Boolean) exprArg() {}
 func (a *Boolean) GetValue() string {
 	return a.Token.Value
@@ -46,6 +49,7 @@ type String struct {
 }
 
 func (a *String) atom()     {}
+func (a *String) ast()      {}
 func (ex *String) exprArg() {}
 func (a *String) GetValue() string {
 	return a.Token.Value
@@ -57,6 +61,7 @@ type Symbol struct {
 }
 
 func (a *Symbol) atom()     {}
+func (a *Symbol) ast()      {}
 func (ex *Symbol) exprArg() {}
 func (a *Symbol) GetValue() string {
 	return a.Token.Value

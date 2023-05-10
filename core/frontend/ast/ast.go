@@ -23,6 +23,8 @@ type Program struct {
 	Body []Globals
 }
 
+func (a *Program) ast() {}
+
 type TypeSymbol interface {
 	typeSymb()
 }
@@ -31,9 +33,12 @@ type SimpleType struct {
 	Symbol tokens.Token
 }
 
+func (a *SimpleType) ast()       {}
 func (ts *SimpleType) typeSymb() {}
 
 type FnParams struct {
 	Symbol tokens.Token
 	Type   TypeSymbol
 }
+
+func (a *FnParams) ast() {}

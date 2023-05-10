@@ -13,6 +13,7 @@ type Expression struct {
 	Args   []ExpressionArg
 }
 
+func (a *Expression) ast()      {}
 func (ea *Expression) exprArg() {}
 func (l *Expression) locals()   {}
 func (e *Expression) GetSymbol() string {

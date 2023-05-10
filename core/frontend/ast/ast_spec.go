@@ -13,6 +13,7 @@ type ConstSP struct {
 }
 
 func (sp *ConstSP) spec()   {}
+func (a *ConstSP) ast()     {}
 func (g *ConstSP) globals() {}
 func (l *ConstSP) locals()  {}
 
@@ -23,6 +24,7 @@ type VarSP struct {
 }
 
 func (sp *VarSP) spec()   {}
+func (a *VarSP) ast()     {}
 func (g *VarSP) globals() {}
 func (l *VarSP) locals()  {}
 
@@ -34,6 +36,7 @@ type FnSP struct {
 }
 
 func (sp *FnSP) spec()   {}
+func (a *FnSP) ast()     {}
 func (g *FnSP) globals() {}
 
 type SetSP struct {
@@ -42,6 +45,7 @@ type SetSP struct {
 }
 
 func (sp *SetSP) spec()  {}
+func (a *SetSP) ast()    {}
 func (l *SetSP) locals() {}
 
 type IfSP struct {
@@ -52,6 +56,7 @@ type IfSP struct {
 }
 
 func (sp *IfSP) spec()  {}
+func (a *IfSP) ast()    {}
 func (l *IfSP) locals() {}
 
 type ElIfSP struct {
@@ -60,6 +65,7 @@ type ElIfSP struct {
 }
 
 func (sp *ElIfSP) spec()  {}
+func (a *ElIfSP) ast()    {}
 func (l *ElIfSP) locals() {}
 
 type ElseSP struct {
@@ -67,6 +73,7 @@ type ElseSP struct {
 }
 
 func (sp *ElseSP) spec()  {}
+func (a *ElseSP) ast()    {}
 func (l *ElseSP) locals() {}
 
 type WhileSP struct {
@@ -76,6 +83,7 @@ type WhileSP struct {
 }
 
 func (sp *WhileSP) spec()  {}
+func (a *WhileSP) ast()    {}
 func (l *WhileSP) locals() {}
 
 type ForSP struct {
@@ -86,4 +94,5 @@ type ForSP struct {
 }
 
 func (sp *ForSP) spec()  {}
+func (a *ForSP) ast()    {}
 func (l *ForSP) locals() {}
