@@ -47,6 +47,8 @@ const (
 	TokenAs
 	TokenTo
 	TokenFrom
+	TokenList
+	TokenMap
 )
 
 var tokenTypeMap = map[TokenType]string{
@@ -83,6 +85,8 @@ var tokenTypeMap = map[TokenType]string{
 	TokenAs:    "as",
 	TokenTo:    "to",
 	TokenFrom:  "from",
+	TokenList:  "list",
+	TokenMap:   "map",
 
 	TokenNumber: "NUMBER",
 	TokenString: "STRING",
@@ -116,6 +120,8 @@ var reservedMap = map[string]TokenType{
 	"as":    TokenAs,
 	"to":    TokenTo,
 	"from":  TokenFrom,
+	"list":  TokenList,
+	"map":   TokenMap,
 }
 
 func IsReserved(val string) (TokenType, bool) {

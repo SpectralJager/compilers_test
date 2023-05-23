@@ -1,15 +1,12 @@
 package semantic
 
-// Scopes
-type Scope struct{}
-
 /*
 global pkgName |>
 	#symbolTable:
-		fn add: ...int -> int
-		fn sub: ...int -> int
-		fn mul: ...int -> int
-		fn div: ...int -> int
+		fn add: []int -> int
+		fn sub: []int -> int
+		fn mul: []int -> int
+		fn div: []int -> int
 		fn printf: format ...strings -> void
 		fn main: void -> void
 		const a:int
@@ -28,6 +25,3 @@ global pkgName |>
 			#symbolTable:
 				var i:int
 */
-
-// SYmbol table
-type SymbolTable struct{}
