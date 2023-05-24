@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// Meta
+type MetaData map[string]string
+
 // Nodes
 type Node interface {
 	json.Marshaler
@@ -18,6 +21,8 @@ func (n ConstNode) node()    {}
 func (n VarNode) node()      {}
 func (n SetNode) node()      {}
 func (n FunctionNode) node() {}
+func (n WhileNode) node()    {}
+func (n IfNode) node()       {}
 
 func (n ExpressionNode) node() {}
 func (n ParamNode) node()      {}
@@ -29,9 +34,9 @@ func (n BooleanNode) node() {}
 func (n SymbolNode) node()  {}
 
 type ProgramNode struct {
-	Package string            `json:"package"`
-	Body    []Node            `json:"body"`
-	Meta    map[string]string `json:"meta"`
+	Package string   `json:"package"`
+	Body    []Node   `json:"body"`
+	Meta    MetaData `json:"meta"`
 }
 
 func (progNode ProgramNode) MarshalJSON() ([]byte, error) {
@@ -40,10 +45,10 @@ func (progNode ProgramNode) MarshalJSON() ([]byte, error) {
 }
 
 type ConstNode struct {
-	Name     Node              `json:"name"`
-	DataType Node              `json:"dataType"`
-	Value    Node              `json:"value"`
-	Meta     map[string]string `json:"meta"`
+	Name     Node     `json:"name"`
+	DataType Node     `json:"dataType"`
+	Value    Node     `json:"value"`
+	Meta     MetaData `json:"meta"`
 }
 
 func (constNode ConstNode) MarshalJSON() ([]byte, error) {
@@ -52,10 +57,10 @@ func (constNode ConstNode) MarshalJSON() ([]byte, error) {
 }
 
 type VarNode struct {
-	Name     Node              `json:"name"`
-	DataType Node              `json:"dataType"`
-	Value    Node              `json:"value"`
-	Meta     map[string]string `json:"meta"`
+	Name     Node     `json:"name"`
+	DataType Node     `json:"dataType"`
+	Value    Node     `json:"value"`
+	Meta     MetaData `json:"meta"`
 }
 
 func (varNode VarNode) MarshalJSON() ([]byte, error) {
@@ -64,9 +69,9 @@ func (varNode VarNode) MarshalJSON() ([]byte, error) {
 }
 
 type SetNode struct {
-	Name  Node              `json:"name"`
-	Value Node              `json:"value"`
-	Meta  map[string]string `json:"meta"`
+	Name  Node     `json:"name"`
+	Value Node     `json:"value"`
+	Meta  MetaData `json:"meta"`
 }
 
 func (setNode SetNode) MarshalJSON() ([]byte, error) {
@@ -86,6 +91,29 @@ func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
 	return toJson(tmp(funcNode), "functionNode")
 }
 
+type WhileNode struct {
+	ConditionExpressions Node     `json:"conditionExpressions"`
+	ThenBody             []Node   `json:"thenBody"`
+	Meta                 MetaData `json:"meta"`
+}
+
+func (whileNode WhileNode) MarshalJSON() ([]byte, error) {
+	type tmp WhileNode
+	return toJson(tmp(whileNode), "whileNode")
+}
+
+type IfNode struct {
+	ConditionExpressions Node     `json:"conditionExpressions"`
+	ThenBody             []Node   `json:"thenBody"`
+	ElseBody             []Node   `json:"elseBody"`
+	Meta                 MetaData `json:"meta"`
+}
+
+func (ifNode IfNode) MarshalJSON() ([]byte, error) {
+	type tmp IfNode
+	return toJson(tmp(ifNode), "ifNode")
+}
+
 type ParamNode struct {
 	Name     Node              `json:"name"`
 	DataType Node              `json:"dataType"`
@@ -98,9 +126,9 @@ func (paramNode ParamNode) MarshalJSON() ([]byte, error) {
 }
 
 type ExpressionNode struct {
-	Function Node              `json:"function"`
-	Args     []Node            `json:"args"`
-	Meta     map[string]string `json:"meta"`
+	Function Node     `json:"function"`
+	Args     []Node   `json:"args"`
+	Meta     MetaData `json:"meta"`
 }
 
 func (exprNode ExpressionNode) MarshalJSON() ([]byte, error) {
@@ -110,6 +138,7 @@ func (exprNode ExpressionNode) MarshalJSON() ([]byte, error) {
 
 type IntegerNode struct {
 	Value tokens.Token `json:"value"`
+	Meta  MetaData     `json:"meta"`
 }
 
 func (intNode IntegerNode) MarshalJSON() ([]byte, error) {
@@ -119,6 +148,7 @@ func (intNode IntegerNode) MarshalJSON() ([]byte, error) {
 
 type FloatNode struct {
 	Value tokens.Token `json:"value"`
+	Meta  MetaData     `json:"meta"`
 }
 
 func (floatNode FloatNode) MarshalJSON() ([]byte, error) {
@@ -128,6 +158,7 @@ func (floatNode FloatNode) MarshalJSON() ([]byte, error) {
 
 type StringNode struct {
 	Value tokens.Token `json:"value"`
+	Meta  MetaData     `json:"meta"`
 }
 
 func (stringNode StringNode) MarshalJSON() ([]byte, error) {
@@ -137,6 +168,7 @@ func (stringNode StringNode) MarshalJSON() ([]byte, error) {
 
 type BooleanNode struct {
 	Value tokens.Token `json:"value"`
+	Meta  MetaData     `json:"meta"`
 }
 
 func (booleanNode BooleanNode) MarshalJSON() ([]byte, error) {
@@ -146,6 +178,7 @@ func (booleanNode BooleanNode) MarshalJSON() ([]byte, error) {
 
 type SymbolNode struct {
 	Value tokens.Token `json:"value"`
+	Meta  MetaData     `json:"meta"`
 }
 
 func (symbolNode SymbolNode) MarshalJSON() ([]byte, error) {
@@ -213,6 +246,10 @@ func (p *Parser) parseLocal() Node {
 		return p.parseVar()
 	case tokens.TokenSet:
 		return p.parseSet()
+	case tokens.TokenWhile:
+		return p.parseWhile()
+	case tokens.TokenIf:
+		return p.parseIf()
 	case tokens.TokenLeftParen:
 		return p.parseExpression()
 	default:
@@ -226,15 +263,15 @@ func (p *Parser) parseAtom() Node {
 	switch tok.Type {
 	case tokens.TokenNumber:
 		if strings.Contains(tok.Value, ".") {
-			return FloatNode{tok}
+			return FloatNode{tok, nil}
 		}
-		return IntegerNode{tok}
+		return IntegerNode{tok, nil}
 	case tokens.TokenString:
-		return StringNode{tok}
+		return StringNode{tok, nil}
 	case tokens.TokenTrue, tokens.TokenFalse:
-		return BooleanNode{tok}
+		return BooleanNode{tok, nil}
 	case tokens.TokenSymbol:
-		return SymbolNode{tok}
+		return SymbolNode{tok, nil}
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ATOM", tok.String()))
 		return nil
@@ -269,6 +306,106 @@ func (p *Parser) parseExpressionArgument() Node {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want EXPR_ARG", tok.String()))
 		return nil
 	}
+}
+
+func (p *Parser) parseIf() Node {
+	var ifNode IfNode
+
+	if !p.match(tokens.TokenIf) {
+		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'if'", p.peek(0).String()))
+		return nil
+	}
+	p.next()
+
+	res := p.parseExpressionArgument()
+	if res == nil {
+		return nil
+	}
+	ifNode.ConditionExpressions = res
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
+		return nil
+	}
+	p.next()
+
+	for p.peek(0).Type != tokens.TokenRightBrace {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		ifNode.ThenBody = append(ifNode.ThenBody, res)
+	}
+
+	if p.peek(0).Type != tokens.TokenRightBrace {
+		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
+		return nil
+	}
+	p.next()
+
+	if p.match(tokens.TokenElse) {
+		p.next()
+
+		if !p.match(tokens.TokenLeftBrace) {
+			p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
+			return nil
+		}
+		p.next()
+
+		for p.peek(0).Type != tokens.TokenRightBrace {
+			res := p.parseLocal()
+			if res == nil {
+				return nil
+			}
+			ifNode.ElseBody = append(ifNode.ElseBody, res)
+		}
+
+		if p.peek(0).Type != tokens.TokenRightBrace {
+			p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
+			return nil
+		}
+		p.next()
+	}
+
+	return ifNode
+}
+
+func (p *Parser) parseWhile() Node {
+	var whileNode WhileNode
+
+	if !p.match(tokens.TokenWhile) {
+		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'while'", p.peek(0).String()))
+		return nil
+	}
+	p.next()
+
+	res := p.parseExpressionArgument()
+	if res == nil {
+		return nil
+	}
+	whileNode.ConditionExpressions = res
+
+	if !p.match(tokens.TokenLeftBrace) {
+		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
+		return nil
+	}
+	p.next()
+
+	for p.peek(0).Type != tokens.TokenRightBrace {
+		res := p.parseLocal()
+		if res == nil {
+			return nil
+		}
+		whileNode.ThenBody = append(whileNode.ThenBody, res)
+	}
+
+	if p.peek(0).Type != tokens.TokenRightBrace {
+		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
+		return nil
+	}
+	p.next()
+
+	return whileNode
 }
 
 func (p *Parser) parseExpression() Node {
@@ -360,7 +497,7 @@ func (p *Parser) parseFunction() Node {
 		if res == nil {
 			return nil
 		}
-		functionNode.Body = append(functionNode.Params, res)
+		functionNode.Body = append(functionNode.Body, res)
 	}
 
 	if p.peek(0).Type != tokens.TokenRightBrace {

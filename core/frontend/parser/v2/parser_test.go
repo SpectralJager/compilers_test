@@ -13,6 +13,15 @@ func TestParser(t *testing.T) {
 @fn main:void() {
 	@const a:int = 1;
 	@set b = a;
+	@while (neq b 10) {
+		@set b = (add b 1);
+	}
+
+	@if (neg b 10) {
+		(printf "%d" b)
+	} else {
+		(printf "%d" (sub b 3))
+	}
 }
 	`
 	lex := lexer.NewLexer(code)
@@ -31,6 +40,6 @@ func TestParser(t *testing.T) {
 		}
 		t.FailNow()
 	}
-	data, _ := json.MarshalIndent(programm, "", "\t")
+	data, _ := json.MarshalIndent(programm, "|", "\t")
 	t.Fatalf("%s\n", data)
 }
