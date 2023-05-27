@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"encoding/json"
 	"gl/core/frontend/lexer"
 	"testing"
 )
@@ -16,7 +15,6 @@ func TestParser(t *testing.T) {
 	@while (neq b 10) {
 		@set b = (add b 1);
 	}
-
 	@if (neg b 10) {
 		(printf "%d" b)
 	} else {
@@ -33,13 +31,13 @@ func TestParser(t *testing.T) {
 		t.FailNow()
 	}
 	prs := NewParser(*tokens)
-	programm := prs.Parse()
+	_ = prs.Parse()
 	if len(prs.Errors()) != 0 {
 		for _, e := range prs.Errors() {
 			t.Logf("Error: %v", e)
 		}
 		t.FailNow()
 	}
-	data, _ := json.MarshalIndent(programm, "|", "\t")
-	t.Fatalf("%s\n", data)
+	// data, _ := json.MarshalIndent(programm, "", "  ")
+	// t.Fatalf("%s\n", data)
 }
