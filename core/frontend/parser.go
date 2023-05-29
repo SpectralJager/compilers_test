@@ -1,209 +1,21 @@
-package parser
+package frontend
 
 import (
-	"encoding/json"
 	"fmt"
-	"gl/core/frontend/tokens"
 	"strings"
 )
 
 // Meta
-type MetaData map[string]string
 
 // Nodes
-type Node interface {
-	json.Marshaler
-	node()
-}
-
-func (n ProgramNode) node()  {}
-func (n ConstNode) node()    {}
-func (n VarNode) node()      {}
-func (n SetNode) node()      {}
-func (n FunctionNode) node() {}
-func (n WhileNode) node()    {}
-func (n IfNode) node()       {}
-
-func (n ExpressionNode) node() {}
-func (n ParamNode) node()      {}
-
-func (n IntegerNode) node() {}
-func (n FloatNode) node()   {}
-func (n StringNode) node()  {}
-func (n BooleanNode) node() {}
-func (n SymbolNode) node()  {}
-
-type ProgramNode struct {
-	Package string   `json:"package"`
-	Body    []Node   `json:"body"`
-	Meta    MetaData `json:"meta"`
-}
-
-func (progNode ProgramNode) MarshalJSON() ([]byte, error) {
-	type tmp ProgramNode
-	return toJson(tmp(progNode), "programNode")
-}
-
-type ConstNode struct {
-	Name     Node     `json:"name"`
-	DataType Node     `json:"dataType"`
-	Value    Node     `json:"value"`
-	Meta     MetaData `json:"meta"`
-}
-
-func (constNode ConstNode) MarshalJSON() ([]byte, error) {
-	type tmp ConstNode
-	return toJson(tmp(constNode), "constNode")
-}
-
-type VarNode struct {
-	Name     Node     `json:"name"`
-	DataType Node     `json:"dataType"`
-	Value    Node     `json:"value"`
-	Meta     MetaData `json:"meta"`
-}
-
-func (varNode VarNode) MarshalJSON() ([]byte, error) {
-	type tmp VarNode
-	return toJson(tmp(varNode), "varNode")
-}
-
-type SetNode struct {
-	Name  Node     `json:"name"`
-	Value Node     `json:"value"`
-	Meta  MetaData `json:"meta"`
-}
-
-func (setNode SetNode) MarshalJSON() ([]byte, error) {
-	type tmp SetNode
-	return toJson(tmp(setNode), "setNode")
-}
-
-type FunctionNode struct {
-	Name       Node   `json:"name"`
-	ReturnType Node   `json:"returnType"`
-	Params     []Node `json:"params"`
-	Body       []Node `json:"body"`
-}
-
-func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
-	type tmp FunctionNode
-	return toJson(tmp(funcNode), "functionNode")
-}
-
-type WhileNode struct {
-	ConditionExpressions Node     `json:"conditionExpressions"`
-	ThenBody             []Node   `json:"thenBody"`
-	Meta                 MetaData `json:"meta"`
-}
-
-func (whileNode WhileNode) MarshalJSON() ([]byte, error) {
-	type tmp WhileNode
-	return toJson(tmp(whileNode), "whileNode")
-}
-
-type IfNode struct {
-	ConditionExpressions Node     `json:"conditionExpressions"`
-	ThenBody             []Node   `json:"thenBody"`
-	ElseBody             []Node   `json:"elseBody"`
-	Meta                 MetaData `json:"meta"`
-}
-
-func (ifNode IfNode) MarshalJSON() ([]byte, error) {
-	type tmp IfNode
-	return toJson(tmp(ifNode), "ifNode")
-}
-
-type ParamNode struct {
-	Name     Node              `json:"name"`
-	DataType Node              `json:"dataType"`
-	Meta     map[string]string `json:"meta"`
-}
-
-func (paramNode ParamNode) MarshalJSON() ([]byte, error) {
-	type tmp ParamNode
-	return toJson(tmp(paramNode), "paramNode")
-}
-
-type ExpressionNode struct {
-	Function Node     `json:"function"`
-	Args     []Node   `json:"args"`
-	Meta     MetaData `json:"meta"`
-}
-
-func (exprNode ExpressionNode) MarshalJSON() ([]byte, error) {
-	type tmp ExpressionNode
-	return toJson(tmp(exprNode), "expressionNode")
-}
-
-type IntegerNode struct {
-	Value tokens.Token `json:"value"`
-	Meta  MetaData     `json:"meta"`
-}
-
-func (intNode IntegerNode) MarshalJSON() ([]byte, error) {
-	type tmp IntegerNode
-	return toJson(tmp(intNode), "integerNode")
-}
-
-type FloatNode struct {
-	Value tokens.Token `json:"value"`
-	Meta  MetaData     `json:"meta"`
-}
-
-func (floatNode FloatNode) MarshalJSON() ([]byte, error) {
-	type tmp FloatNode
-	return toJson(tmp(floatNode), "floatNode")
-}
-
-type StringNode struct {
-	Value tokens.Token `json:"value"`
-	Meta  MetaData     `json:"meta"`
-}
-
-func (stringNode StringNode) MarshalJSON() ([]byte, error) {
-	type tmp StringNode
-	return toJson(tmp(stringNode), "stringNode")
-}
-
-type BooleanNode struct {
-	Value tokens.Token `json:"value"`
-	Meta  MetaData     `json:"meta"`
-}
-
-func (booleanNode BooleanNode) MarshalJSON() ([]byte, error) {
-	type tmp BooleanNode
-	return toJson(tmp(booleanNode), "booleanNode")
-}
-
-type SymbolNode struct {
-	Value tokens.Token `json:"value"`
-	Meta  MetaData     `json:"meta"`
-}
-
-func (symbolNode SymbolNode) MarshalJSON() ([]byte, error) {
-	type tmp SymbolNode
-	return toJson(tmp(symbolNode), "symbolNode")
-}
-
-// Helpers
-
-func toJson(v any, tp string) ([]byte, error) {
-	res, _ := json.Marshal(v)
-	var temp map[string]interface{}
-	json.Unmarshal(res, &temp)
-	temp["type"] = tp
-	return json.Marshal(temp)
-}
-
 // Parser
 type Parser struct {
-	tokens []tokens.Token
+	tokens []Token
 	pos    int
 	errors []error
 }
 
-func NewParser(tokens []tokens.Token) *Parser {
+func NewParser(tokens []Token) *Parser {
 	return &Parser{
 		tokens: tokens,
 	}
@@ -225,11 +37,11 @@ func (p *Parser) Parse() Node {
 func (p *Parser) parseGlobal() Node {
 	tok := p.peek(0)
 	switch tok.Type {
-	case tokens.TokenConst:
+	case TokenConst:
 		return p.parseConst()
-	case tokens.TokenVar:
+	case TokenVar:
 		return p.parseVar()
-	case tokens.TokenFn:
+	case TokenFn:
 		return p.parseFunction()
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want GLOBAL", tok.String()))
@@ -240,17 +52,17 @@ func (p *Parser) parseGlobal() Node {
 func (p *Parser) parseLocal() Node {
 	tok := p.peek(0)
 	switch tok.Type {
-	case tokens.TokenConst:
+	case TokenConst:
 		return p.parseConst()
-	case tokens.TokenVar:
+	case TokenVar:
 		return p.parseVar()
-	case tokens.TokenSet:
+	case TokenSet:
 		return p.parseSet()
-	case tokens.TokenWhile:
+	case TokenWhile:
 		return p.parseWhile()
-	case tokens.TokenIf:
+	case TokenIf:
 		return p.parseIf()
-	case tokens.TokenLeftParen:
+	case TokenLeftParen:
 		return p.parseExpression()
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want LOCAL", tok.String()))
@@ -261,17 +73,17 @@ func (p *Parser) parseLocal() Node {
 func (p *Parser) parseAtom() Node {
 	tok := p.next()
 	switch tok.Type {
-	case tokens.TokenNumber:
+	case TokenNumber:
 		if strings.Contains(tok.Value, ".") {
-			return FloatNode{tok, nil}
+			return FloatNode{Value: tok, Meta: nil}
 		}
-		return IntegerNode{tok, nil}
-	case tokens.TokenString:
-		return StringNode{tok, nil}
-	case tokens.TokenTrue, tokens.TokenFalse:
-		return BooleanNode{tok, nil}
-	case tokens.TokenSymbol:
-		return SymbolNode{tok, nil}
+		return IntegerNode{Value: tok, Meta: nil}
+	case TokenString:
+		return StringNode{Value: tok, Meta: nil}
+	case TokenTrue, TokenFalse:
+		return BooleanNode{Value: tok, Meta: nil}
+	case TokenSymbol:
+		return SymbolNode{Value: tok, Meta: nil}
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ATOM", tok.String()))
 		return nil
@@ -281,12 +93,12 @@ func (p *Parser) parseAtom() Node {
 func (p *Parser) parseDataType() Node {
 	tok := p.peek(0)
 	switch tok.Type {
-	case tokens.TokenSymbol:
+	case TokenSymbol:
 		return p.parseAtom()
-	case tokens.TokenList:
+	case TokenList:
 		p.errors = append(p.errors, fmt.Errorf("unimplemented"))
 		return nil
-	case tokens.TokenMap:
+	case TokenMap:
 		p.errors = append(p.errors, fmt.Errorf("unimplemented"))
 		return nil
 	default:
@@ -298,9 +110,9 @@ func (p *Parser) parseDataType() Node {
 func (p *Parser) parseExpressionArgument() Node {
 	tok := p.peek(0)
 	switch tok.Type {
-	case tokens.TokenSymbol, tokens.TokenNumber, tokens.TokenString, tokens.TokenTrue, tokens.TokenFalse:
+	case TokenSymbol, TokenNumber, TokenString, TokenTrue, TokenFalse:
 		return p.parseAtom()
-	case tokens.TokenLeftParen:
+	case TokenLeftParen:
 		return p.parseExpression()
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want EXPR_ARG", tok.String()))
@@ -311,7 +123,7 @@ func (p *Parser) parseExpressionArgument() Node {
 func (p *Parser) parseIf() Node {
 	var ifNode IfNode
 
-	if !p.match(tokens.TokenIf) {
+	if !p.match(TokenIf) {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'if'", p.peek(0).String()))
 		return nil
 	}
@@ -323,13 +135,13 @@ func (p *Parser) parseIf() Node {
 	}
 	ifNode.ConditionExpressions = res
 
-	if !p.match(tokens.TokenLeftBrace) {
+	if !p.match(TokenLeftBrace) {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	for p.peek(0).Type != tokens.TokenRightBrace {
+	for p.peek(0).Type != TokenRightBrace {
 		res := p.parseLocal()
 		if res == nil {
 			return nil
@@ -337,22 +149,22 @@ func (p *Parser) parseIf() Node {
 		ifNode.ThenBody = append(ifNode.ThenBody, res)
 	}
 
-	if p.peek(0).Type != tokens.TokenRightBrace {
+	if p.peek(0).Type != TokenRightBrace {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	if p.match(tokens.TokenElse) {
+	if p.match(TokenElse) {
 		p.next()
 
-		if !p.match(tokens.TokenLeftBrace) {
+		if !p.match(TokenLeftBrace) {
 			p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
 			return nil
 		}
 		p.next()
 
-		for p.peek(0).Type != tokens.TokenRightBrace {
+		for p.peek(0).Type != TokenRightBrace {
 			res := p.parseLocal()
 			if res == nil {
 				return nil
@@ -360,7 +172,7 @@ func (p *Parser) parseIf() Node {
 			ifNode.ElseBody = append(ifNode.ElseBody, res)
 		}
 
-		if p.peek(0).Type != tokens.TokenRightBrace {
+		if p.peek(0).Type != TokenRightBrace {
 			p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
 			return nil
 		}
@@ -373,7 +185,7 @@ func (p *Parser) parseIf() Node {
 func (p *Parser) parseWhile() Node {
 	var whileNode WhileNode
 
-	if !p.match(tokens.TokenWhile) {
+	if !p.match(TokenWhile) {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'while'", p.peek(0).String()))
 		return nil
 	}
@@ -385,13 +197,13 @@ func (p *Parser) parseWhile() Node {
 	}
 	whileNode.ConditionExpressions = res
 
-	if !p.match(tokens.TokenLeftBrace) {
+	if !p.match(TokenLeftBrace) {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	for p.peek(0).Type != tokens.TokenRightBrace {
+	for p.peek(0).Type != TokenRightBrace {
 		res := p.parseLocal()
 		if res == nil {
 			return nil
@@ -399,7 +211,7 @@ func (p *Parser) parseWhile() Node {
 		whileNode.ThenBody = append(whileNode.ThenBody, res)
 	}
 
-	if p.peek(0).Type != tokens.TokenRightBrace {
+	if p.peek(0).Type != TokenRightBrace {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
 		return nil
 	}
@@ -411,7 +223,7 @@ func (p *Parser) parseWhile() Node {
 func (p *Parser) parseExpression() Node {
 	var expressionNode ExpressionNode
 
-	if p.peek(0).Type != tokens.TokenLeftParen {
+	if p.peek(0).Type != TokenLeftParen {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '('", p.peek(0).String()))
 		return nil
 	}
@@ -423,7 +235,7 @@ func (p *Parser) parseExpression() Node {
 	}
 	expressionNode.Function = res
 
-	for p.peek(0).Type != tokens.TokenRightParen {
+	for p.peek(0).Type != TokenRightParen {
 		res := p.parseExpressionArgument()
 		if res == nil {
 			return nil
@@ -431,7 +243,7 @@ func (p *Parser) parseExpression() Node {
 		expressionNode.Args = append(expressionNode.Args, res)
 	}
 
-	if p.peek(0).Type != tokens.TokenRightParen {
+	if p.peek(0).Type != TokenRightParen {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ')'", p.peek(0).String()))
 		return nil
 	}
@@ -442,19 +254,19 @@ func (p *Parser) parseExpression() Node {
 func (p *Parser) parseFunction() Node {
 	var functionNode FunctionNode
 
-	if p.peek(0).Type != tokens.TokenFn {
+	if p.peek(0).Type != TokenFn {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'fn'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	if p.peek(0).Type != tokens.TokenSymbol {
+	if p.peek(0).Type != TokenSymbol {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want SYMBOL", p.peek(0).String()))
 		return nil
 	}
 	functionNode.Name = p.parseAtom()
 
-	if p.peek(0).Type != tokens.TokenColon {
+	if p.peek(0).Type != TokenColon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ':'", p.peek(0).String()))
 		return nil
 	}
@@ -466,13 +278,13 @@ func (p *Parser) parseFunction() Node {
 	}
 	functionNode.ReturnType = res
 
-	if p.peek(0).Type != tokens.TokenLeftParen {
+	if p.peek(0).Type != TokenLeftParen {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '('", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	for p.peek(0).Type != tokens.TokenRightParen {
+	for p.peek(0).Type != TokenRightParen {
 		res := p.parseParameterNode()
 		if res == nil {
 			return nil
@@ -480,19 +292,19 @@ func (p *Parser) parseFunction() Node {
 		functionNode.Params = append(functionNode.Params, res)
 	}
 
-	if p.peek(0).Type != tokens.TokenRightParen {
+	if p.peek(0).Type != TokenRightParen {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ')'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	if p.peek(0).Type != tokens.TokenLeftBrace {
+	if p.peek(0).Type != TokenLeftBrace {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '{'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	for p.peek(0).Type != tokens.TokenRightBrace {
+	for p.peek(0).Type != TokenRightBrace {
 		res := p.parseLocal()
 		if res == nil {
 			return nil
@@ -500,7 +312,7 @@ func (p *Parser) parseFunction() Node {
 		functionNode.Body = append(functionNode.Body, res)
 	}
 
-	if p.peek(0).Type != tokens.TokenRightBrace {
+	if p.peek(0).Type != TokenRightBrace {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '}'", p.peek(0).String()))
 		return nil
 	}
@@ -512,13 +324,13 @@ func (p *Parser) parseFunction() Node {
 func (p *Parser) parseParameterNode() Node {
 	var paramNode ParamNode
 
-	if p.peek(0).Type != tokens.TokenSymbol {
+	if p.peek(0).Type != TokenSymbol {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want SYMBOL", p.peek(0).String()))
 		return nil
 	}
 	paramNode.Name = p.parseAtom()
 
-	if p.peek(0).Type != tokens.TokenColon {
+	if p.peek(0).Type != TokenColon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ':'", p.peek(0).String()))
 		return nil
 	}
@@ -536,19 +348,19 @@ func (p *Parser) parseParameterNode() Node {
 func (p *Parser) parseVar() Node {
 	var varNode VarNode
 
-	if p.peek(0).Type != tokens.TokenVar {
+	if p.peek(0).Type != TokenVar {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'var'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	if p.peek(0).Type != tokens.TokenSymbol {
+	if p.peek(0).Type != TokenSymbol {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want SYMBOL", p.peek(0).String()))
 		return nil
 	}
 	varNode.Name = p.parseAtom()
 
-	if p.peek(0).Type != tokens.TokenColon {
+	if p.peek(0).Type != TokenColon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ':'", p.peek(0).String()))
 		return nil
 	}
@@ -560,7 +372,7 @@ func (p *Parser) parseVar() Node {
 	}
 	varNode.DataType = res
 
-	if p.peek(0).Type != tokens.TokenAssign {
+	if p.peek(0).Type != TokenAssign {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '='", p.peek(0).String()))
 		return nil
 	}
@@ -572,7 +384,7 @@ func (p *Parser) parseVar() Node {
 	}
 	varNode.Value = res
 
-	if p.peek(0).Type != tokens.TokenSemicolon {
+	if p.peek(0).Type != TokenSemicolon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ';'", p.peek(0).String()))
 		return nil
 	}
@@ -584,19 +396,19 @@ func (p *Parser) parseVar() Node {
 func (p *Parser) parseSet() Node {
 	var setNode SetNode
 
-	if p.peek(0).Type != tokens.TokenSet {
+	if p.peek(0).Type != TokenSet {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'var'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	if p.peek(0).Type != tokens.TokenSymbol {
+	if p.peek(0).Type != TokenSymbol {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want SYMBOL", p.peek(0).String()))
 		return nil
 	}
 	setNode.Name = p.parseAtom()
 
-	if p.peek(0).Type != tokens.TokenAssign {
+	if p.peek(0).Type != TokenAssign {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '='", p.peek(0).String()))
 		return nil
 	}
@@ -608,7 +420,7 @@ func (p *Parser) parseSet() Node {
 	}
 	setNode.Value = res
 
-	if p.peek(0).Type != tokens.TokenSemicolon {
+	if p.peek(0).Type != TokenSemicolon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ';'", p.peek(0).String()))
 		return nil
 	}
@@ -620,19 +432,19 @@ func (p *Parser) parseSet() Node {
 func (p *Parser) parseConst() Node {
 	var constNode ConstNode
 
-	if p.peek(0).Type != tokens.TokenConst {
+	if p.peek(0).Type != TokenConst {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want 'const'", p.peek(0).String()))
 		return nil
 	}
 	p.next()
 
-	if p.peek(0).Type != tokens.TokenSymbol {
+	if p.peek(0).Type != TokenSymbol {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want SYMBOL", p.peek(0).String()))
 		return nil
 	}
 	constNode.Name = p.parseAtom()
 
-	if p.peek(0).Type != tokens.TokenColon {
+	if p.peek(0).Type != TokenColon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ':'", p.peek(0).String()))
 		return nil
 	}
@@ -644,7 +456,7 @@ func (p *Parser) parseConst() Node {
 	}
 	constNode.DataType = res
 
-	if p.peek(0).Type != tokens.TokenAssign {
+	if p.peek(0).Type != TokenAssign {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want '='", p.peek(0).String()))
 		return nil
 	}
@@ -656,7 +468,7 @@ func (p *Parser) parseConst() Node {
 	}
 	constNode.Value = res
 
-	if p.peek(0).Type != tokens.TokenSemicolon {
+	if p.peek(0).Type != TokenSemicolon {
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ';'", p.peek(0).String()))
 		return nil
 	}
@@ -666,17 +478,17 @@ func (p *Parser) parseConst() Node {
 }
 
 // parser utilities
-func (p *Parser) match(expected tokens.TokenType) bool {
+func (p *Parser) match(expected TokenType) bool {
 	return p.peek(0).Type == expected
 }
 
-func (p *Parser) next() tokens.Token {
+func (p *Parser) next() Token {
 	tok := p.peek(0)
 	p.pos += 1
 	return tok
 }
 
-func (p *Parser) peek(n int) tokens.Token {
+func (p *Parser) peek(n int) Token {
 	if p.pos+n >= len(p.tokens) {
 		return p.tokens[len(p.tokens)-1]
 	}
@@ -684,7 +496,7 @@ func (p *Parser) peek(n int) tokens.Token {
 }
 
 func (p *Parser) isEOF() bool {
-	return p.match(tokens.TokenEOF)
+	return p.match(TokenEOF)
 }
 
 func (p *Parser) Errors() []error {

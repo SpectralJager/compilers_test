@@ -1,7 +1,6 @@
-package parser
+package frontend
 
 import (
-	"gl/core/frontend/lexer"
 	"testing"
 )
 
@@ -22,7 +21,7 @@ func TestParser(t *testing.T) {
 	}
 }
 	`
-	lex := lexer.NewLexer(code)
+	lex := NewLexer(code)
 	tokens := lex.Lex()
 	if len(lex.Error()) != 0 {
 		for _, e := range lex.Error() {
@@ -60,7 +59,7 @@ func TestParseConst(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseConst()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)
@@ -91,7 +90,7 @@ func TestParseVar(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseVar()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)
@@ -122,7 +121,7 @@ func TestParseSet(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseSet()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)
@@ -151,7 +150,7 @@ func TestParseIf(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseIf()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)
@@ -179,7 +178,7 @@ func TestParseWhile(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseWhile()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)
@@ -210,7 +209,7 @@ func TestParseFn(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseFunction()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)
@@ -239,7 +238,7 @@ func TestParseExpression(t *testing.T) {
 
 	for _, tc := range td {
 		t.Run(tc.code, func(t *testing.T) {
-			parser := NewParser(*lexer.NewLexer(tc.code).Lex())
+			parser := NewParser(*NewLexer(tc.code).Lex())
 			result := parser.parseExpression()
 			if (result == nil) != tc.isNil {
 				t.Logf("Expected to be nil -- %v, got %v", tc.isNil, result)

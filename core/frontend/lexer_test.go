@@ -1,4 +1,4 @@
-package lexer
+package frontend
 
 import (
 	"io/ioutil"

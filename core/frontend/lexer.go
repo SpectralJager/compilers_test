@@ -1,13 +1,12 @@
-package lexer
+package frontend
 
 import (
 	"fmt"
-	"gl/core/frontend/tokens"
 )
 
 type Lexer struct {
 	input  string
-	tokens []tokens.Token
+	tokens []Token
 	errors []error
 
 	pos    int
@@ -21,7 +20,7 @@ func NewLexer(input string) *Lexer {
 	}
 }
 
-func (l *Lexer) Lex() *[]tokens.Token {
+func (l *Lexer) Lex() *[]Token {
 	for !l.isEOF() {
 		ch := l.peek(0)
 		switch ch {
@@ -34,7 +33,7 @@ func (l *Lexer) Lex() *[]tokens.Token {
 		case ' ', '\t':
 			l.next()
 		case '@':
-			tok := tokens.NewToken(tokens.TokenIllegal, "", l.line, l.column)
+			tok := NewToken(TokenIllegal, "", l.line, l.column)
 			startPos := l.pos
 			l.next()
 			for {
@@ -45,36 +44,36 @@ func (l *Lexer) Lex() *[]tokens.Token {
 				l.next()
 			}
 			tok.Value += l.input[startPos:l.pos]
-			tt, ok := tokens.IsKeyword(tok.Value)
+			tt, ok := IsKeyword(tok.Value)
 			if !ok {
 				l.errors = append(l.errors, fmt.Errorf("unknown keyword %s", tok.String()))
 			}
 			tok.Type = tt
 			l.tokens = append(l.tokens, *tok)
 		case '(':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenLeftParen, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenLeftParen, string(l.next()), l.line, l.column-1))
 		case ')':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenRightParen, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenRightParen, string(l.next()), l.line, l.column-1))
 		case '{':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenLeftBrace, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenLeftBrace, string(l.next()), l.line, l.column-1))
 		case '}':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenRightBrace, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenRightBrace, string(l.next()), l.line, l.column-1))
 		case '=':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenAssign, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenAssign, string(l.next()), l.line, l.column-1))
 		case '/':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenSlash, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenSlash, string(l.next()), l.line, l.column-1))
 		case ':':
 			if l.peek(1) == ':' {
-				tok := tokens.NewToken(tokens.TokenDoubleColon, string(l.next()), l.line, l.column)
+				tok := NewToken(TokenDoubleColon, string(l.next()), l.line, l.column)
 				tok.Value += string(l.next())
 				l.tokens = append(l.tokens, *tok)
 			} else {
-				l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenColon, string(l.next()), l.line, l.column-1))
+				l.tokens = append(l.tokens, *NewToken(TokenColon, string(l.next()), l.line, l.column-1))
 			}
 		case ';':
-			l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenSemicolon, string(l.next()), l.line, l.column-1))
+			l.tokens = append(l.tokens, *NewToken(TokenSemicolon, string(l.next()), l.line, l.column-1))
 		case '"':
-			tok := tokens.NewToken(tokens.TokenString, "", l.line, l.column)
+			tok := NewToken(TokenString, "", l.line, l.column)
 			startPos := l.pos
 			l.next() // eat "
 			for l.isPrintable(l.peek(0)) && !l.isEOF() && l.peek(0) != '\n' {
@@ -89,22 +88,22 @@ func (l *Lexer) Lex() *[]tokens.Token {
 			l.tokens = append(l.tokens, *tok)
 		default:
 			if l.isChar(ch) {
-				tok := tokens.NewToken(tokens.TokenIllegal, "", l.line, l.column)
+				tok := NewToken(TokenIllegal, "", l.line, l.column)
 				startPos := l.pos
 				l.next()
 				for l.isChar(l.peek(0)) && !l.isEOF() {
 					l.next()
 				}
 				tok.Value += l.input[startPos:l.pos]
-				tt, ok := tokens.IsReserved(tok.Value)
+				tt, ok := IsReserved(tok.Value)
 				if !ok {
-					tok.Type = tokens.TokenSymbol
+					tok.Type = TokenSymbol
 				} else {
 					tok.Type = tt
 				}
 				l.tokens = append(l.tokens, *tok)
 			} else if l.isDigit(ch) {
-				tok := tokens.NewToken(tokens.TokenNumber, "", l.line, l.column)
+				tok := NewToken(TokenNumber, "", l.line, l.column)
 				startPos := l.pos
 				l.next()
 				for l.isDigit(l.peek(0)) && !l.isEOF() {
@@ -125,7 +124,7 @@ func (l *Lexer) Lex() *[]tokens.Token {
 			}
 		}
 	}
-	l.tokens = append(l.tokens, *tokens.NewToken(tokens.TokenEOF, "", l.line, l.column))
+	l.tokens = append(l.tokens, *NewToken(TokenEOF, "", l.line, l.column))
 	return &l.tokens
 }
 

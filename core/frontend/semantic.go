@@ -1,7 +1,12 @@
-package semantic
+package frontend
+
+import (
+	"fmt"
+)
 
 /*
 global pkgName |>
+
 	#symbolTable:
 		fn add: []int -> int
 		fn sub: []int -> int
@@ -25,3 +30,17 @@ global pkgName |>
 			#symbolTable:
 				var i:int
 */
+type MetaData map[string]string
+
+func CollectMeta(node Node) error {
+	switch node := node.(type) {
+	case *ProgramNode:
+		return _ProgrammMeta(node)
+	default:
+		return fmt.Errorf("unexpected node type %T", node)
+	}
+}
+
+func _ProgrammMeta(node *ProgramNode) error {
+	return nil
+}
