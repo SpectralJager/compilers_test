@@ -5,9 +5,6 @@ import (
 	"strings"
 )
 
-// Meta
-
-// Nodes
 // Parser
 type Parser struct {
 	tokens []Token
@@ -30,7 +27,7 @@ func (p *Parser) Parse() Node {
 		}
 		programNode.Body = append(programNode.Body, result)
 	}
-	return programNode
+	return &programNode
 }
 
 // Parse functions
@@ -75,15 +72,15 @@ func (p *Parser) parseAtom() Node {
 	switch tok.Type {
 	case TokenNumber:
 		if strings.Contains(tok.Value, ".") {
-			return FloatNode{Value: tok, Meta: nil}
+			return &FloatNode{Value: tok, Meta: nil}
 		}
-		return IntegerNode{Value: tok, Meta: nil}
+		return &IntegerNode{Value: tok, Meta: nil}
 	case TokenString:
-		return StringNode{Value: tok, Meta: nil}
+		return &StringNode{Value: tok, Meta: nil}
 	case TokenTrue, TokenFalse:
-		return BooleanNode{Value: tok, Meta: nil}
+		return &BooleanNode{Value: tok, Meta: nil}
 	case TokenSymbol:
-		return SymbolNode{Value: tok, Meta: nil}
+		return &SymbolNode{Value: tok, Meta: nil}
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ATOM", tok.String()))
 		return nil
@@ -179,7 +176,7 @@ func (p *Parser) parseIf() Node {
 		p.next()
 	}
 
-	return ifNode
+	return &ifNode
 }
 
 func (p *Parser) parseWhile() Node {
@@ -217,7 +214,7 @@ func (p *Parser) parseWhile() Node {
 	}
 	p.next()
 
-	return whileNode
+	return &whileNode
 }
 
 func (p *Parser) parseExpression() Node {
@@ -249,7 +246,7 @@ func (p *Parser) parseExpression() Node {
 	}
 	p.next()
 
-	return expressionNode
+	return &expressionNode
 }
 func (p *Parser) parseFunction() Node {
 	var functionNode FunctionNode
@@ -318,7 +315,7 @@ func (p *Parser) parseFunction() Node {
 	}
 	p.next()
 
-	return functionNode
+	return &functionNode
 }
 
 func (p *Parser) parseParameterNode() Node {
@@ -342,7 +339,7 @@ func (p *Parser) parseParameterNode() Node {
 	}
 	paramNode.DataType = res
 
-	return paramNode
+	return &paramNode
 }
 
 func (p *Parser) parseVar() Node {
@@ -390,7 +387,7 @@ func (p *Parser) parseVar() Node {
 	}
 	p.next()
 
-	return varNode
+	return &varNode
 }
 
 func (p *Parser) parseSet() Node {
@@ -426,7 +423,7 @@ func (p *Parser) parseSet() Node {
 	}
 	p.next()
 
-	return setNode
+	return &setNode
 }
 
 func (p *Parser) parseConst() Node {
@@ -474,7 +471,7 @@ func (p *Parser) parseConst() Node {
 	}
 	p.next()
 
-	return constNode
+	return &constNode
 }
 
 // parser utilities
