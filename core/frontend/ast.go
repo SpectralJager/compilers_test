@@ -73,10 +73,11 @@ func (setNode SetNode) MarshalJSON() ([]byte, error) {
 }
 
 type FunctionNode struct {
-	Name       Node   `json:"name"`
-	ReturnType Node   `json:"returnType"`
-	Params     []Node `json:"params"`
-	Body       []Node `json:"body"`
+	Name       Node     `json:"name"`
+	ReturnType Node     `json:"returnType"`
+	Params     []Node   `json:"params"`
+	Body       []Node   `json:"body"`
+	Meta       MetaData `json:"meta"`
 }
 
 func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
@@ -130,8 +131,7 @@ func (exprNode ExpressionNode) MarshalJSON() ([]byte, error) {
 }
 
 type IntegerNode struct {
-	Value Token    `json:"value"`
-	Meta  MetaData `json:"meta"`
+	Value Token `json:"value"`
 }
 
 func (intNode IntegerNode) MarshalJSON() ([]byte, error) {
@@ -140,8 +140,7 @@ func (intNode IntegerNode) MarshalJSON() ([]byte, error) {
 }
 
 type FloatNode struct {
-	Value Token    `json:"value"`
-	Meta  MetaData `json:"meta"`
+	Value Token `json:"value"`
 }
 
 func (floatNode FloatNode) MarshalJSON() ([]byte, error) {
@@ -150,8 +149,7 @@ func (floatNode FloatNode) MarshalJSON() ([]byte, error) {
 }
 
 type StringNode struct {
-	Value Token    `json:"value"`
-	Meta  MetaData `json:"meta"`
+	Value Token `json:"value"`
 }
 
 func (stringNode StringNode) MarshalJSON() ([]byte, error) {
@@ -160,8 +158,7 @@ func (stringNode StringNode) MarshalJSON() ([]byte, error) {
 }
 
 type BooleanNode struct {
-	Value Token    `json:"value"`
-	Meta  MetaData `json:"meta"`
+	Value Token `json:"value"`
 }
 
 func (booleanNode BooleanNode) MarshalJSON() ([]byte, error) {
@@ -170,8 +167,7 @@ func (booleanNode BooleanNode) MarshalJSON() ([]byte, error) {
 }
 
 type SymbolNode struct {
-	Value Token    `json:"value"`
-	Meta  MetaData `json:"meta"`
+	Value Token `json:"value"`
 }
 
 func (symbolNode SymbolNode) MarshalJSON() ([]byte, error) {

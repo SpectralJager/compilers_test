@@ -72,15 +72,25 @@ func (p *Parser) parseAtom() Node {
 	switch tok.Type {
 	case TokenNumber:
 		if strings.Contains(tok.Value, ".") {
-			return &FloatNode{Value: tok, Meta: nil}
+			return &FloatNode{
+				Value: tok,
+			}
 		}
-		return &IntegerNode{Value: tok, Meta: nil}
+		return &IntegerNode{
+			Value: tok,
+		}
 	case TokenString:
-		return &StringNode{Value: tok, Meta: nil}
+		return &StringNode{
+			Value: tok,
+		}
 	case TokenTrue, TokenFalse:
-		return &BooleanNode{Value: tok, Meta: nil}
+		return &BooleanNode{
+			Value: tok,
+		}
 	case TokenSymbol:
-		return &SymbolNode{Value: tok, Meta: nil}
+		return &SymbolNode{
+			Value: tok,
+		}
 	default:
 		p.errors = append(p.errors, fmt.Errorf("unexpected token %s, want ATOM", tok.String()))
 		return nil

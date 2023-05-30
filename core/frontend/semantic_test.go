@@ -5,14 +5,18 @@ import (
 	"testing"
 )
 
-func TestSemantic(t *testing.T) {
+func TestCollectMeta(t *testing.T) {
 	code := `
 @const alpha:int = 12;
-@var x:float = 12.2;
-@fn main:void(a:int b:float) {}
+@var beta:float = 12.2;
+@fn main:void(a:int b:float) {
+	@const alpha:string = "alpha";
+	@var gamma:string = "gamma";
+	(iadd a 12)
+}
 	`
 	programm := NewParser(*NewLexer(code).Lex()).Parse()
-	if err := CollectMeta(programm); err != nil {
+	if err := CollectMeta(programm.(*ProgramNode)); err != nil {
 		t.Fatal(err)
 	}
 	data, _ := json.MarshalIndent(programm, "", "  ")

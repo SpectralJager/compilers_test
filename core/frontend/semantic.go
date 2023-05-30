@@ -40,13 +40,6 @@ func (md MetaData) appendSymbol(symbol string, definition SymbolDefinition) erro
 	return symbolTable.(SymbolTable).appendSymbol(symbol, definition)
 }
 
-// scopes
-type ScopeKind string
-
-const (
-	ScopeGlobal ScopeKind = "global"
-)
-
 // symbol table
 type SymbolTable map[string]SymbolDefinition
 
@@ -101,18 +94,8 @@ func (df DataTypeDefinition) String() string {
 	return fmt.Sprintf("%s type", df.Kind)
 }
 
-func CollectMeta(node Node) error {
-	switch node := node.(type) {
-	case *ProgramNode:
-		return _programmMeta(node)
-	default:
-		return fmt.Errorf("unexpected node type %T", node)
-	}
-}
-
-func _programmMeta(node *ProgramNode) error {
+func CollectMeta(node *ProgramNode) error {
 	node.Meta = make(MetaData)
-	node.Meta["scope"] = string(ScopeGlobal)
 	node.Meta["symbolTable"] = make(SymbolTable)
 	node.Meta.appendSymbol("int", DataTypeDefinition{"buildin"})
 	node.Meta.appendSymbol("float", DataTypeDefinition{"buildin"})
@@ -122,40 +105,30 @@ func _programmMeta(node *ProgramNode) error {
 	for _, item := range node.Body {
 		switch item := item.(type) {
 		case *ConstNode:
-			symbol := resolveSymbol(item.Name.(*SymbolNode))
-			dataType, err := resolveDataTypeFromNode(item.DataType)
+			err := _constMeta(item)
 			if err != nil {
 				return err
 			}
-			if err := node.Meta.appendSymbol(symbol, ConstantDefinition{dataType}); err != nil {
+			err = node.Meta.appendSymbol(item.Meta["name"].(string), ConstantDefinition{item.Meta["type"].(string)})
+			if err != nil {
 				return err
 			}
 		case *VarNode:
-			symbol := resolveSymbol(item.Name.(*SymbolNode))
-			dataType, err := resolveDataTypeFromNode(item.DataType)
+			err := _varMeta(item)
 			if err != nil {
 				return err
 			}
-			if err := node.Meta.appendSymbol(symbol, VaribleDefinition{dataType}); err != nil {
+			err = node.Meta.appendSymbol(item.Meta["name"].(string), VaribleDefinition{item.Meta["type"].(string)})
+			if err != nil {
 				return err
 			}
 		case *FunctionNode:
-			symbol := resolveSymbol(item.Name.(*SymbolNode))
-			dataType, err := resolveDataTypeFromNode(item.ReturnType)
+			err := _funcMeta(item)
 			if err != nil {
 				return err
 			}
-			definition := FunctionDefinition{
-				Return: dataType,
-			}
-			for _, arg := range item.Params {
-				dataType, err = resolveDataTypeFromNode(arg.(*ParamNode).DataType)
-				if err != nil {
-					return err
-				}
-				definition.Args = append(definition.Args, dataType)
-			}
-			if err := node.Meta.appendSymbol(symbol, definition); err != nil {
+			err = node.Meta.appendSymbol(item.Meta["name"].(string), FunctionDefinition{item.Meta["returnType"].(string), item.Meta["paramsType"].([]string)})
+			if err != nil {
 				return err
 			}
 		default:
@@ -165,8 +138,107 @@ func _programmMeta(node *ProgramNode) error {
 	return nil
 }
 
+func _constMeta(node *ConstNode) error {
+	node.Meta = make(MetaData)
+	node.Meta["name"] = resolveSymbol(node.Name.(*SymbolNode))
+	dataType, err := resolveDataTypeFromNode(node.DataType)
+	if err != nil {
+		return err
+	}
+	node.Meta["type"] = dataType
+	value, err := resolveValueFromNode(node.Value)
+	if err != nil {
+		return err
+	}
+	node.Meta["value"] = value
+	return nil
+}
+
+func _varMeta(node *VarNode) error {
+	node.Meta = make(MetaData)
+	node.Meta["name"] = resolveSymbol(node.Name.(*SymbolNode))
+	dataType, err := resolveDataTypeFromNode(node.DataType)
+	if err != nil {
+		return err
+	}
+	node.Meta["type"] = dataType
+	return nil
+}
+
+func _funcMeta(node *FunctionNode) error {
+	node.Meta = make(MetaData)
+	node.Meta["symbolTable"] = make(SymbolTable)
+	node.Meta["name"] = resolveSymbol(node.Name.(*SymbolNode))
+	returnType, err := resolveDataTypeFromNode(node.ReturnType)
+	if err != nil {
+		return err
+	}
+	node.Meta["returnType"] = returnType
+	node.Meta["paramsType"] = []string{}
+	for _, item := range node.Params {
+		err := _paramMeta(item.(*ParamNode))
+		if err != nil {
+			return err
+		}
+		node.Meta["paramsType"] = append(node.Meta["paramsType"].([]string), item.(*ParamNode).Meta["dataType"].(string))
+		err = node.Meta.appendSymbol(item.(*ParamNode).Meta["name"].(string), VaribleDefinition{item.(*ParamNode).Meta["dataType"].(string)})
+		if err != nil {
+			return err
+		}
+	}
+	for _, item := range node.Body {
+		switch item := item.(type) {
+		case *ConstNode:
+			err := _constMeta(item)
+			if err != nil {
+				return err
+			}
+			err = node.Meta.appendSymbol(item.Meta["name"].(string), ConstantDefinition{item.Meta["type"].(string)})
+			if err != nil {
+				return err
+			}
+		case *VarNode:
+			err := _varMeta(item)
+			if err != nil {
+				return err
+			}
+			err = node.Meta.appendSymbol(item.Meta["name"].(string), VaribleDefinition{item.Meta["type"].(string)})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func _paramMeta(node *ParamNode) error {
+	node.Meta = make(MetaData)
+	node.Meta["name"] = resolveSymbol(node.Name.(*SymbolNode))
+	dataType, err := resolveDataTypeFromNode(node.DataType)
+	if err != nil {
+		return err
+	}
+	node.Meta["dataType"] = dataType
+	return nil
+}
+
 func resolveSymbol(node *SymbolNode) string {
 	return node.Value.Value
+}
+
+func resolveValueFromNode(node Node) (string, error) {
+	switch value := node.(type) {
+	case *IntegerNode:
+		return value.Value.Value, nil
+	case *FloatNode:
+		return value.Value.Value, nil
+	case *BooleanNode:
+		return value.Value.Value, nil
+	case *StringNode:
+		return value.Value.Value, nil
+	default:
+		return "", fmt.Errorf("can't use %T as const value", value)
+	}
 }
 
 func resolveDataTypeFromNode(node Node) (string, error) {
