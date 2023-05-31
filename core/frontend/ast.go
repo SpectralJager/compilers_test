@@ -27,9 +27,8 @@ func (n BooleanNode) node() {}
 func (n SymbolNode) node()  {}
 
 type ProgramNode struct {
-	Package string   `json:"package"`
-	Body    []Node   `json:"body"`
-	Meta    MetaData `json:"meta"`
+	Package string `json:"package"`
+	Body    []Node `json:"body"`
 }
 
 func (progNode ProgramNode) MarshalJSON() ([]byte, error) {
@@ -38,10 +37,9 @@ func (progNode ProgramNode) MarshalJSON() ([]byte, error) {
 }
 
 type ConstNode struct {
-	Name     Node     `json:"name"`
-	DataType Node     `json:"dataType"`
-	Value    Node     `json:"value"`
-	Meta     MetaData `json:"meta"`
+	Name     Node `json:"name"`
+	DataType Node `json:"dataType"`
+	Value    Node `json:"value"`
 }
 
 func (constNode ConstNode) MarshalJSON() ([]byte, error) {
@@ -50,10 +48,9 @@ func (constNode ConstNode) MarshalJSON() ([]byte, error) {
 }
 
 type VarNode struct {
-	Name     Node     `json:"name"`
-	DataType Node     `json:"dataType"`
-	Value    Node     `json:"value"`
-	Meta     MetaData `json:"meta"`
+	Name     Node `json:"name"`
+	DataType Node `json:"dataType"`
+	Value    Node `json:"value"`
 }
 
 func (varNode VarNode) MarshalJSON() ([]byte, error) {
@@ -62,9 +59,8 @@ func (varNode VarNode) MarshalJSON() ([]byte, error) {
 }
 
 type SetNode struct {
-	Name  Node     `json:"name"`
-	Value Node     `json:"value"`
-	Meta  MetaData `json:"meta"`
+	Name  Node `json:"name"`
+	Value Node `json:"value"`
 }
 
 func (setNode SetNode) MarshalJSON() ([]byte, error) {
@@ -73,11 +69,10 @@ func (setNode SetNode) MarshalJSON() ([]byte, error) {
 }
 
 type FunctionNode struct {
-	Name       Node     `json:"name"`
-	ReturnType Node     `json:"returnType"`
-	Params     []Node   `json:"params"`
-	Body       []Node   `json:"body"`
-	Meta       MetaData `json:"meta"`
+	Name       Node   `json:"name"`
+	ReturnType Node   `json:"returnType"`
+	Params     []Node `json:"params"`
+	Body       []Node `json:"body"`
 }
 
 func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
@@ -86,9 +81,8 @@ func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
 }
 
 type WhileNode struct {
-	ConditionExpressions Node     `json:"conditionExpressions"`
-	ThenBody             []Node   `json:"thenBody"`
-	Meta                 MetaData `json:"meta"`
+	ConditionExpressions Node   `json:"conditionExpressions"`
+	ThenBody             []Node `json:"thenBody"`
 }
 
 func (whileNode WhileNode) MarshalJSON() ([]byte, error) {
@@ -97,10 +91,9 @@ func (whileNode WhileNode) MarshalJSON() ([]byte, error) {
 }
 
 type IfNode struct {
-	ConditionExpressions Node     `json:"conditionExpressions"`
-	ThenBody             []Node   `json:"thenBody"`
-	ElseBody             []Node   `json:"elseBody"`
-	Meta                 MetaData `json:"meta"`
+	ConditionExpressions Node   `json:"conditionExpressions"`
+	ThenBody             []Node `json:"thenBody"`
+	ElseBody             []Node `json:"elseBody"`
 }
 
 func (ifNode IfNode) MarshalJSON() ([]byte, error) {
@@ -109,9 +102,8 @@ func (ifNode IfNode) MarshalJSON() ([]byte, error) {
 }
 
 type ParamNode struct {
-	Name     Node     `json:"name"`
-	DataType Node     `json:"dataType"`
-	Meta     MetaData `json:"meta"`
+	Name     Node `json:"name"`
+	DataType Node `json:"dataType"`
 }
 
 func (paramNode ParamNode) MarshalJSON() ([]byte, error) {
@@ -120,9 +112,8 @@ func (paramNode ParamNode) MarshalJSON() ([]byte, error) {
 }
 
 type ExpressionNode struct {
-	Function Node     `json:"function"`
-	Args     []Node   `json:"args"`
-	Meta     MetaData `json:"meta"`
+	Function Node   `json:"function"`
+	Args     []Node `json:"args"`
 }
 
 func (exprNode ExpressionNode) MarshalJSON() ([]byte, error) {

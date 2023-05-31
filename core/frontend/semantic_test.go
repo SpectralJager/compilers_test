@@ -7,7 +7,7 @@ import (
 
 func TestCollectMeta(t *testing.T) {
 	code := `
-@const alpha:int = 12;
+@const alpha:int = 12.12;
 @var beta:float = 12.2;
 @fn main:void(a:int b:float) {
 	@const alpha:string = "alpha";
@@ -16,9 +16,6 @@ func TestCollectMeta(t *testing.T) {
 }
 	`
 	programm := NewParser(*NewLexer(code).Lex()).Parse()
-	if err := CollectMeta(programm.(*ProgramNode)); err != nil {
-		t.Fatal(err)
-	}
 	data, _ := json.MarshalIndent(programm, "", "  ")
 	t.Fatalf("%s\n", data)
 }
