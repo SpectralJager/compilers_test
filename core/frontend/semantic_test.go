@@ -7,15 +7,18 @@ import (
 
 func TestCollectMeta(t *testing.T) {
 	code := `
-@const alpha:int = 12.12;
-@var beta:float = 12.2;
-@fn main:void(a:int b:float) {
-	@const alpha:string = "alpha";
-	@var gamma:string = "gamma";
-	(iadd a 12)
-}
+@const alpha:int = 12;
+@var beta:int = (iaddTwo alpha 1.1);
 	`
 	programm := NewParser(*NewLexer(code).Lex()).Parse()
-	data, _ := json.MarshalIndent(programm, "", "  ")
+	programm.(*ProgramNode).Package = "test"
+	ctx := NewSemanticContext()
+	ctx["buildin"] = NewSymbolTable("buildin")
+	semanticAnalyser := NewSemanticAnalyser(ctx)
+	err := semanticAnalyser.Semantic(programm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := json.MarshalIndent(ctx, "", "  ")
 	t.Fatalf("%s\n", data)
 }
