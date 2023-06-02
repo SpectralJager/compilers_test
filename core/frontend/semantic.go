@@ -165,12 +165,65 @@ func (s *SemanticAnalyser) searchSymbol(symbol string) (SymbolDefinition, string
 	return nil, "undefined", fmt.Errorf("undefined symbol %s", symbol)
 }
 
-func (s *SemanticAnalyser) Semantic(node Node) error {
+func (s *SemanticAnalyser) CollectSymbols(node Node) error {
 	switch node := node.(type) {
 	case *ProgramNode:
 		programmScope := fmt.Sprintf("global_%s", node.Package)
 		s.pushScope(programmScope)
 		s.ctx[programmScope] = NewSymbolTable("global")
+		for _, item := range node.Body {
+			err := s.CollectSymbols(item)
+			if err != nil {
+				return err
+			}
+		}
+		s.popScope()
+		return nil
+	case *ConstNode:
+		symbol := resolveSymbol(node.Name.(*SymbolNode))
+		dataType := resolveDataType(node.DataType)
+		s.currentSymbolTable().AddSymbol(symbol, NewConstDefinition(dataType, ""))
+		return nil
+	case *VarNode:
+		symbol := resolveSymbol(node.Name.(*SymbolNode))
+		dataType := resolveDataType(node.DataType)
+		s.currentSymbolTable().AddSymbol(symbol, NewVarDefinition(dataType))
+		return nil
+	case *FunctionNode:
+		symbol := resolveSymbol(node.Name.(*SymbolNode))
+		returnType := resolveDataType(node.ReturnType)
+		funcScope := fmt.Sprintf("function_%s", symbol)
+		s.pushScope(funcScope)
+		s.ctx[funcScope] = NewSymbolTable("global")
+		argsDataType := []string{}
+		for _, item := range node.Params {
+			paramSymbol := resolveSymbol(item.(*ParamNode).Name.(*SymbolNode))
+			dataType := resolveDataType(item.(*ParamNode).DataType)
+			argsDataType = append(argsDataType, dataType)
+			s.currentSymbolTable().AddSymbol(paramSymbol, NewVarDefinition(dataType))
+		}
+		s.popScope()
+		s.currentSymbolTable().AddSymbol(symbol, NewFuncDefinition(returnType, argsDataType...))
+		s.pushScope(funcScope)
+		for _, item := range node.Body {
+			err := s.CollectSymbols(item)
+			if err != nil {
+				return err
+			}
+		}
+		s.popScope()
+		return nil
+	default:
+		return nil
+	}
+
+}
+
+func (s *SemanticAnalyser) Semantic(node Node) error {
+	switch node := node.(type) {
+	case *ProgramNode:
+		programmScope := fmt.Sprintf("global_%s", node.Package)
+		s.pushScope(programmScope)
 		for _, item := range node.Body {
 			err := s.Semantic(item)
 			if err != nil {
@@ -204,7 +257,7 @@ func (s *SemanticAnalyser) Semantic(node Node) error {
 				return err
 			}
 		}
-		s.currentSymbolTable().AddSymbol(symbol, NewConstDefinition(dataType, value))
+		s.currentSymbolTable()[symbol] = NewConstDefinition(dataType, value)
 		return nil
 	case *VarNode:
 		symbol := resolveSymbol(node.Name.(*SymbolNode))
@@ -231,7 +284,36 @@ func (s *SemanticAnalyser) Semantic(node Node) error {
 				return err
 			}
 		}
-		s.currentSymbolTable().AddSymbol(symbol, NewVarDefinition(dataType))
+		return nil
+	case *FunctionNode:
+		symbol := resolveSymbol(node.Name.(*SymbolNode))
+		returnType := resolveDataType(node.ReturnType)
+		def, _, err := s.searchSymbol(returnType)
+		if err != nil {
+			return err
+		}
+		if def.getType() != "dataType" {
+			return fmt.Errorf("%s is not dataType", returnType)
+		}
+		funcScope := fmt.Sprintf("function_%s", symbol)
+		s.pushScope(funcScope)
+		for _, item := range node.Params {
+			dataType := resolveDataType(item.(*ParamNode).DataType)
+			def, _, err := s.searchSymbol(dataType)
+			if err != nil {
+				return err
+			}
+			if def.getType() != "dataType" {
+				return fmt.Errorf("%s is not dataType", dataType)
+			}
+		}
+		for _, item := range node.Body {
+			err := s.Semantic(item)
+			if err != nil {
+				return err
+			}
+		}
+		s.popScope()
 		return nil
 	case *ExpressionNode:
 		symbol := resolveSymbol(node.Function.(*SymbolNode))
