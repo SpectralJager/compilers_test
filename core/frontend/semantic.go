@@ -1,6 +1,8 @@
 package frontend
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"strings"
 )
@@ -50,6 +52,7 @@ func NewSymbolTable(scopeLevel string) SymbolTable {
 		// primitive data types
 		table.AddSymbol("int", NewDataTypeDefinition("buildin"))
 		table.AddSymbol("float", NewDataTypeDefinition("buildin"))
+		table.AddSymbol("bool", NewDataTypeDefinition("buildin"))
 		// integer functions
 		table.AddSymbol("iadd", NewFuncDefinition("int", "...int"))
 		table.AddSymbol("isub", NewFuncDefinition("int", "...int"))
@@ -63,6 +66,8 @@ func NewSymbolTable(scopeLevel string) SymbolTable {
 		table.AddSymbol("fmul", NewFuncDefinition("float", "...float"))
 		table.AddSymbol("fdiv", NewFuncDefinition("float", "...float"))
 		table.AddSymbol("intToFloat", NewFuncDefinition("float", "int"))
+		// boolean functions
+		table.AddSymbol("ilt", NewFuncDefinition("bool", "...int"))
 	}
 	return table
 }
@@ -170,6 +175,7 @@ func (s *SemanticAnalyser) CollectSymbols(node Node) error {
 	case *ProgramNode:
 		programmScope := fmt.Sprintf("global_%s", node.Package)
 		s.pushScope(programmScope)
+		node.ScopeName = programmScope
 		s.ctx[programmScope] = NewSymbolTable("global")
 		for _, item := range node.Body {
 			err := s.CollectSymbols(item)
@@ -194,7 +200,8 @@ func (s *SemanticAnalyser) CollectSymbols(node Node) error {
 		returnType := resolveDataType(node.ReturnType)
 		funcScope := fmt.Sprintf("function_%s", symbol)
 		s.pushScope(funcScope)
-		s.ctx[funcScope] = NewSymbolTable("global")
+		node.ScopeName = funcScope
+		s.ctx[funcScope] = NewSymbolTable("local")
 		argsDataType := []string{}
 		for _, item := range node.Params {
 			paramSymbol := resolveSymbol(item.(*ParamNode).Name.(*SymbolNode))
@@ -284,6 +291,7 @@ func (s *SemanticAnalyser) Semantic(node Node) error {
 				return err
 			}
 		}
+		s.currentSymbolTable()[symbol] = NewVarDefinition(dataType)
 		return nil
 	case *FunctionNode:
 		symbol := resolveSymbol(node.Name.(*SymbolNode))
@@ -352,6 +360,66 @@ func (s *SemanticAnalyser) Semantic(node Node) error {
 			}
 		}
 		return nil
+	case *IfNode:
+		condValueType, _, err := s.resolveValue(node.ConditionExpressions)
+		if err != nil {
+			return err
+		}
+		if condValueType != "bool" {
+			return fmt.Errorf("cant use %s as condition dataType, expected bool", condValueType)
+		}
+		token := GenerateToken(12)
+		if token == "undefined" {
+			return fmt.Errorf("cant generate token")
+		}
+		fnName := strings.Split(s.top(), "_")[1]
+		node.ScopeName = fmt.Sprintf("%s_%s", fnName, token)
+		scope := fmt.Sprintf("%s_ifBody_%s", fnName, token)
+		s.pushScope(scope)
+		s.ctx[scope] = NewSymbolTable("local")
+		for _, item := range node.ThenBody {
+			err := s.Semantic(item)
+			if err != nil {
+				return err
+			}
+		}
+		s.popScope()
+		scope = fmt.Sprintf("%s_elseBody_%s", fnName, token)
+		s.pushScope(scope)
+		s.ctx[scope] = NewSymbolTable("local")
+		for _, item := range node.ElseBody {
+			err := s.Semantic(item)
+			if err != nil {
+				return err
+			}
+		}
+		s.popScope()
+		return nil
+	case *WhileNode:
+		condValueType, _, err := s.resolveValue(node.ConditionExpressions)
+		if err != nil {
+			return err
+		}
+		if condValueType != "bool" {
+			return fmt.Errorf("cant use %s as condition dataType, expected bool", condValueType)
+		}
+		token := GenerateToken(12)
+		if token == "undefined" {
+			return fmt.Errorf("cant generate token")
+		}
+		fnName := strings.Split(s.top(), "_")[1]
+		node.ScopeName = fmt.Sprintf("%s_%s", fnName, token)
+		scope := fmt.Sprintf("%s_while_%s", fnName, token)
+		s.pushScope(scope)
+		s.ctx[scope] = NewSymbolTable("local")
+		for _, item := range node.ThenBody {
+			err := s.Semantic(item)
+			if err != nil {
+				return err
+			}
+		}
+		s.popScope()
+		return nil
 	default:
 		return fmt.Errorf("unexpected type %T during semantic analysis", node)
 	}
@@ -376,6 +444,8 @@ func (s *SemanticAnalyser) resolveValue(node Node) (string, string, error) {
 		return "int", val.Value.Value, nil
 	case *FloatNode:
 		return "float", val.Value.Value, nil
+	case *BooleanNode:
+		return "bool", val.Value.Value, nil
 	case *SymbolNode:
 		symbol := resolveSymbol(val)
 		def, _, err := s.searchSymbol(symbol)
@@ -404,4 +474,12 @@ func (s *SemanticAnalyser) resolveValue(node Node) (string, string, error) {
 	default:
 		return "undefined", "", fmt.Errorf("unsupported valuet type %T", val)
 	}
+}
+
+func GenerateToken(length int) string {
+	data := make([]byte, length)
+	if _, err := rand.Read(data); err != nil {
+		return "undefined"
+	}
+	return hex.EncodeToString(data)
 }

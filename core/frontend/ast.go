@@ -27,8 +27,9 @@ func (n BooleanNode) node() {}
 func (n SymbolNode) node()  {}
 
 type ProgramNode struct {
-	Package string `json:"package"`
-	Body    []Node `json:"body"`
+	Package   string `json:"package"`
+	Body      []Node `json:"body"`
+	ScopeName string
 }
 
 func (progNode ProgramNode) MarshalJSON() ([]byte, error) {
@@ -73,6 +74,7 @@ type FunctionNode struct {
 	ReturnType Node   `json:"returnType"`
 	Params     []Node `json:"params"`
 	Body       []Node `json:"body"`
+	ScopeName  string
 }
 
 func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
@@ -83,6 +85,7 @@ func (funcNode FunctionNode) MarshalJSON() ([]byte, error) {
 type WhileNode struct {
 	ConditionExpressions Node   `json:"conditionExpressions"`
 	ThenBody             []Node `json:"thenBody"`
+	ScopeName            string
 }
 
 func (whileNode WhileNode) MarshalJSON() ([]byte, error) {
@@ -94,6 +97,7 @@ type IfNode struct {
 	ConditionExpressions Node   `json:"conditionExpressions"`
 	ThenBody             []Node `json:"thenBody"`
 	ElseBody             []Node `json:"elseBody"`
+	ScopeName            string
 }
 
 func (ifNode IfNode) MarshalJSON() ([]byte, error) {

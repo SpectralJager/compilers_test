@@ -8,15 +8,27 @@ import (
 func TestCollectMeta(t *testing.T) {
 	code := `
 @const alpha:int = 12;
-@fn sum:int(a:int b:int) {
-	@var result:int = (iadd a b);
-}
-@var beta:int = (sum alpha 12);
 
 @fn main:int() {
 	@var a:int = 12;
-	(sum beta)
+	@if (ilt a 10) {
+		@var l:int = 2;
+		(sum beta a)
+	} else {
+		(sum a alpha)
+	}
+	@while (ilt a 10) {
+		@var i:int = 0;
+		(iadd i 1)
+		(iadd a 1)
+	}
 }
+
+@fn sum:int(a:int b:int) {
+	@var result:int = (iadd a b);
+}
+
+@var beta:int = (sum alpha 12);
 	`
 	programm := NewParser(*NewLexer(code).Lex()).Parse()
 	programm.(*ProgramNode).Package = "test"
