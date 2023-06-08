@@ -55,7 +55,3 @@ func NewHaltInstruction() *Instruction {
 		ArgSize:  0,
 	}
 }
-
-type Generator struct {
-	ctx SemanticContext
-}
