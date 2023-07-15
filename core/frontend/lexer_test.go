@@ -18,17 +18,17 @@ func TestLexer(t *testing.T) {
 }
 `
 	lexer := NewLexer(code)
-	lexer.Lex()
+	tokens := lexer.Lex()
 	if len(lexer.errors) != 0 {
 		for _, e := range lexer.errors {
 			t.Logf("Error: %v", e)
 		}
 		t.FailNow()
 	}
-	// for _, tok := range *tokens {
-	// 	t.Logf("%s\n", tok.String())
-	// }
-	// t.FailNow()
+	for _, tok := range *tokens {
+		t.Logf("%s\n", tok.String())
+	}
+	t.FailNow()
 }
 
 func BenchmarkLexer100(b *testing.B) {

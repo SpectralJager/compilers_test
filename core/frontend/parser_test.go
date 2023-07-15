@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -30,15 +31,15 @@ func TestParser(t *testing.T) {
 		t.FailNow()
 	}
 	prs := NewParser(*tokens)
-	_ = prs.Parse()
+	programm := prs.Parse()
 	if len(prs.Errors()) != 0 {
 		for _, e := range prs.Errors() {
 			t.Logf("Error: %v", e)
 		}
 		t.FailNow()
 	}
-	// data, _ := json.MarshalIndent(programm, "", "  ")
-	// t.Fatalf("%s\n", data)
+	data, _ := json.MarshalIndent(programm, "", "  ")
+	t.Fatalf("%s\n", data)
 }
 
 func TestParseConst(t *testing.T) {
