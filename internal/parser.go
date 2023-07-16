@@ -60,7 +60,15 @@ var (
 			&MultiVar{},
 			&SingleImport{},
 			&MultiImport{},
-			&Enum{},
+			&Struct{},
+			&Function{},
+		),
+		participle.Union[Local](
+			&SingleConst{},
+			&MultiConst{},
+			&SingleVar{},
+			&MultiVar{},
+			&Expression{},
 		),
 		participle.Union[DataType](
 			&ComplexType{},
@@ -82,6 +90,7 @@ var (
 			&Expression{},
 			&List{},
 			&Map{},
+			&Symbol{},
 		),
 	)
 )
@@ -94,6 +103,29 @@ type Atom interface{ at() }
 
 type Program struct {
 	Body []Global `parser:"@@+"`
+}
+
+type Function struct {
+	Ident      string        `parser:"'@fn' @Symbol"`
+	ReturnType DataType      `parser:"':'@@"`
+	Args       []IdentDef    `parser:"'(' @@* ')'"`
+	ErrorEnum  PrimitiveType `parser:"@@?"`
+	Body       Local         `parser:"'{' @@* '}'"`
+}
+
+func (gl *Function) gl() {}
+
+type Struct struct {
+	Ident   string     `parser:"'@struct' @Symbol '{'"`
+	Fields  []IdentDef `parser:"@@+"`
+	Methods []Function `parser:"@@* '}'"`
+}
+
+func (gl *Struct) gl() {}
+
+type IdentDef struct {
+	Ident string   `parser:"@Symbol"`
+	Type  DataType `parser:"':' @@"`
 }
 
 type Enum struct {
@@ -131,12 +163,14 @@ type SingleConst struct {
 }
 
 func (gl *SingleConst) gl() {}
+func (lc *SingleConst) lc() {}
 
 type MultiConst struct {
 	Consts []ConstBody `parser:"'@const' '{' @@+ '}'"`
 }
 
 func (gl *MultiConst) gl() {}
+func (lc *MultiConst) lc() {}
 
 type ConstBody struct {
 	Ident string   `parser:"@Symbol ':'"`
@@ -149,12 +183,14 @@ type SingleVar struct {
 }
 
 func (gl *SingleVar) gl() {}
+func (lc *SingleVar) lc() {}
 
 type MultiVar struct {
 	Vars []VarBody `parser:"'@var' '{' @@+ '}'"`
 }
 
 func (gl *MultiVar) gl() {}
+func (lc *MultiVar) lc() {}
 
 type VarBody struct {
 	Ident string   `parser:"@Symbol ':'"`
@@ -181,6 +217,13 @@ type Expression struct {
 }
 
 func (ex *Expression) ex() {}
+func (lc *Expression) lc() {}
+
+type Symbol struct {
+	Ident string `parser:"@Symbol"`
+}
+
+func (ea *Symbol) ex() {}
 
 type Integer struct {
 	Value string `parser:"@Integer"`

@@ -1,48 +1,47 @@
-## Code file
 ```
-@import {
-  "std" as std
+// function stmts
+@fn main(x:int y:float) <int> {...}
+
+// varible stmts
+@var x:int = 1;
+@var x:float = 1.0;
+@var x:string = "hello world";
+@var x:bool = false;
+@var y:list<int> = '(1 2 3);
+@var y:map<string, int> = #("string" -> 1);
+
+// expressions
+(function arg1 arg2)
+
+// condition stmts
+@if (leq a b) {
+  ...
+}
+@if (leq a b) {
+  ...
+} else {
+  ...
+}
+@if (leq a b) {
+  ...
+} (neq a b) {
+  ...
+} else {
+  ...
 }
 
-@const {
-  a:Int = 1
+// loop stmts
+@for i:int <> 0...10 {
+  ...
+}
+@while (eq a b) {
+  ...
+}
+@each val:int <> '(1 2 3) {
+  ...
 }
 
-@var {
-  str:String = "hello world"
-  list:List<String> = ["hello" "world"]
-  map:Map<String, String> = {"hello"::"world"}
-}
-
-@enum errors:Error {
-  ErrNoError => Error("")
-  ErrNotImplemented => Error("not implemented")
-}
-
-@struct Struct {
-  a:Int
-  b:String
-  fn getA:<Int, errors>() {
-    return this.a, ErrNoError
-  }
-}
-
-@interface IO {
-  Read:Int(String)
-  Write:Int(String)
-}
-
-@fn main:Int() {
-  @return 0, ner
-}
-```
-
-## Fragment file
-
-```
-<code>
-</code>
-
-<ui>
-</ui>
+// other stmts
+@return ...;
+@set a = 1;
 ```

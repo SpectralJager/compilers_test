@@ -35,14 +35,18 @@ func main() {
 		#("3"::3 "4"::4))
 }
 
-@enum test:Int {
-	first -> 1
-	second -> 2
+@struct Test {
+	a:Int
+	b:String
+	complex:List<Map<String,Int>>
+	
+	@fn print:Void(a:Int b:String complex:List<Map<String,Int>>){
+		(printf "a:%d b:%s" a b)
+	}
 }
 
-@enum test {
-	first
-	second
+@fn main:Int(a:Int b:String complex:List<Map<String,Int>>) {
+	(printf "a:%d b:%s" a b)
 }
 	`
 	lex, err := internal.Def.LexString("", code)
@@ -63,10 +67,10 @@ func main() {
 	res, err := internal.Parser.ParseString("", code, participle.Trace(os.Stdout))
 	fmt.Println()
 	fmt.Println(internal.Parser.String())
+	fmt.Println()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println()
 	data, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {
 		panic(err)
