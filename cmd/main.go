@@ -11,43 +11,22 @@ import (
 
 func main() {
 	code := `
-@import "github.com/alecthomas/participle" as participle
-@import {
-	"std" as std
-	"fmt" as fmt
-}
-
-@const a:Int = 1	
-@const {
-	b:String = "hello"
-	c:Float = 12.2
-}
-
-@var a:Int = 1	
-@var {
-	b:String = "hello"
-	c:Float = 12.2
-	d:Float = (fadd 12.2 13.0)
-	list:List<Int> = '(12 13 14)
-	map:Map<String,Int> = #("1"::1 "2"::2)
-	complex:List<Map<String,Int>> = '(
-		#("1"::1 "2"::2)
-		#("3"::3 "4"::4))
-}
-
-@struct Test {
-	a:Int
-	b:String
-	complex:List<Map<String,Int>>
-	
-	@fn print:Void(a:Int b:String complex:List<Map<String,Int>>){
-		(printf "a:%d b:%s" a b)
+@var global:int = 1;
+@fn main(a:int) <int> {
+	@var local:int = 2;
+	@var local_list:list<int> = '(1 2 3);
+	@set local = 10;
+	(function)
+	@while (eq a b) {
+		(iadd a b)
 	}
-}
-
-@fn main:Int(a:Int b:String complex:List<Map<String,Int>>) {
-	(printf "a:%d b:%s" a b)
-}
+	@each i:int <- local_list {
+		(print i)
+	}
+	@if (eq a b) {
+		(print i)
+	}
+}	
 	`
 	lex, err := internal.Def.LexString("", code)
 	if err != nil {

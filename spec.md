@@ -8,7 +8,7 @@
 @var x:string = "hello world";
 @var x:bool = false;
 @var y:list<int> = '(1 2 3);
-@var y:map<string, int> = #("string" -> 1);
+@var y:map<string int> = #("string" -> 1);
 
 // expressions
 (function arg1 arg2)
@@ -31,13 +31,10 @@
 }
 
 // loop stmts
-@for i:int <> 0...10 {
-  ...
-}
 @while (eq a b) {
   ...
 }
-@each val:int <> '(1 2 3) {
+@each val:int <- '(1 2 3) {
   ...
 }
 
