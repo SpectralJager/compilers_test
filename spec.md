@@ -1,3 +1,4 @@
+## AST
 ```
 // function stmts
 @fn main(x:int y:float) <int> {...}
@@ -41,4 +42,33 @@
 // other stmts
 @return ...;
 @set a = 1;
+```
+
+## IR
+```
+filename: ...
+constants:
+  a:int -> 2
+  l:list<int> -> '(1 2 3)
+varibles:
+  a:int
+  b:list<int>
+code:
+  set_varible a 12
+  set_varibles b '(1 2 3)
+  ...
+  call main
+  hlt
+functions:
+  // void <- void
+  main:
+    load_const $2
+    load_const $1
+    ...
+    ret
+```
+
+## Symbol table
+```
+
 ```

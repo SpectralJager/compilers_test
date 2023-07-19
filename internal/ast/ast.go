@@ -1,73 +1,14 @@
-package internal
+package ast
 
-import (
-	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer"
-)
+// Unions for parse tree
 
-var (
-	Def = lexer.MustStateful(lexer.Rules{
-		"Root": {
-			{Name: "Function", Pattern: `@fn`, Action: nil},
-			{Name: "Varible", Pattern: `@var`, Action: nil},
-			{Name: "Set", Pattern: `@set`, Action: nil},
-			{Name: "While", Pattern: `@while`, Action: nil},
-			{Name: "Each", Pattern: `@each`, Action: nil},
-			{Name: "If", Pattern: `@if`, Action: nil},
-			{Name: "Else", Pattern: `else`, Action: nil},
-			{Name: "ListStart", Pattern: `'\(`, Action: nil},
-			{Name: "Range", Pattern: `<-`, Action: nil},
-			{Name: "LParen", Pattern: `\(`, Action: nil},
-			{Name: "RParen", Pattern: `\)`, Action: nil},
-			{Name: "LTBracet", Pattern: `<`, Action: nil},
-			{Name: "RTBracet", Pattern: `>`, Action: nil},
-			{Name: "LCBracet", Pattern: `{`, Action: nil},
-			{Name: "RCBracet", Pattern: `}`, Action: nil},
-			{Name: "Colon", Pattern: `:`, Action: nil},
-			{Name: "Semicolon", Pattern: `;`, Action: nil},
-			{Name: "Assign", Pattern: `=`, Action: nil},
-			{Name: "Symbol", Pattern: `[a-zA-Z_]+`, Action: nil},
-			{Name: "Integer", Pattern: `[0-9]+`, Action: nil},
-			{Name: "whitespace", Pattern: `[\n\t\r ]+`, Action: nil},
-		},
-	})
-	Parser = participle.MustBuild[Program](
-		participle.Lexer(Def),
-		participle.UseLookahead(1),
-		participle.Union[Global](
-			&Function{},
-			&Varible{},
-		),
-		participle.Union[Local](
-			&Varible{},
-			&Set{},
-			&FunctionCall{},
-			&WhileLoop{},
-			&EachLoop{},
-			&IfStatement{},
-		),
-		participle.Union[DataType](
-			&ComplexType{},
-			&SimpleType{},
-		),
-		participle.Union[Expression](
-			&FunctionCall{},
-			&Symbol{},
-			&Integer{},
-			&List{},
-		),
-		participle.Union[Atom](
-			&Integer{},
-			&List{},
-		),
-	)
-)
-
+// interface for global scope stmts
 type Global interface{ glob() }
 
 func (g *Function) glob() {}
 func (g *Varible) glob()  {}
 
+// interface for local scope stmts
 type Local interface{ local() }
 
 func (l *Varible) local()      {}
@@ -77,11 +18,13 @@ func (l *WhileLoop) local()    {}
 func (l *EachLoop) local()     {}
 func (l *IfStatement) local()  {}
 
+// interface for simple and complex datatypes
 type DataType interface{ dt() }
 
 func (dt *SimpleType) dt()  {}
 func (dt *ComplexType) dt() {}
 
+// interface for expressions
 type Expression interface{ expr() }
 
 func (ex *FunctionCall) expr() {}
@@ -89,10 +32,13 @@ func (ex *Symbol) expr()       {}
 func (ex *Integer) expr()      {}
 func (ex *List) expr()         {}
 
+// interface for atoms
 type Atom interface{ atom() }
 
 func (at *Integer) atom() {}
 func (at *List) atom()    {}
+
+// Parse tree
 
 type Program struct {
 	Body []Global `parser:"@@+"`
