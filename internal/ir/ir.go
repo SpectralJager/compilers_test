@@ -1,5 +1,7 @@
 package ir
 
+import "fmt"
+
 /*
 package: *Name*
 Constants: // only int, float, string
@@ -24,8 +26,6 @@ init:
 00000005|> global_load a;
 00000006|> call_builtin neq;
 00000007|> global_save d;
-00000008|> call main;
-00000009|> exit;
 functions:
 === main:
 Arguments:
@@ -50,3 +50,56 @@ Body:
 00000000|> call_builtin iadd;
 00000001|> ret;
 */
+
+type IR interface {
+	fmt.Stringer
+	Kind() string
+}
+
+type IConstant interface {
+	constIR()
+}
+
+type ISymbolDef interface {
+	symdefIR()
+}
+
+type IInstruction interface {
+	instrIR()
+}
+
+type IDataType interface {
+	dtIR()
+}
+
+type Package struct {
+	Name      string
+	Constants []IConstant
+	Globals   map[string]ISymbolDef
+	InitCode  []IInstruction
+	Functions map[string]Function
+}
+
+type Function struct {
+	Name      string
+	Arguments map[string]ISymbolDef
+	Locals    map[string]ISymbolDef
+	BodyCode  []IInstruction
+}
+
+type Integer struct {
+	Value int
+}
+
+type Float struct {
+	Value int
+}
+
+type String struct {
+	Value int
+}
+
+type VaribleDef struct {
+	Name string
+	Type IDataType
+}
