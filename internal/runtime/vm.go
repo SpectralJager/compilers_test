@@ -48,7 +48,7 @@ func (vm *VM) StackTrace() string {
 	var buf bytes.Buffer
 	fmt.Fprintln(&buf, "=== Stack trace ===")
 	for i, o := range vm.Stack {
-		fmt.Fprintf(&buf, "%d: %s\n", i, o.String())
+		fmt.Fprintf(&buf, "%d -> %s\n", i, o.String())
 	}
 	fmt.Fprintln(&buf, "=== =========== ===")
 	return buf.String()

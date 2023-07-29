@@ -23,11 +23,6 @@ type String struct {
 	Value string
 }
 
-type Varible struct {
-	Name  string
-	Value Object
-}
-
 // Stringers
 func (s *Float) String() string {
 	return fmt.Sprintf("float:%f", s.Value)
@@ -37,7 +32,4 @@ func (s *Integer) String() string {
 }
 func (s *String) String() string {
 	return fmt.Sprintf("string:%s", s.Value)
-}
-func (s *Varible) String() string {
-	return fmt.Sprintf("varible:%s=%s", s.Name, s.Value)
 }

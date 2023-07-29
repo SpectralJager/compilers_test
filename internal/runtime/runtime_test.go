@@ -24,5 +24,5 @@ func TestRuntime(t *testing.T) {
 		Stack: make(Stack, 0),
 	}
 	vm.MustExecute(program)
-	fmt.Println(vm.StackTrace())
+	defer fmt.Println(vm.StackTrace())
 }
