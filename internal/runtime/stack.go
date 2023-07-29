@@ -1,5 +1,10 @@
 package runtime
 
+import (
+	"bytes"
+	"fmt"
+)
+
 /*
 Stack:
 0 -> int:40
@@ -18,4 +23,14 @@ func (s *Stack) Pop() Object {
 	obj := (*s)[s.Len()-1]
 	*s = (*s)[:s.Len()-1]
 	return obj
+}
+
+func (s *Stack) StackTrace() string {
+	var buf bytes.Buffer
+	fmt.Fprintln(&buf, "=== Stack trace ===")
+	for i, o := range *s {
+		fmt.Fprintf(&buf, "\t%d -> %s\n", i, o.String())
+	}
+	fmt.Fprintln(&buf, "=== =========== ===")
+	return buf.String()
 }

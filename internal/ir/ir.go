@@ -88,10 +88,9 @@ type Program struct {
 }
 
 type Function struct {
-	Name      string
-	Arguments map[string]ISymbolDef
-	Locals    map[string]ISymbolDef
-	BodyCode  []IInstruction
+	Name     string
+	Locals   map[string]ISymbolDef
+	BodyCode []IInstruction
 }
 
 // Constants
@@ -228,10 +227,6 @@ func (s *Program) String() string {
 func (s *Function) String() string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "=== %s:\n", s.Name)
-	fmt.Fprint(&buf, "arguments: \n")
-	for _, arg := range s.Arguments {
-		fmt.Fprintf(&buf, "\t%s\n", arg.String())
-	}
 	fmt.Fprint(&buf, "locals: \n")
 	for _, loc := range s.Locals {
 		fmt.Fprintf(&buf, "\t%s\n", loc.String())

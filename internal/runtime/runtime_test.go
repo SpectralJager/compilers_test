@@ -11,18 +11,38 @@ func TestRuntime(t *testing.T) {
 		Name: "test",
 		Constants: []ir.IConstant{
 			&ir.Integer{Value: 40},
-			&ir.Integer{Value: 2},
-			&ir.Integer{Value: 1},
+			&ir.Integer{Value: 60},
+		},
+		Globals: map[string]ir.ISymbolDef{
+			"res": &ir.VaribleDef{Name: "a", Type: &ir.Primitive{Name: "int"}},
+			"sum": &ir.FunctionDef{
+				Name: "sum",
+				// Arguments: []ir.IDataType{
+				// 	&ir.Primitive{Name: "int"},
+				// 	&ir.Primitive{Name: "int"},
+				// },
+				Returns: []ir.IDataType{
+					&ir.Primitive{Name: "int"},
+				},
+			},
 		},
 		InitCode: []ir.IInstruction{
-			&ir.Load{ConstIndex: 0},
-			&ir.Load{ConstIndex: 2},
-			&ir.Load{ConstIndex: 1},
+			&ir.Call{FuncName: "sum"},
+			&ir.GlobalSave{Symbol: "res"},
+		},
+		Functions: map[string]ir.Function{
+			"sum": {
+				Name: "sum",
+				BodyCode: []ir.IInstruction{
+					&ir.Load{ConstIndex: 0},
+					&ir.Load{ConstIndex: 1},
+					&ir.CallBuildin{FuncName: "iadd"},
+					&ir.Return{Count: 1},
+				},
+			},
 		},
 	}
-	vm := VM{
-		Stack: make(Stack, 0),
-	}
+	vm := VM{}
 	vm.MustExecute(program)
-	defer fmt.Println(vm.StackTrace())
+	fmt.Println(vm.GlobalFrame.String())
 }

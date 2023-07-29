@@ -35,9 +35,8 @@ func TestIR(t *testing.T) {
 		},
 		Functions: map[string]Function{
 			"main": {
-				Name:      "main",
-				Arguments: map[string]ISymbolDef{},
-				Locals:    map[string]ISymbolDef{},
+				Name:   "main",
+				Locals: map[string]ISymbolDef{},
 				BodyCode: []IInstruction{
 					&Load{ConstIndex: 0},
 					&Call{FuncName: "fib"},
@@ -47,13 +46,12 @@ func TestIR(t *testing.T) {
 			},
 			"fib": {
 				Name: "fib",
-				Arguments: map[string]ISymbolDef{
+				Locals: map[string]ISymbolDef{
 					"n": &VaribleDef{
 						Name: "n",
 						Type: &Primitive{"int"},
 					},
 				},
-				Locals: map[string]ISymbolDef{},
 				BodyCode: []IInstruction{
 					&Load{0},
 					&LocalLoad{"n"},
