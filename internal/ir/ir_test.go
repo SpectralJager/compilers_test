@@ -34,7 +34,7 @@ func TestIR(t *testing.T) {
 			},
 		},
 		Functions: map[string]Function{
-			"main": Function{
+			"main": {
 				Name:      "main",
 				Arguments: map[string]ISymbolDef{},
 				Locals:    map[string]ISymbolDef{},
@@ -45,7 +45,7 @@ func TestIR(t *testing.T) {
 					&Return{},
 				},
 			},
-			"fib": Function{
+			"fib": {
 				Name: "fib",
 				Arguments: map[string]ISymbolDef{
 					"n": &VaribleDef{

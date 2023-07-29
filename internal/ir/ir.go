@@ -56,6 +56,7 @@ Body:
 
 type IR interface {
 	fmt.Stringer
+	ir()
 }
 
 type IConstant interface {
@@ -335,3 +336,26 @@ func (s *Call) String() string {
 func (s *Return) String() string {
 	return fmt.Sprintf("return %d;", s.Count)
 }
+
+// irs
+func (*Program) ir()         {}
+func (*Function) ir()        {}
+func (*Integer) ir()         {}
+func (*Float) ir()           {}
+func (*String) ir()          {}
+func (*Primitive) ir()       {}
+func (*VaribleDef) ir()      {}
+func (*FunctionDef) ir()     {}
+func (*GlobalSet) ir()       {}
+func (*GlobalLoad) ir()      {}
+func (*GlobalSave) ir()      {}
+func (*LocalSet) ir()        {}
+func (*LocalLoad) ir()       {}
+func (*LocalSave) ir()       {}
+func (*Load) ir()            {}
+func (*CallBuildin) ir()     {}
+func (*Call) ir()            {}
+func (*Jump) ir()            {}
+func (*ConditionalJump) ir() {}
+func (*RelativeJump) ir()    {}
+func (*Return) ir()          {}
