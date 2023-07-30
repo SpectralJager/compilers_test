@@ -84,7 +84,7 @@ type Program struct {
 	Constants []IConstant
 	Globals   map[string]ISymbolDef
 	InitCode  []IInstruction
-	Functions map[string]Function
+	Functions map[string]*Function
 }
 
 type Function struct {
@@ -97,6 +97,8 @@ type Function struct {
 func (*Integer) constIR() {}
 func (*Float) constIR()   {}
 func (*String) constIR()  {}
+func (*True) constIR()    {}
+func (*False) constIR()   {}
 
 type Integer struct {
 	Value int
@@ -109,6 +111,9 @@ type Float struct {
 type String struct {
 	Value string
 }
+
+type True struct{}
+type False struct{}
 
 // Defenitions
 func (*VaribleDef) symdefIR()  {}
@@ -146,6 +151,7 @@ func (*RelativeJump) instrIR()    {}
 func (*CallBuildin) instrIR()     {}
 func (*Call) instrIR()            {}
 func (*Return) instrIR()          {}
+func (*Halt) instrIR()            {}
 
 type GlobalSet struct {
 	Symbol     string
@@ -201,6 +207,8 @@ type Return struct {
 	Count int
 }
 
+type Halt struct{}
+
 // Stringers
 func (s *Program) String() string {
 	var buf bytes.Buffer
@@ -248,6 +256,14 @@ func (s *Float) String() string {
 
 func (s *String) String() string {
 	return s.Value
+}
+
+func (*True) String() string {
+	return "true"
+}
+
+func (*False) String() string {
+	return "false"
 }
 
 func (s *VaribleDef) String() string {
@@ -332,12 +348,18 @@ func (s *Return) String() string {
 	return fmt.Sprintf("return %d;", s.Count)
 }
 
+func (s *Halt) String() string {
+	return "halt"
+}
+
 // irs
 func (*Program) ir()         {}
 func (*Function) ir()        {}
 func (*Integer) ir()         {}
 func (*Float) ir()           {}
 func (*String) ir()          {}
+func (*True) ir()            {}
+func (*False) ir()           {}
 func (*Primitive) ir()       {}
 func (*VaribleDef) ir()      {}
 func (*FunctionDef) ir()     {}
@@ -354,3 +376,4 @@ func (*Jump) ir()            {}
 func (*ConditionalJump) ir() {}
 func (*RelativeJump) ir()    {}
 func (*Return) ir()          {}
+func (*Halt) ir()            {}

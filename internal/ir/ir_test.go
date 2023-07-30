@@ -33,7 +33,7 @@ func TestIR(t *testing.T) {
 				},
 			},
 		},
-		Functions: map[string]Function{
+		Functions: map[string]*Function{
 			"main": {
 				Name:   "main",
 				Locals: map[string]ISymbolDef{},

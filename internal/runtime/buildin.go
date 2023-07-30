@@ -1,9 +1,14 @@
 package runtime
 
-var buildins = map[string]any{
-	"iadd": iadd,
-}
-
 func iadd(a, b *Integer) *Integer {
 	return &Integer{a.Value + b.Value}
+}
+func isub(a, b *Integer) *Integer {
+	return &Integer{a.Value - b.Value}
+}
+func ilt(a, b *Integer) *Boolean {
+	if a.Value < b.Value {
+		return &Boolean{true}
+	}
+	return &Boolean{false}
 }

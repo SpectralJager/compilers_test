@@ -34,3 +34,5 @@ func (s *Stack) StackTrace() string {
 	fmt.Fprintln(&buf, "=== =========== ===")
 	return buf.String()
 }
+
+func (s *Stack) SP() int { return len(*s) - 1 }

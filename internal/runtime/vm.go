@@ -6,12 +6,15 @@ import (
 )
 
 type VM struct {
-	Program     ir.Program
-	Constants   []Object
-	GlobalFrame *Frame
+	Program    *ir.Program
+	Constants  []Object
+	Stack      Stack
+	Frames     [512]Frame
+	frameIndex int
 }
 
-func (vm *VM) MustExecute(program ir.Program) {
+func (vm *VM) MustExecute(program *ir.Program) {
+	vm.Stack = make(Stack, 0, 2048)
 	vm.Program = program
 	log.Println("Start executing")
 	log.Print("read constants...")
@@ -24,6 +27,10 @@ func (vm *VM) MustExecute(program ir.Program) {
 				vm.Constants = append(vm.Constants, &Float{c.Value})
 			case *ir.String:
 				vm.Constants = append(vm.Constants, &String{c.Value})
+			case *ir.True:
+				vm.Constants = append(vm.Constants, &Boolean{true})
+			case *ir.False:
+				vm.Constants = append(vm.Constants, &Boolean{false})
 			}
 		}
 		log.Print("DONE\n")
@@ -32,8 +39,9 @@ func (vm *VM) MustExecute(program ir.Program) {
 	}
 	log.Print("execute code...")
 	if len(vm.Program.InitCode) > 0 {
-		vm.GlobalFrame = NewFrame("global", vm.Program.Globals, vm.Program.InitCode)
-		vm.run(vm.GlobalFrame)
+		fr := NewFrame("global", vm.Program.Globals, vm.Program.InitCode, 0)
+		vm.PushFrame(fr)
+		vm.run()
 		log.Print("DONE\n")
 	} else {
 		log.Print("SKIPED\n")
@@ -41,76 +49,99 @@ func (vm *VM) MustExecute(program ir.Program) {
 	log.Println("execution finished")
 }
 
-func (vm *VM) run(f *Frame) Object {
-	for ip := 0; ip < len(f.Code); {
-		i := f.Code[ip]
+func (vm *VM) GlobalFrame() *Frame {
+	return &vm.Frames[0]
+}
+
+func (vm *VM) CurrentFrame() *Frame {
+	return &vm.Frames[vm.frameIndex-1]
+}
+
+func (vm *VM) PushFrame(frame Frame) {
+	vm.Frames[vm.frameIndex] = frame
+	vm.frameIndex += 1
+}
+
+func (vm *VM) PopFrame() {
+	if len(vm.Frames) == 1 {
+		return
+	}
+	vm.frameIndex -= 1
+}
+
+func (vm *VM) run() {
+	for vm.CurrentFrame().Ip < len(vm.CurrentFrame().Code) {
+		f := vm.CurrentFrame()
+		i := f.Instruction()
 		switch i := i.(type) {
+		case *ir.Halt:
+			return
 		case *ir.Return:
-			if i.Count == 0 {
-				return nil
+			if i.Count == 1 {
+				retObj := vm.Stack.Pop()
+				vm.Stack = vm.Stack[:f.Bp]
+				vm.PopFrame()
+				vm.Stack.Push(retObj)
+			} else {
+				vm.Stack = vm.Stack[:f.Bp]
+				vm.PopFrame()
 			}
-			return f.Stack.Pop()
+			continue
 		case *ir.Load:
-			ind := i.ConstIndex
-			f.Stack.Push(vm.Constants[ind])
+			vm.Stack.Push(vm.Constants[i.ConstIndex])
 		case *ir.GlobalSet:
-			ind := i.ConstIndex
-			obj := vm.Constants[ind]
-			symbol := i.Symbol
-			vm.GlobalFrame.Varibles[symbol] = obj
+			vm.GlobalFrame().Varibles[i.Symbol] = vm.Constants[i.ConstIndex]
 		case *ir.GlobalLoad:
-			symbol := i.Symbol
-			obj := vm.GlobalFrame.Varibles[symbol]
-			f.Stack.Push(obj)
+			vm.Stack.Push(vm.GlobalFrame().Varibles[i.Symbol])
 		case *ir.GlobalSave:
-			symbol := i.Symbol
-			obj := f.Stack.Pop()
-			vm.GlobalFrame.Varibles[symbol] = obj
+			vm.GlobalFrame().Varibles[i.Symbol] = vm.Stack.Pop()
 		case *ir.LocalSet:
-			ind := i.ConstIndex
-			obj := vm.Constants[ind]
-			symbol := i.Symbol
-			f.Varibles[symbol] = obj
+			f.Varibles[i.Symbol] = vm.Constants[i.ConstIndex]
 		case *ir.LocalLoad:
-			symbol := i.Symbol
-			obj := f.Varibles[symbol]
-			f.Stack.Push(obj)
+			vm.Stack.Push(f.Varibles[i.Symbol])
 		case *ir.LocalSave:
-			symbol := i.Symbol
-			obj := f.Stack.Pop()
-			f.Varibles[symbol] = obj
+			f.Varibles[i.Symbol] = vm.Stack.Pop()
 		case *ir.Jump:
-			ip = i.Address
+			vm.CurrentFrame().Ip = i.Address
 			continue
 		case *ir.RelativeJump:
-			ip += i.Count
+			vm.CurrentFrame().Ip += i.Count
 			continue
 		case *ir.ConditionalJump:
+			obj := vm.Stack.Pop().(*Boolean)
+			if obj.Value {
+				vm.CurrentFrame().Ip = i.Address
+				continue
+			}
 		case *ir.Call:
-			symbol := i.FuncName
-			fn := vm.Program.Functions[symbol]
-			argCount := len(vm.Program.Globals[symbol].(*ir.FunctionDef).Arguments)
-			objs := make([]Object, 0)
-			for i := 0; i < argCount; i++ {
-				objs = append(objs, f.Stack.Pop())
-			}
-			fr := NewFrame(f.Name, fn.Locals, fn.BodyCode)
-			copy(fr.Stack, objs)
-			res := vm.run(fr)
-			if res != nil {
-				f.Stack.Push(res)
-			}
+			fn := vm.Program.Functions[i.FuncName]
+			args := len(vm.Program.Globals[i.FuncName].(*ir.FunctionDef).Arguments)
+			bp := vm.Stack.Len() - args
+			// if bp < 0 {
+			// 	panic("base pointer is out of bounds")
+			// }
+			fr := NewFrame(fn.Name, fn.Locals, fn.BodyCode, bp)
+			vm.PushFrame(fr)
 		case *ir.CallBuildin:
 			symbol := i.FuncName
 			switch symbol {
 			case "iadd":
-				obj2 := f.Stack.Pop()
-				obj1 := f.Stack.Pop()
+				obj1 := vm.Stack.Pop()
+				obj2 := vm.Stack.Pop()
 				res := iadd(obj1.(*Integer), obj2.(*Integer))
-				f.Stack.Push(res)
+				vm.Stack.Push(res)
+			case "isub":
+				obj1 := vm.Stack.Pop()
+				obj2 := vm.Stack.Pop()
+				res := isub(obj1.(*Integer), obj2.(*Integer))
+				vm.Stack.Push(res)
+			case "ilt":
+				obj1 := vm.Stack.Pop()
+				obj2 := vm.Stack.Pop()
+				res := ilt(obj1.(*Integer), obj2.(*Integer))
+				vm.Stack.Push(res)
 			}
 		}
-		ip += 1
+		f.Ip += 1
 	}
-	return nil
 }
