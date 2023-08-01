@@ -12,7 +12,7 @@ func main() {
 	program := ir.Program{
 		Name: "test",
 		Constants: []ir.IConstant{
-			&ir.Integer{Value: 40},
+			&ir.Integer{Value: 35},
 			&ir.Integer{Value: 2},
 			&ir.Integer{Value: 1},
 		},
@@ -56,7 +56,7 @@ func main() {
 					WriteBytes(ir.LocalSave(0)...).
 					WriteBytes(ir.Load(1)...).
 					WriteBytes(ir.LocalLoad(0)...).
-					WriteBytes(ir.IntFunc(2)...).
+					WriteBytes(ir.IntFunc(4)...).
 					WriteBytes(ir.JumpCondition(0x3c)...).
 					WriteBytes(ir.Load(1)...).
 					WriteBytes(ir.LocalLoad(0)...).

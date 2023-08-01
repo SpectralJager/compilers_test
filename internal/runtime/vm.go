@@ -173,7 +173,49 @@ func (vm *VM) run() {
 			case 2:
 				obj1 := vm.Stack.Pop().(*Integer)
 				obj2 := vm.Stack.Pop().(*Integer)
+				res := imul(obj1, obj2)
+				vm.Stack.Push(res)
+			case 3:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := idiv(obj1, obj2)
+				vm.Stack.Push(res)
+			case 4:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
 				res := ilt(obj1, obj2)
+				vm.Stack.Push(res)
+			case 5:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := igt(obj1, obj2)
+				vm.Stack.Push(res)
+			case 6:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := ileq(obj1, obj2)
+				vm.Stack.Push(res)
+			case 7:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := igeq(obj1, obj2)
+				vm.Stack.Push(res)
+			case 8:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := ieq(obj1, obj2)
+				vm.Stack.Push(res)
+			case 9:
+				obj1 := vm.Stack.Pop().(*Integer)
+				res := itof(obj1)
+				vm.Stack.Push(res)
+			case 10:
+				obj1 := vm.Stack.Pop().(*Integer)
+				res := itos(obj1)
+				vm.Stack.Push(res)
+			case 11:
+				obj1 := vm.Stack.Pop().(*Integer)
+				res := itob(obj1)
 				vm.Stack.Push(res)
 			}
 		default:
