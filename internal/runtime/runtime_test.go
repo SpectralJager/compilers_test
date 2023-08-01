@@ -10,39 +10,29 @@ func TestRuntime(t *testing.T) {
 	program := ir.Program{
 		Name: "test",
 		Constants: []ir.IConstant{
-			&ir.Integer{Value: 12},
+			&ir.Integer{Value: 40},
 		},
-		Globals: map[string]ir.ISymbolDef{
-			"sum": &ir.FunctionDef{
-				Name: "sum",
-				Arguments: []ir.IDataType{
-					&ir.Primitive{Name: "int"},
-				},
+		Globals: []ir.ISymbolDef{
+			&ir.FunctionDef{
+				Name:      "main",
+				Arguments: []ir.IDataType{},
+				Returns:   []ir.IDataType{},
 			},
-			"res": &ir.VaribleDef{Name: "res", Type: &ir.Primitive{Name: "int"}},
 		},
-		InitCode: []ir.IInstruction{
-			&ir.Load{ConstIndex: 0},
-			&ir.Call{FuncName: "sum"},
-			&ir.GlobalSave{Symbol: "res"},
-			&ir.Halt{},
-		},
+		InitCode: ir.NewCode().
+			WriteBytes(ir.Call(0)...).
+			WriteByte(ir.Halt()),
 		Functions: map[string]*ir.Function{
-			"sum": {
-				Name: "sum",
-				Locals: map[string]ir.ISymbolDef{
-					"n": &ir.VaribleDef{Name: "n", Type: &ir.Primitive{Name: "n"}},
-				},
-				BodyCode: []ir.IInstruction{
-					&ir.LocalSave{Symbol: "n"},
-					&ir.Load{ConstIndex: 0},
-					&ir.LocalLoad{Symbol: "n"},
-					&ir.CallBuildin{FuncName: "iadd"},
-					&ir.Return{Count: 1},
-				},
+			"main": {
+				Name:   "main",
+				Locals: []ir.ISymbolDef{},
+				BodyCode: ir.NewCode().
+					WriteBytes(ir.Load(0)...).
+					WriteBytes(ir.Return(1)...),
 			},
 		},
 	}
+	fmt.Println(program.String())
 	vm := VM{}
 	vm.MustExecute(&program)
 	fmt.Println(vm.GlobalFrame().String())

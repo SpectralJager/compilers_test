@@ -69,10 +69,7 @@ type ISymbolDef interface {
 	symdefIR()
 }
 
-type IInstruction interface {
-	IR
-	instrIR()
-}
+type IInstruction []byte
 
 type IDataType interface {
 	IR
@@ -82,15 +79,15 @@ type IDataType interface {
 type Program struct {
 	Name      string
 	Constants []IConstant
-	Globals   map[string]ISymbolDef
-	InitCode  []IInstruction
+	Globals   []ISymbolDef
+	InitCode  *Code
 	Functions map[string]*Function
 }
 
 type Function struct {
 	Name     string
-	Locals   map[string]ISymbolDef
-	BodyCode []IInstruction
+	Locals   []ISymbolDef
+	BodyCode *Code
 }
 
 // Constants
@@ -137,78 +134,6 @@ type Primitive struct {
 	Name string
 }
 
-// Instructions
-func (*GlobalSet) instrIR()       {}
-func (*GlobalSave) instrIR()      {}
-func (*GlobalLoad) instrIR()      {}
-func (*LocalSet) instrIR()        {}
-func (*LocalSave) instrIR()       {}
-func (*LocalLoad) instrIR()       {}
-func (*Load) instrIR()            {}
-func (*Jump) instrIR()            {}
-func (*ConditionalJump) instrIR() {}
-func (*RelativeJump) instrIR()    {}
-func (*CallBuildin) instrIR()     {}
-func (*Call) instrIR()            {}
-func (*Return) instrIR()          {}
-func (*Halt) instrIR()            {}
-
-type GlobalSet struct {
-	Symbol     string
-	ConstIndex int
-}
-
-type GlobalSave struct {
-	Symbol string
-}
-
-type GlobalLoad struct {
-	Symbol string
-}
-
-type LocalSet struct {
-	Symbol     string
-	ConstIndex int
-}
-
-type LocalSave struct {
-	Symbol string
-}
-
-type LocalLoad struct {
-	Symbol string
-}
-
-type Load struct {
-	ConstIndex int
-}
-
-type Jump struct {
-	Address int
-}
-
-type ConditionalJump struct {
-	Address int
-}
-
-type RelativeJump struct {
-	Count int
-}
-
-type Call struct {
-	FuncName string
-}
-
-type CallBuildin struct {
-	FuncName string
-}
-
-type Return struct {
-	Count int
-}
-
-type Halt struct{}
-
 // Stringers
 func (s *Program) String() string {
 	var buf bytes.Buffer
@@ -218,13 +143,11 @@ func (s *Program) String() string {
 		fmt.Fprintf(&buf, "\t%d: %s\n", i, c.String())
 	}
 	fmt.Fprint(&buf, "globals: \n")
-	for _, g := range s.Globals {
-		fmt.Fprintf(&buf, "\t%s\n", g.String())
+	for i, g := range s.Globals {
+		fmt.Fprintf(&buf, "\t%d: %s\n", i, g.String())
 	}
 	fmt.Fprint(&buf, "init: \n")
-	for i, code := range s.InitCode {
-		fmt.Fprintf(&buf, "%08x|> %s\n", i, code.String())
-	}
+	fmt.Fprint(&buf, s.InitCode.Disassembly())
 	fmt.Fprint(&buf, "functions: \n")
 	for _, function := range s.Functions {
 		fmt.Fprint(&buf, function.String())
@@ -236,13 +159,11 @@ func (s *Function) String() string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "=== %s:\n", s.Name)
 	fmt.Fprint(&buf, "locals: \n")
-	for _, loc := range s.Locals {
-		fmt.Fprintf(&buf, "\t%s\n", loc.String())
+	for i, loc := range s.Locals {
+		fmt.Fprintf(&buf, "\t%d: %s\n", i, loc.String())
 	}
 	fmt.Fprint(&buf, "body: \n")
-	for i, code := range s.BodyCode {
-		fmt.Fprintf(&buf, "%08x|> %s\n", i, code.String())
-	}
+	fmt.Fprint(&buf, s.BodyCode.Disassembly())
 	return buf.String()
 }
 
@@ -296,84 +217,14 @@ func (s *Primitive) String() string {
 	return s.Name
 }
 
-func (s *GlobalSet) String() string {
-	return fmt.Sprintf("global_set %s $%d;", s.Symbol, s.ConstIndex)
-}
-
-func (s *GlobalLoad) String() string {
-	return fmt.Sprintf("global_load %s;", s.Symbol)
-}
-
-func (s *GlobalSave) String() string {
-	return fmt.Sprintf("global_save %s;", s.Symbol)
-}
-
-func (s *LocalSet) String() string {
-	return fmt.Sprintf("local_set %s $%d;", s.Symbol, s.ConstIndex)
-}
-
-func (s *LocalLoad) String() string {
-	return fmt.Sprintf("local_load %s;", s.Symbol)
-}
-
-func (s *LocalSave) String() string {
-	return fmt.Sprintf("local_save %s;", s.Symbol)
-}
-
-func (s *Load) String() string {
-	return fmt.Sprintf("load $%d;", s.ConstIndex)
-}
-
-func (s *Jump) String() string {
-	return fmt.Sprintf("jump %08x;", s.Address)
-}
-
-func (s *ConditionalJump) String() string {
-	return fmt.Sprintf("cond_jump %08x;", s.Address)
-}
-
-func (s *RelativeJump) String() string {
-	return fmt.Sprintf("rel_jump %d;", s.Count)
-}
-
-func (s *CallBuildin) String() string {
-	return fmt.Sprintf("call_buildin %s;", s.FuncName)
-}
-
-func (s *Call) String() string {
-	return fmt.Sprintf("call %s;", s.FuncName)
-}
-
-func (s *Return) String() string {
-	return fmt.Sprintf("return %d;", s.Count)
-}
-
-func (s *Halt) String() string {
-	return "halt"
-}
-
 // irs
-func (*Program) ir()         {}
-func (*Function) ir()        {}
-func (*Integer) ir()         {}
-func (*Float) ir()           {}
-func (*String) ir()          {}
-func (*True) ir()            {}
-func (*False) ir()           {}
-func (*Primitive) ir()       {}
-func (*VaribleDef) ir()      {}
-func (*FunctionDef) ir()     {}
-func (*GlobalSet) ir()       {}
-func (*GlobalLoad) ir()      {}
-func (*GlobalSave) ir()      {}
-func (*LocalSet) ir()        {}
-func (*LocalLoad) ir()       {}
-func (*LocalSave) ir()       {}
-func (*Load) ir()            {}
-func (*CallBuildin) ir()     {}
-func (*Call) ir()            {}
-func (*Jump) ir()            {}
-func (*ConditionalJump) ir() {}
-func (*RelativeJump) ir()    {}
-func (*Return) ir()          {}
-func (*Halt) ir()            {}
+func (*Program) ir()     {}
+func (*Function) ir()    {}
+func (*Integer) ir()     {}
+func (*Float) ir()       {}
+func (*String) ir()      {}
+func (*True) ir()        {}
+func (*False) ir()       {}
+func (*Primitive) ir()   {}
+func (*VaribleDef) ir()  {}
+func (*FunctionDef) ir() {}

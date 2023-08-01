@@ -1,6 +1,8 @@
 package runtime
 
 import (
+	"encoding/binary"
+	"fmt"
 	"gl/internal/ir"
 	"log"
 )
@@ -38,7 +40,7 @@ func (vm *VM) MustExecute(program *ir.Program) {
 		log.Print("SKIPED\n")
 	}
 	log.Print("execute code...")
-	if len(vm.Program.InitCode) > 0 {
+	if vm.Program.InitCode.Len() > 0 {
 		fr := NewFrame("global", vm.Program.Globals, vm.Program.InitCode, 0)
 		vm.PushFrame(fr)
 		vm.run()
@@ -70,78 +72,112 @@ func (vm *VM) PopFrame() {
 }
 
 func (vm *VM) run() {
-	for vm.CurrentFrame().Ip < len(vm.CurrentFrame().Code) {
+	for vm.CurrentFrame().Ip < vm.CurrentFrame().Code.Len() {
 		f := vm.CurrentFrame()
 		i := f.Instruction()
-		switch i := i.(type) {
-		case *ir.Halt:
+		switch i {
+		case ir.OP_HALT:
 			return
-		case *ir.Return:
-			if i.Count == 1 {
-				retObj := vm.Stack.Pop()
+		case ir.OP_RETURN:
+			f.Ip += 1
+			count := vm.CurrentFrame().Code.ReadBytes(f.Ip, 1)[0]
+			f.Ip += 1
+			if count == 0 {
 				vm.Stack = vm.Stack[:f.Bp]
 				vm.PopFrame()
-				vm.Stack.Push(retObj)
 			} else {
+				obj := vm.Stack.Pop()
 				vm.Stack = vm.Stack[:f.Bp]
 				vm.PopFrame()
+				vm.Stack.Push(obj)
 			}
-			continue
-		case *ir.Load:
-			vm.Stack.Push(vm.Constants[i.ConstIndex])
-		case *ir.GlobalSet:
-			vm.GlobalFrame().Varibles[i.Symbol] = vm.Constants[i.ConstIndex]
-		case *ir.GlobalLoad:
-			vm.Stack.Push(vm.GlobalFrame().Varibles[i.Symbol])
-		case *ir.GlobalSave:
-			vm.GlobalFrame().Varibles[i.Symbol] = vm.Stack.Pop()
-		case *ir.LocalSet:
-			f.Varibles[i.Symbol] = vm.Constants[i.ConstIndex]
-		case *ir.LocalLoad:
-			vm.Stack.Push(f.Varibles[i.Symbol])
-		case *ir.LocalSave:
-			f.Varibles[i.Symbol] = vm.Stack.Pop()
-		case *ir.Jump:
-			vm.CurrentFrame().Ip = i.Address
-			continue
-		case *ir.RelativeJump:
-			vm.CurrentFrame().Ip += i.Count
-			continue
-		case *ir.ConditionalJump:
-			obj := vm.Stack.Pop().(*Boolean)
-			if obj.Value {
-				vm.CurrentFrame().Ip = i.Address
+		case ir.OP_LOAD:
+			f.Ip += 1
+			ind := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			obj := vm.Constants[ind]
+			vm.Stack.Push(obj)
+		case ir.OP_GLOBAL_SET:
+			f.Ip += 1
+			indV := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			indC := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			obj := vm.Constants[indC]
+			vm.GlobalFrame().Varibles[indV] = obj
+		case ir.OP_GLOBAL_LOAD:
+			f.Ip += 1
+			ind := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			vm.Stack.Push(vm.GlobalFrame().Varibles[ind])
+		case ir.OP_GLOBAL_SAVE:
+			f.Ip += 1
+			ind := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			obj := vm.Stack.Pop()
+			vm.GlobalFrame().Varibles[ind] = obj
+		case ir.OP_LOCAL_SET:
+			f.Ip += 1
+			indV := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			indC := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			obj := vm.Constants[indC]
+			f.Varibles[indV] = obj
+		case ir.OP_LOCAL_LOAD:
+			f.Ip += 1
+			ind := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			vm.Stack.Push(f.Varibles[ind])
+		case ir.OP_LOCAL_SAVE:
+			f.Ip += 1
+			ind := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			obj := vm.Stack.Pop()
+			f.Varibles[ind] = obj
+		case ir.OP_JUMP:
+			f.Ip += 1
+			address := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip = int(address)
+		case ir.OP_JUMP_CONDITION:
+			f.Ip += 1
+			address := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			if vm.Stack.Pop().(*Boolean).Value {
+				f.Ip = int(address)
 				continue
 			}
-		case *ir.Call:
-			fn := vm.Program.Functions[i.FuncName]
-			args := len(vm.Program.Globals[i.FuncName].(*ir.FunctionDef).Arguments)
-			bp := vm.Stack.Len() - args
-			// if bp < 0 {
-			// 	panic("base pointer is out of bounds")
-			// }
-			fr := NewFrame(fn.Name, fn.Locals, fn.BodyCode, bp)
+			f.Ip += 4
+		case ir.OP_CALL:
+			f.Ip += 1
+			ind := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			f.Ip += 4
+			def := vm.Program.Globals[ind].(*ir.FunctionDef)
+			fn := vm.Program.Functions[def.Name]
+			fr := NewFrame(def.Name, fn.Locals, fn.BodyCode, vm.Stack.Len()-len(def.Arguments))
 			vm.PushFrame(fr)
-		case *ir.CallBuildin:
-			symbol := i.FuncName
-			switch symbol {
-			case "iadd":
-				obj1 := vm.Stack.Pop()
-				obj2 := vm.Stack.Pop()
-				res := iadd(obj1.(*Integer), obj2.(*Integer))
+		case ir.OP_INT_FUNC:
+			f.Ip += 1
+			id := f.Code.ReadBytes(f.Ip, 1)[0]
+			f.Ip += 1
+			switch id {
+			case 0:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := iadd(obj1, obj2)
 				vm.Stack.Push(res)
-			case "isub":
-				obj1 := vm.Stack.Pop()
-				obj2 := vm.Stack.Pop()
-				res := isub(obj1.(*Integer), obj2.(*Integer))
+			case 1:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := isub(obj1, obj2)
 				vm.Stack.Push(res)
-			case "ilt":
-				obj1 := vm.Stack.Pop()
-				obj2 := vm.Stack.Pop()
-				res := ilt(obj1.(*Integer), obj2.(*Integer))
+			case 2:
+				obj1 := vm.Stack.Pop().(*Integer)
+				obj2 := vm.Stack.Pop().(*Integer)
+				res := ilt(obj1, obj2)
 				vm.Stack.Push(res)
 			}
+		default:
+			panic(fmt.Sprintf("invalid instruction %d", i))
 		}
-		f.Ip += 1
 	}
 }

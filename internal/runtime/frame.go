@@ -18,17 +18,14 @@ code:
 
 type Frame struct {
 	Name     string
-	Varibles map[string]Object
-	Code     []ir.IInstruction
+	Varibles []Object
+	Code     *ir.Code
 	Bp       int
 	Ip       int
 }
 
-func NewFrame(name string, varibles map[string]ir.ISymbolDef, code []ir.IInstruction, bp int) Frame {
-	vars := make(map[string]Object)
-	for k := range varibles {
-		vars[k] = nil
-	}
+func NewFrame(name string, varibles []ir.ISymbolDef, code *ir.Code, bp int) Frame {
+	vars := make([]Object, len(varibles))
 	return Frame{
 		Name:     name,
 		Varibles: vars,
@@ -37,8 +34,8 @@ func NewFrame(name string, varibles map[string]ir.ISymbolDef, code []ir.IInstruc
 	}
 }
 
-func (f *Frame) Instruction() ir.IInstruction {
-	return f.Code[f.Ip]
+func (f *Frame) Instruction() byte {
+	return (*f.Code)[f.Ip]
 }
 
 func (f *Frame) String() string {
@@ -46,9 +43,9 @@ func (f *Frame) String() string {
 	fmt.Fprintf(&buf, "= Frame: %s\n", f.Name)
 	fmt.Fprintf(&buf, "base pointer: %d\n", f.Bp)
 	fmt.Fprint(&buf, "varibles:\n")
-	for k, v := range f.Varibles {
+	for i, v := range f.Varibles {
 		if v != nil {
-			fmt.Fprintf(&buf, "\t%s -> %s\n", k, v.String())
+			fmt.Fprintf(&buf, "\t%d -> %s\n", i, v.String())
 		}
 	}
 	fmt.Fprint(&buf, "===================\n")
