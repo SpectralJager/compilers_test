@@ -218,6 +218,96 @@ func (vm *VM) run() {
 				res := itob(obj1)
 				vm.Stack.Push(res)
 			}
+		case ir.OP_FLOAT_FUNC:
+			f.Ip += 1
+			id := f.Code.ReadBytes(f.Ip, 1)[0]
+			f.Ip += 1
+			switch id {
+			case 0:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fadd(obj1, obj2)
+				vm.Stack.Push(res)
+			case 1:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fsub(obj1, obj2)
+				vm.Stack.Push(res)
+			case 2:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fmul(obj1, obj2)
+				vm.Stack.Push(res)
+			case 3:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fdiv(obj1, obj2)
+				vm.Stack.Push(res)
+			case 4:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := flt(obj1, obj2)
+				vm.Stack.Push(res)
+			case 5:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fgt(obj1, obj2)
+				vm.Stack.Push(res)
+			case 6:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fleq(obj1, obj2)
+				vm.Stack.Push(res)
+			case 7:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := fgeq(obj1, obj2)
+				vm.Stack.Push(res)
+			case 8:
+				obj1 := vm.Stack.Pop().(*Float)
+				obj2 := vm.Stack.Pop().(*Float)
+				res := feq(obj1, obj2)
+				vm.Stack.Push(res)
+			case 9:
+				obj1 := vm.Stack.Pop().(*Float)
+				res := ftoi(obj1)
+				vm.Stack.Push(res)
+			case 10:
+				obj1 := vm.Stack.Pop().(*Float)
+				res := ftos(obj1)
+				vm.Stack.Push(res)
+			case 11:
+				obj1 := vm.Stack.Pop().(*Float)
+				res := ftob(obj1)
+				vm.Stack.Push(res)
+			}
+		case ir.OP_STRING_FUNC:
+			f.Ip += 1
+			id := f.Code.ReadBytes(f.Ip, 1)[0]
+			f.Ip += 1
+			switch id {
+			case 0:
+				obj1 := vm.Stack.Pop().(*String)
+				obj2 := vm.Stack.Pop().(*String)
+				res := sconcat(obj1, obj2)
+				vm.Stack.Push(res)
+			case 1:
+				obj1 := vm.Stack.Pop().(*String)
+				res := slen(obj1)
+				vm.Stack.Push(res)
+			case 2:
+				obj1 := vm.Stack.Pop().(*String)
+				res := stoi(obj1)
+				vm.Stack.Push(res)
+			case 3:
+				obj1 := vm.Stack.Pop().(*String)
+				res := stof(obj1)
+				vm.Stack.Push(res)
+			case 4:
+				obj1 := vm.Stack.Pop().(*String)
+				res := stob(obj1)
+				vm.Stack.Push(res)
+			}
 		default:
 			panic(fmt.Sprintf("invalid instruction %d", i))
 		}

@@ -42,6 +42,8 @@ const (
 	OP_JUMP
 	OP_JUMP_CONDITION
 	OP_INT_FUNC
+	OP_FLOAT_FUNC
+	OP_STRING_FUNC
 )
 
 func Halt() byte               { return OP_HALT }
@@ -111,6 +113,18 @@ func JumpCondition(addr uint32) []byte {
 func IntFunc(id byte) []byte {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.LittleEndian, OP_INT_FUNC)
+	binary.Write(&buf, binary.LittleEndian, id)
+	return buf.Bytes()
+}
+func FloatFunc(id byte) []byte {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.LittleEndian, OP_FLOAT_FUNC)
+	binary.Write(&buf, binary.LittleEndian, id)
+	return buf.Bytes()
+}
+func StringFunc(id byte) []byte {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.LittleEndian, OP_STRING_FUNC)
 	binary.Write(&buf, binary.LittleEndian, id)
 	return buf.Bytes()
 }
@@ -200,6 +214,18 @@ func (c *Code) Disassembly() string {
 			id := c.ReadBytes(ip, 1)[0]
 			ip += 1
 			fmt.Fprintf(&buf, "%08x int_func %d\n", temp, id)
+		case OP_FLOAT_FUNC:
+			temp := ip
+			ip += 1
+			id := c.ReadBytes(ip, 1)[0]
+			ip += 1
+			fmt.Fprintf(&buf, "%08x float_func %d\n", temp, id)
+		case OP_STRING_FUNC:
+			temp := ip
+			ip += 1
+			id := c.ReadBytes(ip, 1)[0]
+			ip += 1
+			fmt.Fprintf(&buf, "%08x string_func %d\n", temp, id)
 		}
 	}
 	return buf.String()

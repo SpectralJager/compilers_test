@@ -1,6 +1,9 @@
 package runtime
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // int functions
 
@@ -57,4 +60,94 @@ func itob(a *Integer) *Boolean {
 		return &Boolean{false}
 	}
 	return &Boolean{true}
+}
+
+// float functions
+
+func fadd(a, b *Float) *Float {
+	return &Float{a.Value + b.Value}
+}
+func fsub(a, b *Float) *Float {
+	return &Float{a.Value - b.Value}
+}
+func fmul(a, b *Float) *Float {
+	return &Float{a.Value * b.Value}
+}
+func fdiv(a, b *Float) *Float {
+	return &Float{a.Value / b.Value}
+}
+func flt(a, b *Float) *Boolean {
+	if a.Value < b.Value {
+		return &Boolean{true}
+	}
+	return &Boolean{false}
+}
+func fgt(a, b *Float) *Boolean {
+	if a.Value > b.Value {
+		return &Boolean{true}
+	}
+	return &Boolean{false}
+}
+func fgeq(a, b *Float) *Boolean {
+	if a.Value >= b.Value {
+		return &Boolean{true}
+	}
+	return &Boolean{false}
+}
+func fleq(a, b *Float) *Boolean {
+	if a.Value <= b.Value {
+		return &Boolean{true}
+	}
+	return &Boolean{false}
+}
+func feq(a, b *Float) *Boolean {
+	if a.Value == b.Value {
+		return &Boolean{true}
+	}
+	return &Boolean{false}
+}
+func ftoi(a *Float) *Integer {
+	return &Integer{int(a.Value)}
+}
+func ftos(a *Float) *String {
+	return &String{fmt.Sprint(a.Value)}
+}
+func ftob(a *Float) *Boolean {
+	if a.Value == 0.0 {
+		return &Boolean{false}
+	}
+	return &Boolean{true}
+}
+
+// string functions
+
+func sconcat(s1, s2 *String) *String {
+	return &String{Value: s1.Value + s2.Value}
+}
+
+func slen(s1 *String) *Integer {
+	return &Integer{Value: len(s1.Value)}
+}
+
+func stoi(s1 *String) *Integer {
+	val, err := strconv.ParseInt(s1.Value, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return &Integer{Value: int(val)}
+}
+
+func stof(s1 *String) *Float {
+	val, err := strconv.ParseFloat(s1.Value, 64)
+	if err != nil {
+		panic(err)
+	}
+	return &Float{Value: val}
+}
+
+func stob(s1 *String) *Boolean {
+	if s1.Value == "" {
+		return &Boolean{Value: false}
+	}
+	return &Boolean{Value: true}
 }

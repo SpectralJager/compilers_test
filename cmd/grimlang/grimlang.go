@@ -9,7 +9,22 @@ import (
 )
 
 func main() {
-	program := ir.Program{
+	program := fibProg()
+	fmt.Println(program.String())
+	vm := runtime.VM{}
+	fl, err := os.Create("fib.prof")
+	if err != nil {
+		panic(err)
+	}
+	pprof.StartCPUProfile(fl)
+	vm.MustExecute(program)
+	pprof.StopCPUProfile()
+	fmt.Println(vm.GlobalFrame().String())
+	fmt.Println(vm.Stack.StackTrace())
+}
+
+func fibProg() *ir.Program {
+	return &ir.Program{
 		Name: "test",
 		Constants: []ir.IConstant{
 			&ir.Integer{Value: 35},
@@ -73,15 +88,4 @@ func main() {
 			},
 		},
 	}
-	fmt.Println(program.String())
-	vm := runtime.VM{}
-	fl, err := os.Create("fib.prof")
-	if err != nil {
-		panic(err)
-	}
-	pprof.StartCPUProfile(fl)
-	vm.MustExecute(&program)
-	pprof.StopCPUProfile()
-	fmt.Println(vm.GlobalFrame().String())
-	fmt.Println(vm.Stack.StackTrace())
 }
