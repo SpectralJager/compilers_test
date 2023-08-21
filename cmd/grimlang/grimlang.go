@@ -2,25 +2,53 @@ package main
 
 import (
 	"fmt"
+	"gl/internal/compiler"
 	"gl/internal/ir"
 	"gl/internal/runtime"
 	"os"
-	"runtime/pprof"
 )
 
 func main() {
-	program := fibProg()
+	program := test()
 	fmt.Println(program.String())
 	vm := runtime.VM{}
-	fl, err := os.Create("fib.prof")
+	// fl, err := os.Create("fib.prof")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// pprof.StartCPUProfile(fl)
+	vm.MustExecute(program)
+	// pprof.StopCPUProfile()
+	fmt.Println(vm.GlobalFrame().String())
+	fmt.Println(vm.Stack.StackTrace())
+}
+
+func test() *ir.Program {
+	// 	code := `
+	// @var result:int = 0;
+	// @fn main[] {
+	// 	@var temp:int = 1;
+	// 	@if (ieq temp 0) {
+	// 		@set result = 10;
+	// 	} else {
+	// 		@set result = 20;
+	// 	}
+	// }
+	// 	`
+	data, err := os.ReadFile("test.grim")
 	if err != nil {
 		panic(err)
 	}
-	pprof.StartCPUProfile(fl)
-	vm.MustExecute(program)
-	pprof.StopCPUProfile()
-	fmt.Println(vm.GlobalFrame().String())
-	fmt.Println(vm.Stack.StackTrace())
+	programm, err := compiler.Parser.ParseString("test.grim", string(data))
+	if err != nil {
+		panic(err)
+	}
+	var g compiler.Generator
+	res, err := g.GenerateProgram(*programm)
+	if err != nil {
+		panic(err)
+	}
+	return &res
 }
 
 func fibProg() *ir.Program {

@@ -76,6 +76,8 @@ func (vm *VM) run() {
 		f := vm.CurrentFrame()
 		i := f.Instruction()
 		switch i {
+		case ir.OP_NULL:
+			f.Ip += 1
 		case ir.OP_HALT:
 			return
 		case ir.OP_RETURN:
@@ -143,6 +145,14 @@ func (vm *VM) run() {
 			f.Ip += 1
 			address := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
 			if vm.Stack.Pop().(*Boolean).Value {
+				f.Ip = int(address)
+				continue
+			}
+			f.Ip += 4
+		case ir.OP_JUMP_NOT_CONDITION:
+			f.Ip += 1
+			address := binary.LittleEndian.Uint32(f.Code.ReadBytes(f.Ip, 4))
+			if !vm.Stack.Pop().(*Boolean).Value {
 				f.Ip = int(address)
 				continue
 			}

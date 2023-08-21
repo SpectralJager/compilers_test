@@ -29,7 +29,8 @@ func (c *Code) ReadBytes(offset, n int) []byte {
 func (c *Code) Len() int { return len(*c) }
 
 const (
-	OP_HALT byte = iota
+	OP_NULL byte = iota
+	OP_HALT
 	OP_RETURN
 	OP_LOAD
 	OP_GLOBAL_SET
@@ -41,11 +42,13 @@ const (
 	OP_CALL
 	OP_JUMP
 	OP_JUMP_CONDITION
+	OP_JUMP_NOT_CONDITION
 	OP_INT_FUNC
 	OP_FLOAT_FUNC
 	OP_STRING_FUNC
 )
 
+func Null() byte               { return OP_NULL }
 func Halt() byte               { return OP_HALT }
 func Return(count byte) []byte { return []byte{OP_RETURN, count} }
 func Load(index uint32) []byte {
@@ -110,6 +113,12 @@ func JumpCondition(addr uint32) []byte {
 	binary.Write(&buf, binary.LittleEndian, addr)
 	return buf.Bytes()
 }
+func JumpNotCondition(addr uint32) []byte {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.LittleEndian, OP_JUMP_NOT_CONDITION)
+	binary.Write(&buf, binary.LittleEndian, addr)
+	return buf.Bytes()
+}
 func IntFunc(id byte) []byte {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.LittleEndian, OP_INT_FUNC)
@@ -135,6 +144,9 @@ func (c *Code) Disassembly() string {
 	for ip := 0; ip < len(bts); {
 		i := bts[ip]
 		switch i {
+		case OP_NULL:
+			ip += 1
+			fmt.Fprintf(&buf, "%08x null\n", ip-1)
 		case OP_HALT:
 			ip += 1
 			fmt.Fprintf(&buf, "%08x halt\n", ip-1)
@@ -208,6 +220,12 @@ func (c *Code) Disassembly() string {
 			addr := binary.LittleEndian.Uint32(c.ReadBytes(ip, 4))
 			ip += 4
 			fmt.Fprintf(&buf, "%08x jump_condition [%08x]\n", temp, addr)
+		case OP_JUMP_NOT_CONDITION:
+			temp := ip
+			ip += 1
+			addr := binary.LittleEndian.Uint32(c.ReadBytes(ip, 4))
+			ip += 4
+			fmt.Fprintf(&buf, "%08x jump_not_condition [%08x]\n", temp, addr)
 		case OP_INT_FUNC:
 			temp := ip
 			ip += 1
