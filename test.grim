@@ -1,7 +1,13 @@
-@var a:int = 0;
+@var result:int = 0;
+
+@fn fib[n:int] <int> {
+    @if (ilt n 2) {
+        @return n;
+    }
+    @return (iadd (fib (isub n 1)) (fib (isub n 2)));
+}
 
 @fn main[] {
-    @var a:int = 0;
-    @set a = (iadd 12 22);
-    (println a)
+   @set result = (fib 20);
+   (println result)
 }

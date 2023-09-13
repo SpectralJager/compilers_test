@@ -53,8 +53,8 @@ type FunctionAST struct {
 
 type IfAST struct {
 	Expr     Expression `parser:"'@if' @@"`
-	ThenBody []Local    `parser:"'{'@@+'}'"`
-	ElseBody []Local    `parser:"('else' '{'@@+'}')?"`
+	ThenBody []Local    `parser:"'{'@@+"`
+	ElseBody []Local    `parser:"('else''=>' @@+)?'}'"`
 }
 
 type ReturnAST struct {

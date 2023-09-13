@@ -27,40 +27,20 @@ func main() {
 	{{range .locals}}{{.}}
 	{{end}}
 }`,
+		"arg":  `{{.name}} {{.dtype}}`,
 		"var":  `var {{.name}} {{.dtype}} = {{.value}}`,
 		"set":  `{{.name}} = {{.value}}`,
 		"atom": `{{.value}}`,
 		"call": `{{.name}}(ctx,{{range .args}} {{.}},{{end}})`,
-	},
-	"buildin": {
-		"iadd": `func iadd(ctx context.Context, args ...int) int{
-    res := args[0]
-    for _, v := range args[1:] {
-        res += v
-    }
-    return res
-}`,
-		"isub": `func isub(ctx context.Context, args ...int) int{
-    res := args[0]
-    for _, v := range args[1:] {
-        res -= v
-    }
-    return res
-}`,
-		"imul": `func imul(ctx context.Context, args ...int) int{
-    res := args[0]
-    for _, v := range args {
-        res *= v
-    }
-    return res
-}`,
-		"idiv": `func idiv(ctx context.Context, args ...int32) int{
-    res := args[0]
-    for _, v := range args {
-        res /= v
-    }
-    return res
-}`,
+		"if": `switch {
+	case {{.expr}}:
+		{{range .then}}{{.}}
+		{{end}}
+	{{if .else}}default:
+		{{range .else}}{{.}}
+		{{end}}{{end}}
+	}`,
+		"return": `return {{.value}}`,
 	},
 }
 
@@ -80,7 +60,10 @@ func Generate(node AST) string {
 			"globals": globals,
 		})
 	case *FunctionAST:
-		var locals []string
+		var locals, args []string
+		for _, arg := range node.Arguments {
+			args = append(args, Generate(arg))
+		}
 		for _, lc := range node.Body {
 			locals = append(locals, Generate(lc))
 		}
@@ -90,10 +73,20 @@ func Generate(node AST) string {
 		}
 		tmpl.Execute(&buf, map[string]any{
 			"name":    node.Ident,
-			"args":    nil,
+			"args":    args,
 			"returns": nil,
 			"locals":  locals,
 		})
+	case SymbolDeclAST:
+		tmpl, err := template.New("").Parse(tmpls["core"]["arg"])
+		if err != nil {
+			log.Fatal(err)
+		}
+		tmpl.Execute(&buf, map[string]any{
+			"name":  node.Ident,
+			"dtype": "int",
+		})
+
 	case *VaribleAST:
 		tmpl, err := template.New("").Parse(tmpls["core"]["var"])
 		if err != nil {
@@ -112,6 +105,31 @@ func Generate(node AST) string {
 		tmpl.Execute(&buf, map[string]any{
 			"name":  node.Ident,
 			"value": Generate(node.Value),
+		})
+	case *ReturnAST:
+		tmpl, err := template.New("").Parse(tmpls["core"]["return"])
+		if err != nil {
+			log.Fatal(err)
+		}
+		tmpl.Execute(&buf, map[string]any{
+			"value": Generate(node.Expression),
+		})
+	case *IfAST:
+		var th, el []string
+		for _, lc := range node.ThenBody {
+			th = append(th, Generate(lc))
+		}
+		for _, lc := range node.ElseBody {
+			el = append(el, Generate(lc))
+		}
+		tmpl, err := template.New("").Parse(tmpls["core"]["if"])
+		if err != nil {
+			log.Fatal(err)
+		}
+		tmpl.Execute(&buf, map[string]any{
+			"expr": Generate(node.Expr),
+			"then": th,
+			"else": el,
 		})
 	case *SymbolExpressionAST:
 		var args []string
