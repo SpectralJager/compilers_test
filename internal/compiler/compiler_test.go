@@ -44,25 +44,14 @@ func TestParser(t *testing.T) {
 }
 
 func TestCodegen(t *testing.T) {
-	code := `
-@var result:int = 0;
-@fn main[] {
-	@var temp:int = 0;
-	@if (ieq temp 0) {
-		@set result = 10;
-	} else {
-		@set result = 20;
-	}
-}
-	`
-	programm, err := Parser.ParseString("test.grim", string(code))
+	data, err := os.ReadFile("../../test.grim")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var g Generator
-	res, err := g.GenerateProgram(*programm)
+	programm, err := Parser.ParseString("test.grim", string(data))
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(res.String())
+	res := Generate(programm)
+	fmt.Println(res)
 }

@@ -1,311 +1,149 @@
 package compiler
 
 import (
-	"fmt"
-	"gl/internal/ir"
+	"log"
+	"strings"
+	"text/template"
 )
 
-var builtins = map[string][]byte{
-	"iadd": ir.IntFunc(0),
-	"isub": ir.IntFunc(1),
-	"imul": ir.IntFunc(2),
-	"idiv": ir.IntFunc(3),
-	"ilt":  ir.IntFunc(4),
-	"igt":  ir.IntFunc(5),
-	"igeq": ir.IntFunc(6),
-	"ileq": ir.IntFunc(7),
-	"ieq":  ir.IntFunc(8),
-	"itof": ir.IntFunc(9),
-	"itos": ir.IntFunc(10),
-	"itob": ir.IntFunc(11),
+var tmpls = map[string]map[string]string{
+	"core": {
+		"mainBody": `package main
+import (
+	"context"
+	"log"
+	"os"
+)
+{{range .globals}}
+{{.}}
+{{end}}
+
+func main() {
+	_main(ctx)
+	os.Exit(0)
+}
+`,
+		"fn": `func _{{.name}}(ctx context.Context,{{range .args}} {{.}},{{end}}) ({{range .returns}}{{.}},{{end}}) {
+	{{range .locals}}{{.}}
+	{{end}}
+}`,
+		"var":  `var {{.name}} {{.dtype}} = {{.value}}`,
+		"set":  `{{.name}} = {{.value}}`,
+		"atom": `{{.value}}`,
+		"call": `{{.name}}(ctx,{{range .args}} {{.}},{{end}})`,
+	},
+	"buildin": {
+		"iadd": `func iadd(ctx context.Context, args ...int) int{
+    res := args[0]
+    for _, v := range args[1:] {
+        res += v
+    }
+    return res
+}`,
+		"isub": `func isub(ctx context.Context, args ...int) int{
+    res := args[0]
+    for _, v := range args[1:] {
+        res -= v
+    }
+    return res
+}`,
+		"imul": `func imul(ctx context.Context, args ...int) int{
+    res := args[0]
+    for _, v := range args {
+        res *= v
+    }
+    return res
+}`,
+		"idiv": `func idiv(ctx context.Context, args ...int32) int{
+    res := args[0]
+    for _, v := range args {
+        res /= v
+    }
+    return res
+}`,
+	},
 }
 
-type Generator struct {
-	Program  ir.Program
-	Function ir.Function
-}
-
-func (g *Generator) GenerateProgram(program ProgramAST) (ir.Program, error) {
-	g.Program = ir.Program{
-		Name:      program.Name,
-		Constants: []ir.IConstant{},
-		Globals:   []ir.ISymbolDef{},
-		InitCode:  ir.NewCode(),
-		Functions: map[string]*ir.Function{},
-	}
-	for _, node := range program.Body {
-		switch node := node.(type) {
-		case *FunctionAST:
-			def, err := g.GenerateDefenition(*node)
-			if err != nil {
-				return g.Program, err
-			}
-			g.Program.Globals = append(g.Program.Globals, def)
-
-			irfn, err := g.GenerateFunction(*node)
-			if err != nil {
-				return g.Program, err
-			}
-			g.Program.Functions[node.Ident] = &irfn
-		case *VaribleAST:
-			var def ir.ISymbolDef
-			def, err := g.GenerateDefenition(node.Symbol)
-			if err != nil {
-				return g.Program, err
-			}
-			ind := len(g.Program.Globals)
-			g.Program.Globals = append(g.Program.Globals, def)
-			c, err := g.GenerateExpression(node.Value)
-			if err != nil {
-				return g.Program, err
-			}
-			code := g.Program.InitCode
-			code = code.WriteBytes(*c...)
-			code = code.WriteBytes(ir.GlobalSave(uint32(ind))...)
-			g.Program.InitCode = code
-		default:
-			return g.Program, fmt.Errorf("unexpected global ast node: %T", node)
-		}
-	}
-	for i, def := range g.Program.Globals {
-		if def, ok := def.(*ir.FunctionDef); ok {
-			if def.Name == "main" {
-				g.Program.InitCode = g.Program.InitCode.WriteBytes(ir.Call(uint32(i))...)
-			}
-		}
-	}
-	return g.Program, nil
-}
-
-func (g *Generator) GenerateDataType(dt DataType) (ir.IDataType, error) {
-	var irdt ir.IDataType
-	switch dt := dt.(type) {
-	case *SimpleDataTypeAST:
-		irdt = &ir.Primitive{Name: dt.Value}
-	default:
-		return irdt, fmt.Errorf("unexpected datatype %T", dt)
-	}
-	return irdt, nil
-}
-
-func (g *Generator) GenerateDefenition(node AST) (ir.ISymbolDef, error) {
-	var def ir.ISymbolDef
+func Generate(node AST) string {
+	var buf strings.Builder
 	switch node := node.(type) {
-	case FunctionAST:
-		var fnDef ir.FunctionDef
-		fnDef.Name = node.Ident
-		for _, v := range node.Arguments {
-			dt, err := g.GenerateDataType(v.DataType)
-			if err != nil {
-				return def, err
-			}
-			fnDef.Arguments = append(fnDef.Arguments, dt)
+	case *ProgramAST:
+		var globals []string
+		for _, gl := range node.Body {
+			globals = append(globals, Generate(gl))
 		}
-		for _, v := range node.RetTypes {
-			dt, err := g.GenerateDataType(v)
-			if err != nil {
-				return def, err
-			}
-			fnDef.Returns = append(fnDef.Returns, dt)
-		}
-		def = &fnDef
-	case SymbolDeclAST:
-		var vrDef ir.VaribleDef
-		vrDef.Name = node.Ident
-		dt, err := g.GenerateDataType(node.DataType)
+		tmpl, err := template.New("").Parse(tmpls["core"]["mainBody"])
 		if err != nil {
-			return def, err
+			log.Fatal(err)
 		}
-		vrDef.Type = dt
-		def = &vrDef
-	default:
-		return def, fmt.Errorf("unexpected ast node for defenition: %T", node)
-	}
-	return def, nil
-}
-
-func (g *Generator) GenerateFunction(fn FunctionAST) (ir.Function, error) {
-	g.Function = ir.Function{
-		Name:     fn.Ident,
-		Locals:   []ir.ISymbolDef{},
-		BodyCode: ir.NewCode(),
-	}
-	for i, v := range fn.Arguments {
-		df, err := g.GenerateDefenition(v)
+		tmpl.Execute(&buf, map[string]any{
+			"globals": globals,
+		})
+	case *FunctionAST:
+		var locals []string
+		for _, lc := range node.Body {
+			locals = append(locals, Generate(lc))
+		}
+		tmpl, err := template.New("").Parse(tmpls["core"]["fn"])
 		if err != nil {
-			return g.Function, err
+			log.Fatal(err)
 		}
-		g.Function.Locals = append(g.Function.Locals, df)
-
-		g.Function.BodyCode = g.Function.BodyCode.WriteBytes(ir.LocalSave(uint32(i))...)
-	}
-	for _, v := range fn.Body {
-		code, err := g.GenerateLocal(v)
-		if err != nil {
-			return g.Function, err
-		}
-		g.Function.BodyCode = g.Function.BodyCode.WriteBytes(*code...)
-	}
-	return g.Function, nil
-}
-
-func (g *Generator) GenerateLocal(l Local) (*ir.Code, error) {
-	code := ir.NewCode()
-	switch l := l.(type) {
-	case *SymbolExpressionAST:
-		c, err := g.GenerateExpression(l)
-		if err != nil {
-			return code, err
-		}
-		code = code.WriteBytes(*c...)
-	case *ReturnAST:
-		c, err := g.GenerateExpression(l.Expression)
-		if err != nil {
-			return code, err
-		}
-		code = code.WriteBytes(*c...)
-		code = code.WriteBytes(ir.Return(1)...)
+		tmpl.Execute(&buf, map[string]any{
+			"name":    node.Ident,
+			"args":    nil,
+			"returns": nil,
+			"locals":  locals,
+		})
 	case *VaribleAST:
-		var def ir.ISymbolDef
-		def, err := g.GenerateDefenition(l.Symbol)
+		tmpl, err := template.New("").Parse(tmpls["core"]["var"])
 		if err != nil {
-			return code, err
+			log.Fatal(err)
 		}
-		ind := len(g.Function.Locals)
-		g.Function.Locals = append(g.Function.Locals, def)
-		c, err := g.GenerateExpression(l.Value)
-		if err != nil {
-			return code, err
-		}
-		code = code.WriteBytes(*c...)
-		code = code.WriteBytes(ir.LocalSave(uint32(ind))...)
+		tmpl.Execute(&buf, map[string]any{
+			"name":  node.Symbol.Ident,
+			"dtype": "int",
+			"value": Generate(node.Value),
+		})
 	case *SetAST:
-		c, err := g.GenerateExpression(l.Value)
+		tmpl, err := template.New("").Parse(tmpls["core"]["set"])
 		if err != nil {
-			return code, err
+			log.Fatal(err)
 		}
-		code = code.WriteBytes(*c...)
-		ind := -1
-		for i, v := range g.Function.Locals {
-			if v.(*ir.VaribleDef).Name == l.Ident {
-				ind = i
-				break
-			}
-		}
-		if ind == -1 {
-			for i, v := range g.Program.Globals {
-				if v, ok := v.(*ir.VaribleDef); ok && v.Name == l.Ident {
-					ind = i
-					break
-				}
-			}
-			if ind == -1 {
-				return code, fmt.Errorf("symbol '%s' not found for function '%s'", l.Ident, g.Function.Name)
-			}
-			code = code.WriteBytes(ir.GlobalSave(uint32(ind))...)
-		} else {
-			code = code.WriteBytes(ir.LocalSave(uint32(ind))...)
-		}
-	case *IfAST:
-		exprCode, err := g.GenerateExpression(l.Expr)
-		if err != nil {
-			return code, err
-		}
-		code = code.WriteBytes(*exprCode...)
-		start := len(*g.Function.BodyCode) + len(*exprCode)
-		thenCode := ir.NewCode()
-		for _, v := range l.ThenBody {
-			temp, err := g.GenerateLocal(v)
-			if err != nil {
-				return code, err
-			}
-			thenCode = thenCode.WriteBytes(*temp...)
-		}
-		thenOffset := len(*thenCode)
-		elseCode := ir.NewCode()
-		for _, v := range l.ElseBody {
-			temp, err := g.GenerateLocal(v)
-			if err != nil {
-				return code, err
-			}
-			elseCode = elseCode.WriteBytes(*temp...)
-		}
-		elseOffset := len(*elseCode)
-		elseCode = elseCode.WriteBytes(ir.Jump(uint32(start + thenOffset + elseOffset + 5 + 5))...)
-		elseOffset = len(*elseCode)
-		code = code.WriteBytes(ir.JumpCondition(uint32(start + elseOffset + 5))...)
-		code = code.WriteBytes(*elseCode...)
-		code = code.WriteBytes(*thenCode...)
-		code = code.WriteByte(ir.Null())
-	default:
-		return code, fmt.Errorf("unexpected local ast type %T", l)
-	}
-	return code, nil
-}
-
-func (g *Generator) GenerateExpression(expr Expression) (*ir.Code, error) {
-	code := ir.NewCode()
-	switch expr := expr.(type) {
-	case *IntegerAST:
-		intConst := ir.Integer{Value: expr.Integer}
-		ind := -1
-		for i, v := range g.Program.Constants {
-			if v.String() == intConst.String() {
-				ind = i
-			}
-		}
-		if ind == -1 {
-			ind = len(g.Program.Constants)
-			g.Program.Constants = append(g.Program.Constants, &intConst)
-		}
-		code = code.WriteBytes(ir.Load(uint32(ind))...)
-	case *SymbolAST:
-		ind := -1
-		for i, s := range g.Function.Locals {
-			if s.(*ir.VaribleDef).Name == expr.Symbol {
-				ind = i
-				break
-			}
-		}
-		if ind == -1 {
-			for i, v := range g.Program.Globals {
-				if v, ok := v.(*ir.VaribleDef); ok && v.Name == expr.Symbol {
-					ind = i
-					break
-				}
-			}
-			if ind == -1 {
-				return code, fmt.Errorf("symbol '%s' not found for function '%s'", expr.Symbol, g.Function.Name)
-			}
-			code = code.WriteBytes(ir.GlobalLoad(uint32(ind))...)
-		} else {
-			code = code.WriteBytes(ir.LocalLoad(uint32(ind))...)
-		}
+		tmpl.Execute(&buf, map[string]any{
+			"name":  node.Ident,
+			"value": Generate(node.Value),
+		})
 	case *SymbolExpressionAST:
-		for i := len(expr.Arguments) - 1; i >= 0; i-- {
-			c, err := g.GenerateExpression(expr.Arguments[i])
-			if err != nil {
-				return code, err
-			}
-			code = code.WriteBytes(*c...)
+		var args []string
+		for _, arg := range node.Arguments {
+			args = append(args, Generate(arg))
 		}
-		ind := -1
-		for i, s := range g.Program.Globals {
-			if s, ok := s.(*ir.FunctionDef); ok && s.Name == expr.Symbol {
-				ind = i
-				break
-			}
+		tmpl, err := template.New("").Parse(tmpls["core"]["call"])
+		if err != nil {
+			log.Fatal(err)
 		}
-		if ind == -1 {
-			if bt, ok := builtins[expr.Symbol]; ok {
-				code = code.WriteBytes(bt...)
-				return code, nil
-			}
-			return code, fmt.Errorf("function '%s' not found", expr.Symbol)
+		tmpl.Execute(&buf, map[string]any{
+			"name": node.Symbol,
+			"args": args,
+		})
+	case *IntegerAST:
+		tmpl, err := template.New("").Parse(tmpls["core"]["atom"])
+		if err != nil {
+			log.Fatal(err)
 		}
-		code = code.WriteBytes(ir.Call(uint32(ind))...)
+		tmpl.Execute(&buf, map[string]any{
+			"value": node.Integer,
+		})
+	case *SymbolAST:
+		tmpl, err := template.New("").Parse(tmpls["core"]["atom"])
+		if err != nil {
+			log.Fatal(err)
+		}
+		tmpl.Execute(&buf, map[string]any{
+			"value": node.Symbol,
+		})
 	default:
-		return code, fmt.Errorf("unexpected argument type %T", expr)
+		log.Fatalf("unexpected node type %T", node)
 	}
-	return code, nil
+	return buf.String()
 }
