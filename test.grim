@@ -9,5 +9,4 @@
 
 @fn main[] {
    @set result = (fib 20);
-   (println result)
 }

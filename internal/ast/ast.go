@@ -1,4 +1,4 @@
-package compiler
+package ast
 
 type AST interface {
 	// ast()
