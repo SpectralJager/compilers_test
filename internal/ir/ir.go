@@ -6,12 +6,24 @@ type IR interface {
 	fmt.Stringer
 }
 
-type Block interface {
-	IR
-	block()
-}
-
-type Instruction interface {
+type INSTR interface {
 	IR
 	instr()
+}
+
+type OBJ interface {
+	IR
+	obj()
+}
+
+type Program struct {
+	Name  string
+	Types []Type
+	Init  []INSTR
+	Blocs []Bloc
+}
+
+type Type struct {
+	Kind    typeKind
+	Subtype []Type
 }
