@@ -1,98 +1,78 @@
 package ast
 
-type AST interface {
-	// ast()
-}
+import (
+	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer"
+)
+
+var Lexer = lexer.MustStateful(lexer.Rules{
+	"Root": []lexer.Rule{
+		{Name: "whitespace", Pattern: `[ \t\r\n]+`},
+		{Name: "comment", Pattern: `//[^\n]*\n`},
+
+		{Name: "Varible", Pattern: `@var`},
+
+		{Name: "Symbol", Pattern: `[a-zA-Z_]+[a-zA-Z0-9_]*`},
+		{Name: "Integer", Pattern: `[-+]?[0-9]+`},
+
+		{Name: "Brace[", Pattern: `\[`},
+		{Name: "Brace]", Pattern: `\]`},
+		{Name: "Brace(", Pattern: `\(`},
+		{Name: "Brace)", Pattern: `\)`},
+		{Name: "Brace<", Pattern: `<`},
+		{Name: "Brace>", Pattern: `>`},
+		{Name: "Brace{", Pattern: `{`},
+		{Name: "Brace}", Pattern: `}`},
+		{Name: "Colon", Pattern: `:`},
+		{Name: "SemiColon", Pattern: `;`},
+		{Name: "Assign", Pattern: `=`},
+	},
+})
+
+var Parser = participle.MustBuild[ProgramAST](
+	participle.Lexer(Lexer),
+	participle.Union[Global](
+		&VaribleAST{},
+	),
+	participle.Union[Expression](
+		&SymbolAST{},
+		&IntegerAST{},
+	),
+)
 
 type Global interface {
-	AST
 	global()
 }
 
-func (g *FunctionAST) global() {}
-func (g *VaribleAST) global()  {}
-
-type Local interface {
-	AST
-	local()
-}
-
-func (l *IfAST) local()               {}
-func (l *ReturnAST) local()           {}
-func (l *SymbolExpressionAST) local() {}
-func (l *VaribleAST) local()          {}
-func (l *SetAST) local()              {}
+func (g *VaribleAST) global() {}
 
 type Expression interface {
 	expr()
 }
 
-func (e *SymbolExpressionAST) expr() {}
-func (e *SymbolAST) expr()           {}
-func (e *IntegerAST) expr()          {}
-func (e *FloatAST) expr()            {}
-
-type DataType interface {
-	AST
-	dat()
-}
-
-func (d *SimpleDataTypeAST) dat() {}
+func (e *SymbolAST) expr()  {}
+func (e *IntegerAST) expr() {}
 
 type ProgramAST struct {
 	Name string
 	Body []Global `parser:"@@+"`
 }
 
-type FunctionAST struct {
-	Ident     string          `parser:"'@fn' @Symbol"`
-	Arguments []SymbolDeclAST `parser:"'['@@*']'"`
-	RetTypes  []DataType      `parser:"('<'@@+'>')?"`
-	Body      []Local         `parser:"'{'@@+'}'"`
-}
-
-type IfAST struct {
-	Expr     Expression `parser:"'@if' @@"`
-	ThenBody []Local    `parser:"'{'@@+"`
-	ElseBody []Local    `parser:"('else''=>' @@+)?'}'"`
-}
-
-type ReturnAST struct {
-	Expression Expression `parser:"'@return' @@?';'"`
-}
-
 type VaribleAST struct {
-	Symbol SymbolDeclAST `parser:"'@var' @@ '='"`
-	Value  Expression    `parser:"@@ ';'"`
+	Symbol SymbolAST  `parser:"'@var' @@ "`
+	Type   TypeAST    `parser:"':' @@ "`
+	Value  Expression `parser:" '=' @@ ';'"`
 }
 
-type SetAST struct {
-	Ident string     `parser:"'@set' @Symbol '='"`
-	Value Expression `parser:"@@ ';'"`
-}
-
-type SymbolDeclAST struct {
-	Ident    string   `parser:"@Symbol"`
-	DataType DataType `parser:"':' @@"`
-}
-
-type SimpleDataTypeAST struct {
-	Value string `parser:"@Symbol"`
-}
-
-type SymbolExpressionAST struct {
-	Symbol    string       `parser:"'(' @Symbol"`
-	Arguments []Expression `parser:"@@* ')'"`
+type TypeAST struct {
+	Primary   SymbolAST `parser:"@@"`
+	Secondary []TypeAST `parser:"('<' @@+ '>')?"`
 }
 
 type SymbolAST struct {
-	Symbol string `parser:"@Symbol"`
+	Value string `parser:"@Symbol"`
 }
 
 type IntegerAST struct {
-	Integer int `parser:"@Integer"`
-}
-
-type FloatAST struct {
-	Integer float64 `parser:"@Float"`
+	Value int `parser:"@Integer"`
 }
