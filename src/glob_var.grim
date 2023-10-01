@@ -1,0 +1,5 @@
+// declaring global variables
+@var alpha:int = 12;
+@var beta12:int = 12;
+@var tetha_12: int = 12;
+@var lupin:int = (int/add alpha beta12 12);

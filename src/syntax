@@ -1,0 +1,24 @@
+// variables
+@var alpha:int = 12;
+// constants
+@const alpha = 2;
+// functions
+@fn main() <void> {
+    // assignment
+    @set alpha = 12; 
+    // expression
+    (int/add alpha 12)
+    // control flow
+    @if (int/lt alpha 12) {
+        ...
+    elif (int/gt alpha 12) =>
+        ...
+    else =>
+        ...
+    }
+    @while (int/gt alpha 12) {
+        ...
+    else =>
+        ... 
+    }
+}

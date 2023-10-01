@@ -13,7 +13,7 @@
 # Language specification:
 === 1. Base data types
 ====== 1) int 
-====== 2) bool 
+====== 2) bool
 === 2. Custom data types
 ====== 2) function
 === 3. Memory managment
