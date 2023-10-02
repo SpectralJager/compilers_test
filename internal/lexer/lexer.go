@@ -13,6 +13,7 @@ var Lexer = lexer.MustStateful(lexer.Rules{
 		{Name: "If", Pattern: `@if`},
 		{Name: "Return", Pattern: `@ret`},
 		{Name: "Else", Pattern: `else`},
+		{Name: "Elif", Pattern: `elif`},
 
 		{Name: "Symbol", Pattern: `[a-zA-Z_]+[a-zA-Z0-9_]*`},
 		{Name: "Integer", Pattern: `[-+]?[0-9]+`},
