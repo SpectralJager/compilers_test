@@ -1,0 +1,13 @@
+@var n:int = 40;
+
+@fn fib(n:int) <int> {
+    @if (int/lt n 2) {
+        @ret n;
+    else => 
+        @ret (fib (int/add (int/sub n 1) (int/sub n 2)));
+    }
+}
+
+@fn main() {
+    @var res:int = (fib n);
+}

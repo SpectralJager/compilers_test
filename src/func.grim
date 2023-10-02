@@ -4,5 +4,5 @@
 }
 
 @fn func(a:int) <int> {
-    @ret (int/add 12 10 a)
+    @ret (int/add 12 10 a);
 }

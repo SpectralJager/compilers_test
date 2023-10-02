@@ -22,6 +22,10 @@ func TestParser(t *testing.T) {
 			desc: "parse functions",
 			src:  "../../src/func.grim",
 		},
+		{
+			desc: "parse fib prog",
+			src:  "../../src/fib.grim",
+		},
 	}
 	out, err := os.OpenFile("output.xml", os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {

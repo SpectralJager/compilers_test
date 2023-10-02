@@ -10,11 +10,14 @@ var Lexer = lexer.MustStateful(lexer.Rules{
 		{Name: "Function", Pattern: `@fn`},
 		{Name: "Varible", Pattern: `@var`},
 		{Name: "While", Pattern: `@while`},
+		{Name: "If", Pattern: `@if`},
 		{Name: "Return", Pattern: `@ret`},
+		{Name: "Else", Pattern: `else`},
 
 		{Name: "Symbol", Pattern: `[a-zA-Z_]+[a-zA-Z0-9_]*`},
 		{Name: "Integer", Pattern: `[-+]?[0-9]+`},
 
+		{Name: "ArrowR", Pattern: `=>`},
 		{Name: "Brace[", Pattern: `\[`},
 		{Name: "Brace]", Pattern: `\]`},
 		{Name: "Brace(", Pattern: `\(`},

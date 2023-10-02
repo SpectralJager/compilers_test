@@ -3,7 +3,7 @@ package ast
 import "fmt"
 
 type ReturnAST struct {
-	Value EXPR `parser:"'@ret' @@"`
+	Value EXPR `parser:"'@ret' @@ ';'"`
 }
 
 func (r *ReturnAST) String() string {

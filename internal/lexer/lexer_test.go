@@ -47,6 +47,14 @@ func TestLexer(t *testing.T) {
 			src: "@while (int/lt a 12) {}",
 			exp: []string{"@while", "(", "int", "/", "lt", "a", "12", ")", "{", "}"},
 		},
+		{
+			src: "@if (int/lt a 12) {}",
+			exp: []string{"@if", "(", "int", "/", "lt", "a", "12", ")", "{", "}"},
+		},
+		{
+			src: "@if (int/lt a 12) {(int/add a 12) else => (int/sub a 12)}",
+			exp: []string{"@if", "(", "int", "/", "lt", "a", "12", ")", "{", "(", "int", "/", "add", "a", "12", ")", "else", "=>", "(", "int", "/", "sub", "a", "12", ")", "}"},
+		},
 	}
 	for i, tC := range testCases {
 		t.Run(tC.src, func(t *testing.T) {
