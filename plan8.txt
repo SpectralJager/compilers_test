@@ -22,3 +22,5 @@
 === 4. Control flow
 ====== 1) if-elif-else
 ====== 2) while-else
+# Grim state machine:
+=== 1. Call stack of functions
