@@ -10,7 +10,7 @@ functions |>
 func:
 	var.new a int
 	var.pop a
-	block.begin // allocate memory
-	var.new a int // other a variable
-	block.end // deallocate memory
+	block.begin
+	var.new a int
+	block.end
 */
