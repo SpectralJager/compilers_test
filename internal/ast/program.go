@@ -7,6 +7,7 @@ import (
 
 type ProgramAST struct {
 	Name string
+	Path string
 	Body []GLOBAL `parser:"@@+"`
 }
 

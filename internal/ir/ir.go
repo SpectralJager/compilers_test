@@ -2,17 +2,22 @@ package ir
 
 /*
 module:
+
 	name -> ...
 	path -> ...
 	imports |>
 		"..." as ...
+
 global |>
+
 	block.begin global
 	var.new a int
 	var.set a 12
 	call main 0
 	block.end
+
 main |>
+
 	block.begin fn
 	var.new res int
 	const.push 40
@@ -21,7 +26,9 @@ main |>
 	var.push res
 	callb printf 1
 	block.end
+
 fib |>
+
 	block.begin fn
 	var.new n int
 	var.pop n
