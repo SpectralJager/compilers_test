@@ -6,56 +6,64 @@ import (
 )
 
 func TestIr(t *testing.T) {
-	mod := NewModule(
-		"test",
-		"",
-		nil,
-		NewChunk(
-			"GLOBAL",
-			OPBlockBegin(NewSymbol("global", nil)),
-			OPVarNew(NewSymbol("n", nil), NewSymbol("int", nil)),
-			OPVarSet(NewSymbol("n", nil), NewInteger(40)),
-			OPCall(NewSymbol("main", nil), NewInteger(1)),
-			OPBlockEnd(),
-		),
-		NewChunk(
-			"main",
-			OPBlockBegin(NewSymbol("function", nil)),
-			OPVarNew(NewSymbol("res", nil), NewSymbol("int", nil)),
-			OPVarPush(NewSymbol("n", nil)),
-			OPCall(NewSymbol("fib", nil), NewInteger(1)),
-			OPVarPop(NewSymbol("res", nil)),
-			OPVarPush(NewSymbol("res", nil)),
-			OPCallb(NewSymbol("io", NewSymbol("println", nil)), NewInteger(1)),
-			OPBlockEnd(),
-		),
-		NewChunk(
-			"fib",
-			OPBlockBegin(NewSymbol("function", nil)),
-			OPVarNew(NewSymbol("n", nil), NewSymbol("int", nil)),
-			OPVarPop(NewSymbol("n", nil)),
-			OPVarPush(NewSymbol("n", nil)),
-			OPConstPush(NewInteger(2)),
-			OPCallb(NewSymbol("int", NewSymbol("lt", nil)), NewInteger(2)),
-			OPJumpFalse(NewSymbol("if_end_token", nil)),
-			OPBlockBegin(NewSymbol("local", nil)),
-			OPVarPush(NewSymbol("n", nil)),
-			OPStackType(NewSymbol("int", nil)),
-			OPReturn(NewInteger(1)),
-			OPBlockEnd(),
-			OPLabel(NewSymbol("if_end_token", nil)),
-			OPVarPush(NewSymbol("n", nil)),
-			OPConstPush(NewInteger(1)),
-			OPCallb(NewSymbol("int", NewSymbol("sub", nil)), NewInteger(2)),
-			OPVarPush(NewSymbol("n", nil)),
-			OPConstPush(NewInteger(2)),
-			OPCallb(NewSymbol("int", NewSymbol("sub", nil)), NewInteger(2)),
-			OPCallb(NewSymbol("int", NewSymbol("add", nil)), NewInteger(2)),
-			OPCall(NewSymbol("fib", nil), NewInteger(1)),
-			OPStackType(NewSymbol("int", nil)),
-			OPReturn(NewInteger(1)),
-			OPBlockEnd(),
-		),
+	module := NewModule("test", ".")
+	module.AddChunk(
+		NewChunk("GLOBAL").
+			AddBlock(
+				NewBlock("start").
+					AddInstructions(
+						VarNew(NewSymbol("n", nil), NewSymbol("int", nil)),
+						VarSet(NewSymbol("n", nil), NewInteger(40)),
+						Call(NewSymbol("main", nil), NewInteger(0)),
+					)))
+	module.AddChunk(
+		NewChunk("main").
+			AddBlock(
+				NewBlock("start").
+					AddInstructions(
+						VarNew(NewSymbol("res", nil), NewSymbol("int", nil)),
+						VarPush(NewSymbol("n", nil)),
+						Call(NewSymbol("fib", nil), NewInteger(1)),
+						VarPop(NewSymbol("res", nil)),
+						VarPush(NewSymbol("res", nil)),
+						CallBuiltin(NewSymbol("io", NewSymbol("println", nil)), NewInteger(1)),
+					),
+			),
 	)
-	fmt.Println(mod.String())
+	module.AddChunk(
+		NewChunk("fib").
+			AddBlocks(
+				NewBlock("start").
+					AddInstructions(
+						VarNew(NewSymbol("n", nil), NewSymbol("int", nil)),
+						VarPop(NewSymbol("n", nil)),
+						VarPush(NewSymbol("n", nil)),
+						ConstPush(NewInteger(2)),
+						CallBuiltin(NewSymbol("int", NewSymbol("lt", nil)), NewInteger(2)),
+						BrTrue(NewSymbol("if_00000001", nil), NewSymbol("endif_00000001", nil)),
+					),
+				NewBlock("if_00000001").
+					AddInstructions(
+						VarPush(NewSymbol("n", nil)),
+						StackType(NewSymbol("int", nil)),
+						VarFree(NewSymbol("n", nil)),
+						Return(NewInteger(1)),
+					),
+				NewBlock("endif_00000001").
+					AddInstructions(
+						VarPush(NewSymbol("n", nil)),
+						ConstPush(NewInteger(1)),
+						CallBuiltin(NewSymbol("int", NewSymbol("sub", nil)), NewInteger(2)),
+						VarPush(NewSymbol("n", nil)),
+						ConstPush(NewInteger(2)),
+						CallBuiltin(NewSymbol("int", NewSymbol("sub", nil)), NewInteger(2)),
+						CallBuiltin(NewSymbol("int", NewSymbol("add", nil)), NewInteger(2)),
+						Call(NewSymbol("fib", nil), NewInteger(1)),
+						StackType(NewSymbol("int", nil)),
+						VarFree(NewSymbol("n", nil)),
+						Return(NewInteger(1)),
+					),
+			),
+	)
+	fmt.Println(module.String())
 }

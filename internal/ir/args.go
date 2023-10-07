@@ -1,9 +1,6 @@
 package ir
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
 type InstrArg interface {
 	fmt.Stringer
@@ -21,24 +18,21 @@ func NewInteger(value int) *Integer {
 	return &Integer{Value: value}
 }
 
-func (i *Integer) String() string {
-	return fmt.Sprintf("%d", i.Value)
-}
+func (i *Integer) String() string { return fmt.Sprintf("%d", i.Value) }
 
 type Symbol struct {
-	Name      string
-	SubSymbol *Symbol
+	Primary   string
+	Secondary *Symbol
 }
 
-func NewSymbol(name string, sub *Symbol) *Symbol {
-	return &Symbol{Name: name, SubSymbol: sub}
+func NewSymbol(p string, s *Symbol) *Symbol {
+	return &Symbol{Primary: p, Secondary: s}
 }
 
-func (s *Symbol) String() string {
-	var buf strings.Builder
-	fmt.Fprintf(&buf, "%s", s.Name)
-	if s.SubSymbol != nil {
-		fmt.Fprintf(&buf, "/%s", s.SubSymbol.String())
+func (i *Symbol) String() string {
+	if i.Secondary == nil {
+		return i.Primary
+	} else {
+		return fmt.Sprintf("%s/%s", i.Primary, i.Secondary)
 	}
-	return buf.String()
 }
