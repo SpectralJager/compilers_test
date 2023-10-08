@@ -10,4 +10,5 @@
 
 @fn main() {
     @var res:int = (fib n);
+    (println res)
 }

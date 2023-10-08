@@ -1,5 +1,6 @@
 <ProgramAST>
 	<Name>parse global variable</Name>
+	<Path></Path>
 	<Body>
 		<Symbol>
 			<Primary>alpha</Primary>
@@ -69,6 +70,7 @@
 </ProgramAST>
 <ProgramAST>
 	<Name>parse functions</Name>
+	<Path></Path>
 	<Body>
 		<Symbol>
 			<Primary>main</Primary>
@@ -149,6 +151,7 @@
 </ProgramAST>
 <ProgramAST>
 	<Name>parse fib prog</Name>
+	<Path></Path>
 	<Body>
 		<Symbol>
 			<Primary>n</Primary>
