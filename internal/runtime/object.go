@@ -39,5 +39,5 @@ func (s *String) String() string {
 	return fmt.Sprintf("string:%s", s.Value)
 }
 func (s *Boolean) String() string {
-	return fmt.Sprintf("string:%v", s.Value)
+	return fmt.Sprintf("bool:%v", s.Value)
 }

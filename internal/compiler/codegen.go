@@ -18,6 +18,25 @@ var builtins = map[string][]byte{
 	"itof": ir.IntFunc(9),
 	"itos": ir.IntFunc(10),
 	"itob": ir.IntFunc(11),
+
+	"fadd": ir.FloatFunc(0),
+	"fsub": ir.FloatFunc(1),
+	"fmul": ir.FloatFunc(2),
+	"fdiv": ir.FloatFunc(3),
+	"flt":  ir.FloatFunc(4),
+	"fgt":  ir.FloatFunc(5),
+	"fgeq": ir.FloatFunc(6),
+	"fleq": ir.FloatFunc(7),
+	"feq":  ir.FloatFunc(8),
+	"ftoi": ir.FloatFunc(9),
+	"ftos": ir.FloatFunc(10),
+	"ftob": ir.FloatFunc(11),
+
+	"scon": ir.StringFunc(0),
+	"slen": ir.StringFunc(1),
+	"stoi": ir.StringFunc(2),
+	"stof": ir.StringFunc(3),
+	"stob": ir.StringFunc(4),
 }
 
 type Generator struct {
