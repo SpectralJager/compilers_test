@@ -78,7 +78,7 @@ var OperandString = map[OperandType]string{
 	OP_BR_FALSE: "BR.FALSE",
 }
 
-func VarNew(symbol *Symbol, tp *Symbol) *Instruction {
+func VarNew(symbol *Symbol, tp *Type) *Instruction {
 	return NewInstruction(OP_VAR_NEW, symbol, tp)
 }
 func VarSet(symbol *Symbol, val InstrArg) *Instruction {
@@ -111,7 +111,7 @@ func StackPop() *Instruction {
 func StackDup() *Instruction {
 	return NewInstruction(OP_STACK_DUP)
 }
-func StackType(tp *Symbol) *Instruction {
+func StackType(tp *Type) *Instruction {
 	return NewInstruction(OP_STACK_TYPE, tp)
 }
 func Br(label *Symbol) *Instruction {

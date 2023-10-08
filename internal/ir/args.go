@@ -1,6 +1,9 @@
 package ir
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type InstrArg interface {
 	fmt.Stringer
@@ -9,6 +12,7 @@ type InstrArg interface {
 
 func (i *Integer) instrArg() {}
 func (i *Symbol) instrArg()  {}
+func (i *Type) instrArg()    {}
 
 type Integer struct {
 	Value int
@@ -34,5 +38,28 @@ func (i *Symbol) String() string {
 		return i.Primary
 	} else {
 		return fmt.Sprintf("%s/%s", i.Primary, i.Secondary)
+	}
+}
+
+type Type struct {
+	Primary *Symbol
+	Generic []*Type
+}
+
+func NewType(p *Symbol, g ...*Type) *Type {
+	return &Type{Primary: p, Generic: g}
+}
+
+func (i *Type) String() string {
+	if i.Generic == nil {
+		return i.Primary.String()
+	} else {
+		var buf strings.Builder
+		fmt.Fprintf(&buf, "%s<", i.Primary.String())
+		for _, g := range i.Generic {
+			fmt.Fprintf(&buf, " %s", g.String())
+		}
+		fmt.Fprint(&buf, ">")
+		return buf.String()
 	}
 }

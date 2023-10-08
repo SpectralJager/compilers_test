@@ -43,12 +43,12 @@ func (ch *Chunk) GetBlock(name string) *Block {
 
 func (ch *Chunk) String() string {
 	var buf strings.Builder
-	fmt.Fprintf(&buf, ".%s =>\n", ch.Name)
+	fmt.Fprintf(&buf, "\n.%s =>\n", ch.Name)
 	if len(ch.Blocks) == 0 {
 		fmt.Fprint(&buf, "\tempty\n")
 	} else {
 		for _, bl := range ch.Blocks {
-			fmt.Fprintf(&buf, "%s\n", bl.String())
+			fmt.Fprintf(&buf, "%s", bl.String())
 		}
 	}
 	return buf.String()

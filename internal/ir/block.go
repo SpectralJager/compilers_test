@@ -23,9 +23,13 @@ func (b *Block) AddInstructions(instrs ...*Instruction) *Block {
 
 func (b *Block) String() string {
 	var buf strings.Builder
-	fmt.Fprintf(&buf, "%s:\n", b.Name)
-	for _, instr := range b.Code {
-		fmt.Fprintf(&buf, "\t%s\n", instr.String())
+	if b.Code != nil {
+		if b.Name != "" {
+			fmt.Fprintf(&buf, "%s:\n", b.Name)
+		}
+		for _, instr := range b.Code {
+			fmt.Fprintf(&buf, "\t%s\n", instr.String())
+		}
 	}
 	return buf.String()
 }

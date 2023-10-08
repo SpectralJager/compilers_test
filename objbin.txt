@@ -1,8 +1,0 @@
-# Concept
-tag:options:value
-1. int, float, bool
-    tag:value
-2. string
-    tag:len:value
-3. list
-    tag:itemTag
