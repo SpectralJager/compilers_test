@@ -22,3 +22,6 @@ func (t TypeAST) String() string {
 	}
 	return buf.String()
 }
+
+// part of ...
+func (t TypeAST) atom() {}

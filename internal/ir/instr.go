@@ -25,6 +25,7 @@ const (
 	OP_CONST_LOAD
 
 	OP_CALL
+	OP_RETURN
 
 	OP_LABEL
 
@@ -63,6 +64,8 @@ func (ir InstrKind) String() string {
 		return "const.load"
 	case OP_CALL:
 		return "call"
+	case OP_RETURN:
+		return "return"
 	case OP_LABEL:
 		return "label"
 	case OP_BR:
@@ -189,4 +192,8 @@ func StackDup() InstrIR {
 }
 func StackType(tp TypeIR) InstrIR {
 	return InstrIR{Op: OP_STACK_TYPE, Args: []IR{&tp}}
+}
+
+func Return(count IntIR) InstrIR {
+	return InstrIR{Op: OP_RETURN, Args: []IR{&count}}
 }
