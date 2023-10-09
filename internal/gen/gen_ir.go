@@ -6,26 +6,21 @@ import (
 	"log"
 )
 
-type GeneratorModuleIR struct {
+type GeneratorIR struct {
 	Program *ast.ProgramAST
 	Module  ir.ModuleIR
 	rec     chan ir.FunctionIR
 }
 
-type GenerateFunctionIR struct {
-	Fast *ast.FunctionAST
-	Fir  *ir.FunctionIR
-}
-
-func NewGenIr(prog *ast.ProgramAST) *GeneratorModuleIR {
-	return &GeneratorModuleIR{
+func NewGenIr(prog *ast.ProgramAST) *GeneratorIR {
+	return &GeneratorIR{
 		Program: prog,
 		Module:  ir.NewModule(prog.Name),
 		rec:     make(chan ir.FunctionIR),
 	}
 }
 
-func (g *GeneratorModuleIR) Start() *ir.ModuleIR {
+func (g *GeneratorIR) Start() *ir.ModuleIR {
 	cnt := 0
 	for _, gl := range g.Program.Body {
 		switch gl := gl.(type) {
