@@ -99,101 +99,101 @@ func (ir *InstrIR) String() string {
 	return buf.String()
 }
 
-// func GlobalNew(name SymbolIR) InstrIR {
-// 	return InstrIR{
+// func GlobalNew(name SymbolIR) *InstrIR {
+// 	return &InstrIR{
 // 		Op:   OP_GLOBAL_NEW,
 // 		Args: []IR{&name},
 // 	}
 // }
 
-// func GlobalLoad(name SymbolIR) InstrIR {
-// 	return InstrIR{
+// func GlobalLoad(name SymbolIR) *InstrIR {
+// 	return &InstrIR{
 // 		Op:   OP_GLOBAL_LOAD,
 // 		Args: []IR{&name},
 // 	}
 // }
 
-// func GlobalSave(name SymbolIR) InstrIR {
-// 	return InstrIR{
+// func GlobalSave(name SymbolIR) *InstrIR {
+// 	return &InstrIR{
 // 		Op:   OP_GLOBAL_SAVE,
 // 		Args: []IR{&name},
 // 	}
 // }
 
-func VarNew(name SymbolIR) InstrIR {
-	return InstrIR{
+func VarNew(name *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_VAR_NEW,
-		Args: []IR{&name},
+		Args: []IR{name},
 	}
 }
 
-func VarLoad(name SymbolIR) InstrIR {
-	return InstrIR{
+func VarLoad(name *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_VAR_LOAD,
-		Args: []IR{&name},
+		Args: []IR{name},
 	}
 }
 
-func VarSave(name SymbolIR) InstrIR {
-	return InstrIR{
+func VarSave(name *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_VAR_SAVE,
-		Args: []IR{&name},
+		Args: []IR{name},
 	}
 }
 
-func ConstLoadInt(val IntIR) InstrIR {
-	return InstrIR{
+func ConstLoadInt(val *IntIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_CONST_LOAD,
-		Args: []IR{&val},
+		Args: []IR{val},
 	}
 }
 
-func Call(fn SymbolIR, count IntIR) InstrIR {
-	return InstrIR{
+func Call(fn *SymbolIR, count *IntIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_CALL,
-		Args: []IR{&fn, &count},
+		Args: []IR{fn, count},
 	}
 }
 
-func Lable(name SymbolIR) InstrIR {
-	return InstrIR{
+func Lable(name *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_LABEL,
-		Args: []IR{&name},
+		Args: []IR{name},
 	}
 }
 
-func Br(label SymbolIR) InstrIR {
-	return InstrIR{
+func Br(label *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_BR,
-		Args: []IR{&label},
+		Args: []IR{label},
 	}
 }
 
-func BrTrue(thn, els SymbolIR) InstrIR {
-	return InstrIR{
+func BrTrue(thn, els *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_BR_TRUE,
-		Args: []IR{&thn, &els},
+		Args: []IR{thn, els},
 	}
 }
 
-func BrFalse(thn, els SymbolIR) InstrIR {
-	return InstrIR{
+func BrFalse(thn, els *SymbolIR) *InstrIR {
+	return &InstrIR{
 		Op:   OP_BR_FALSE,
-		Args: []IR{&thn, &els},
+		Args: []IR{thn, els},
 	}
 }
 
-func StackPop() InstrIR {
-	return InstrIR{Op: OP_STACK_POP}
+func StackPop() *InstrIR {
+	return &InstrIR{Op: OP_STACK_POP}
 }
 
-func StackDup() InstrIR {
-	return InstrIR{Op: OP_STACK_DUP}
+func StackDup() *InstrIR {
+	return &InstrIR{Op: OP_STACK_DUP}
 }
-func StackType(tp TypeIR) InstrIR {
-	return InstrIR{Op: OP_STACK_TYPE, Args: []IR{&tp}}
+func StackType(tp *TypeIR) *InstrIR {
+	return &InstrIR{Op: OP_STACK_TYPE, Args: []IR{tp}}
 }
 
-func Return(count IntIR) InstrIR {
-	return InstrIR{Op: OP_RETURN, Args: []IR{&count}}
+func Return(count *IntIR) *InstrIR {
+	return &InstrIR{Op: OP_RETURN, Args: []IR{count}}
 }

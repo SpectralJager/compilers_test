@@ -12,19 +12,19 @@ type IR interface {
 
 type ModuleIR struct {
 	Name      string
-	Init      []InstrIR
+	Init      []*InstrIR
 	Functions map[string]FunctionIR
 }
 
-func NewModule(name string) ModuleIR {
-	return ModuleIR{
+func NewModule(name string) *ModuleIR {
+	return &ModuleIR{
 		Name:      name,
 		Functions: make(map[string]FunctionIR),
-		Init:      make([]InstrIR, 0),
+		Init:      make([]*InstrIR, 0),
 	}
 }
 
-func (m *ModuleIR) WriteInstrs(instr ...InstrIR) {
+func (m *ModuleIR) WriteInstrs(instr ...*InstrIR) {
 	m.Init = append(m.Init, instr...)
 }
 
@@ -51,14 +51,14 @@ func (ir *ModuleIR) String() string {
 
 type FunctionIR struct {
 	Name SymbolIR
-	Code []InstrIR
+	Code []*InstrIR
 }
 
-func NewFunction(name SymbolIR) FunctionIR {
-	return FunctionIR{Name: name}
+func NewFunction(name SymbolIR) *FunctionIR {
+	return &FunctionIR{Name: name}
 }
 
-func (ir *FunctionIR) WriteInstrs(instrs ...InstrIR) {
+func (ir *FunctionIR) WriteInstrs(instrs ...*InstrIR) {
 	ir.Code = append(ir.Code, instrs...)
 }
 
@@ -75,8 +75,8 @@ type IntIR struct {
 	Value int
 }
 
-func NewInt(val int) IntIR {
-	return IntIR{Value: val}
+func NewInt(val int) *IntIR {
+	return &IntIR{Value: val}
 }
 
 func (ir *IntIR) String() string {
@@ -88,8 +88,8 @@ type SymbolIR struct {
 	Secondary *SymbolIR
 }
 
-func NewSymbol(p string, s *SymbolIR) SymbolIR {
-	return SymbolIR{
+func NewSymbol(p string, s *SymbolIR) *SymbolIR {
+	return &SymbolIR{
 		Primary:   p,
 		Secondary: s,
 	}
@@ -107,8 +107,8 @@ type TypeIR struct {
 	Generic []TypeIR
 }
 
-func NewType(p SymbolIR, g ...TypeIR) TypeIR {
-	return TypeIR{
+func NewType(p SymbolIR, g ...TypeIR) *TypeIR {
+	return &TypeIR{
 		Primary: p,
 		Generic: g,
 	}
