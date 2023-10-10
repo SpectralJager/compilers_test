@@ -2,6 +2,7 @@ package gen
 
 import (
 	"context"
+	"fmt"
 	"grimlang/internal/ast"
 	"grimlang/internal/ir"
 	"log"
@@ -12,10 +13,12 @@ func _GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
 	for _, gl := range prog.Body {
 		switch gl := gl.(type) {
 		case *ast.FunctionAST:
+			m.WriteFunctions(_GenFunction(gl))
 		default:
 			m.WriteInstrs(_GenGlobal(context.TODO(), gl)...)
 		}
 	}
+	m.WriteInstrs(ir.Call(ir.NewSymbol("main", nil), ir.NewInt(0)))
 	return m
 }
 
@@ -36,7 +39,7 @@ func _GenFunction(fn *ast.FunctionAST) *ir.FunctionIR {
 	ctx = context.WithValue(ctx, "token", &tok)
 	fir := ir.NewFunction(*_GenSymbol(ctx, fn.Symbol))
 
-	for i := len(fn.Args); i >= 0; i-- {
+	for i := len(fn.Args) - 1; i >= 0; i-- {
 		arg := fn.Args[i]
 		sm := _GenSymbol(ctx, arg.Symbol)
 		tp := _GenType(ctx, arg.Type)
@@ -80,6 +83,7 @@ func _GenExpr(ctx context.Context, ex ast.EXPR) []*ir.InstrIR {
 		sm := _GenSymbol(ctx, *ex)
 		code := make([]*ir.InstrIR, 0)
 		code = append(code, ir.VarLoad(sm))
+		return code
 	}
 	return nil
 }
@@ -121,10 +125,63 @@ func _GenRet(ctx context.Context, rt *ast.ReturnAST) []*ir.InstrIR {
 	return code
 }
 
-func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR
+func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
+	code := make([]*ir.InstrIR, 0)
+	code = append(code, _GenExpr(ctx, ifel.IfCondition)...)
 
-func _GenInt(ctx context.Context, in ast.IntAST) *ir.IntIR
+	tmp := ctx.Value("token").(*int)
+	tok := *tmp
+	*tmp += 1
 
-func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR
+	ifbeginLable := ir.NewSymbol(fmt.Sprintf("ifbegin_%08x", tok), nil)
+	ifendLable := ir.NewSymbol(fmt.Sprintf("ifend_%08x", tok), nil)
 
-func _GenType(ctx context.Context, tp ast.TypeAST) *ir.TypeIR
+	thenCode := make([]*ir.InstrIR, 0)
+	thenCode = append(thenCode, ir.Lable(ifbeginLable))
+	for _, lc := range ifel.IfBody {
+		thenCode = append(thenCode, _GenLocal(ctx, lc)...)
+	}
+	thenCode = append(thenCode, ir.Br(ifendLable))
+
+	if ifel.Elif != nil {
+	} else if ifel.ElseBody != nil {
+		elseLabel := ir.NewSymbol(fmt.Sprintf("else_%08x", tok), nil)
+		elseCode := make([]*ir.InstrIR, 0)
+		elseCode = append(elseCode, ir.Lable(elseLabel))
+		for _, lc := range ifel.ElseBody {
+			elseCode = append(elseCode, _GenLocal(ctx, lc)...)
+		}
+		elseCode = append(elseCode, ir.Br(ifendLable))
+
+		code = append(code, ir.BrTrue(ifbeginLable, elseLabel))
+		code = append(code, thenCode...)
+		code = append(code, elseCode...)
+		code = append(code, ir.Lable(ifendLable))
+	} else {
+		code = append(code, ir.BrTrue(ifbeginLable, ifendLable))
+		code = append(code, thenCode...)
+		code = append(code, ir.Lable(ifendLable))
+	}
+	return code
+}
+
+func _GenInt(ctx context.Context, in ast.IntAST) *ir.IntIR {
+	return ir.NewInt(in.Value)
+}
+
+func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR {
+	var s *ir.SymbolIR
+	if sm.Additional != nil {
+		s = _GenSymbol(ctx, *sm.Additional)
+	}
+	return ir.NewSymbol(sm.Primary, s)
+}
+
+func _GenType(ctx context.Context, tp ast.TypeAST) *ir.TypeIR {
+	var gns []ir.TypeIR
+	for _, g := range tp.Generic {
+		gns = append(gns, *_GenType(ctx, g))
+	}
+	sm := _GenSymbol(ctx, tp.Primary)
+	return ir.NewType(*sm, gns...)
+}

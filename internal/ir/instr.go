@@ -42,18 +42,6 @@ func (ir InstrKind) String() string {
 	switch ir {
 	case OP_NOP:
 		return "nop"
-	// case OP_GLOBAL_NEW:
-	// 	return "global.new"
-	// case OP_GLOBAL_LOAD:
-	// 	return "global.load"
-	// case OP_GLOBAL_SAVE:
-	// 	return "global.save"
-	// case OP_LOCAL_NEW:
-	// 	return "local.new"
-	// case OP_LOCAL_LOAD:
-	// 	return "local.load"
-	// case OP_LOCAL_SAVE:
-	// 	return "local_NEW:
 	case OP_VAR_NEW:
 		return "var.new"
 	case OP_VAR_LOAD:
@@ -92,33 +80,20 @@ type InstrIR struct {
 
 func (ir *InstrIR) String() string {
 	var buf strings.Builder
-	fmt.Fprintf(&buf, "%s", ir.Op.String())
-	for _, arg := range ir.Args {
-		fmt.Fprintf(&buf, " %s", arg.String())
+	if ir.Op == OP_LABEL {
+		fmt.Fprintf(&buf, "%s:", ir.Args[0].String())
+	} else {
+		fmt.Fprintf(&buf, "%s", ir.Op.String())
+		for _, arg := range ir.Args {
+			fmt.Fprintf(&buf, " %s", arg.String())
+		}
 	}
 	return buf.String()
 }
 
-// func GlobalNew(name SymbolIR) *InstrIR {
-// 	return &InstrIR{
-// 		Op:   OP_GLOBAL_NEW,
-// 		Args: []IR{&name},
-// 	}
-// }
-
-// func GlobalLoad(name SymbolIR) *InstrIR {
-// 	return &InstrIR{
-// 		Op:   OP_GLOBAL_LOAD,
-// 		Args: []IR{&name},
-// 	}
-// }
-
-// func GlobalSave(name SymbolIR) *InstrIR {
-// 	return &InstrIR{
-// 		Op:   OP_GLOBAL_SAVE,
-// 		Args: []IR{&name},
-// 	}
-// }
+func Nop() *InstrIR {
+	return &InstrIR{Op: OP_NOP}
+}
 
 func VarNew(name *SymbolIR) *InstrIR {
 	return &InstrIR{

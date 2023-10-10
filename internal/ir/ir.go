@@ -13,13 +13,13 @@ type IR interface {
 type ModuleIR struct {
 	Name      string
 	Init      []*InstrIR
-	Functions map[string]FunctionIR
+	Functions map[string]*FunctionIR
 }
 
 func NewModule(name string) *ModuleIR {
 	return &ModuleIR{
 		Name:      name,
-		Functions: make(map[string]FunctionIR),
+		Functions: make(map[string]*FunctionIR),
 		Init:      make([]*InstrIR, 0),
 	}
 }
@@ -28,7 +28,7 @@ func (m *ModuleIR) WriteInstrs(instr ...*InstrIR) {
 	m.Init = append(m.Init, instr...)
 }
 
-func (m *ModuleIR) WriteFunctions(fns ...FunctionIR) {
+func (m *ModuleIR) WriteFunctions(fns ...*FunctionIR) {
 	for _, f := range fns {
 		if _, ok := m.Functions[f.Name.String()]; ok {
 			log.Fatalf("function %s already exists", f.Name)
@@ -40,8 +40,8 @@ func (m *ModuleIR) WriteFunctions(fns ...FunctionIR) {
 func (ir *ModuleIR) String() string {
 	var buf strings.Builder
 	fmt.Fprintf(&buf, "=== %s\n", ir.Name)
-	for x, instr := range ir.Init {
-		fmt.Fprintf(&buf, "%08x %s\n", x, instr.String())
+	for _, instr := range ir.Init {
+		fmt.Fprintf(&buf, "\t%s\n", instr.String())
 	}
 	for _, fn := range ir.Functions {
 		fmt.Fprintf(&buf, "%s\n", fn.String())
@@ -65,8 +65,12 @@ func (ir *FunctionIR) WriteInstrs(instrs ...*InstrIR) {
 func (ir *FunctionIR) String() string {
 	var buf strings.Builder
 	fmt.Fprintf(&buf, ".%s:\n", ir.Name.String())
-	for x, instr := range ir.Code {
-		fmt.Fprintf(&buf, "%08x %s\n", x, instr.String())
+	for _, instr := range ir.Code {
+		if instr.Op == OP_LABEL {
+			fmt.Fprintf(&buf, "%s\n", instr.String())
+		} else {
+			fmt.Fprintf(&buf, "\t%s\n", instr.String())
+		}
 	}
 	return buf.String()
 }
