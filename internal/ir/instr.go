@@ -2,6 +2,8 @@ package ir
 
 import (
 	"fmt"
+	"grimlang/internal/object"
+	tp "grimlang/internal/type"
 	"strings"
 )
 
@@ -9,14 +11,6 @@ type InstrKind uint
 
 const (
 	OP_NOP InstrKind = iota
-
-	// OP_GLOBAL_NEW
-	// OP_GLOBAL_LOAD
-	// OP_GLOBAL_SAVE
-
-	// OP_LOCAL_NEW
-	// OP_LOCAL_LOAD
-	// OP_LOCAL_SAVE
 
 	OP_VAR_NEW
 	OP_VAR_LOAD
@@ -116,14 +110,14 @@ func VarSave(name *SymbolIR) *InstrIR {
 	}
 }
 
-func ConstLoadInt(val *IntIR) *InstrIR {
+func ConstLoadInt(val *object.Integer) *InstrIR {
 	return &InstrIR{
 		Op:   OP_CONST_LOAD,
 		Args: []IR{val},
 	}
 }
 
-func Call(fn *SymbolIR, count *IntIR) *InstrIR {
+func Call(fn *SymbolIR, count *object.Integer) *InstrIR {
 	return &InstrIR{
 		Op:   OP_CALL,
 		Args: []IR{fn, count},
@@ -165,10 +159,10 @@ func StackPop() *InstrIR {
 func StackDup() *InstrIR {
 	return &InstrIR{Op: OP_STACK_DUP}
 }
-func StackType(tp *TypeIR) *InstrIR {
-	return &InstrIR{Op: OP_STACK_TYPE, Args: []IR{tp}}
+func StackType(t tp.Type) *InstrIR {
+	return &InstrIR{Op: OP_STACK_TYPE, Args: []IR{t}}
 }
 
-func Return(count *IntIR) *InstrIR {
+func Return(count *object.Integer) *InstrIR {
 	return &InstrIR{Op: OP_RETURN, Args: []IR{count}}
 }

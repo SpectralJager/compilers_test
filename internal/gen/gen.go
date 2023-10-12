@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"grimlang/internal/ast"
 	"grimlang/internal/ir"
+	"grimlang/internal/object"
+	tp "grimlang/internal/type"
 	"log"
 )
 
@@ -18,7 +20,7 @@ func _GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
 			m.WriteInstrs(_GenGlobal(context.TODO(), gl)...)
 		}
 	}
-	m.WriteInstrs(ir.Call(ir.NewSymbol("main", nil), ir.NewInt(0)))
+	m.WriteInstrs(ir.Call(ir.NewSymbol("main", nil), object.NewInt(0)))
 	return m
 }
 
@@ -104,7 +106,7 @@ func _GenSCall(ctx context.Context, sc *ast.SCallAST) []*ir.InstrIR {
 	for _, arg := range sc.Arguments {
 		code = append(code, _GenExpr(ctx, arg)...)
 	}
-	l := ir.NewInt(len(sc.Arguments))
+	l := object.NewInt(len(sc.Arguments))
 	sm := _GenSymbol(ctx, sc.Function)
 	code = append(code, ir.Call(sm, l))
 	return code
@@ -114,12 +116,12 @@ func _GenRet(ctx context.Context, rt *ast.ReturnAST) []*ir.InstrIR {
 	code := make([]*ir.InstrIR, 0)
 	code = append(code, _GenExpr(ctx, rt.Value)...)
 	if retTypes, ok := ctx.Value("retTypes").([]ast.TypeAST); ok {
-		l := ir.NewInt(1)
+		l := object.NewInt(1)
 		tp := _GenType(ctx, retTypes[0])
 		code = append(code, ir.StackType(tp))
 		code = append(code, ir.Return(l))
 	} else {
-		l := ir.NewInt(0)
+		l := object.NewInt(0)
 		code = append(code, ir.Return(l))
 	}
 	return code
@@ -165,8 +167,8 @@ func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
 	return code
 }
 
-func _GenInt(ctx context.Context, in ast.IntAST) *ir.IntIR {
-	return ir.NewInt(in.Value)
+func _GenInt(ctx context.Context, in ast.IntAST) *object.Integer {
+	return &object.Integer{Value: in.Value}
 }
 
 func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR {
@@ -177,11 +179,6 @@ func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR {
 	return ir.NewSymbol(sm.Primary, s)
 }
 
-func _GenType(ctx context.Context, tp ast.TypeAST) *ir.TypeIR {
-	var gns []ir.TypeIR
-	for _, g := range tp.Generic {
-		gns = append(gns, *_GenType(ctx, g))
-	}
-	sm := _GenSymbol(ctx, tp.Primary)
-	return ir.NewType(*sm, gns...)
+func _GenType(ctx context.Context, t ast.TypeAST) tp.Type {
+	return &tp.IntegerType{}
 }

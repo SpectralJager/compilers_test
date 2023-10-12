@@ -75,18 +75,6 @@ func (ir *FunctionIR) String() string {
 	return buf.String()
 }
 
-type IntIR struct {
-	Value int
-}
-
-func NewInt(val int) *IntIR {
-	return &IntIR{Value: val}
-}
-
-func (ir *IntIR) String() string {
-	return fmt.Sprint(ir.Value)
-}
-
 type SymbolIR struct {
 	Primary   string
 	Secondary *SymbolIR
@@ -104,29 +92,4 @@ func (ir *SymbolIR) String() string {
 		return ir.Primary
 	}
 	return fmt.Sprintf("%s/%s", ir.Primary, ir.Secondary.String())
-}
-
-type TypeIR struct {
-	Primary SymbolIR
-	Generic []TypeIR
-}
-
-func NewType(p SymbolIR, g ...TypeIR) *TypeIR {
-	return &TypeIR{
-		Primary: p,
-		Generic: g,
-	}
-}
-
-func (ir *TypeIR) String() string {
-	if ir.Generic == nil {
-		return ir.Primary.String()
-	}
-	var buf strings.Builder
-	fmt.Fprintf(&buf, "%s<", ir.Primary.String())
-	for _, t := range ir.Generic {
-		fmt.Fprintf(&buf, "%s,", t.String())
-	}
-	fmt.Fprint(&buf, ">")
-	return buf.String()
 }
