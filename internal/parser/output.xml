@@ -6,9 +6,7 @@
 			<Primary>alpha</Primary>
 		</Symbol>
 		<Type>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</Type>
 		<Expression>
 			<Value>12</Value>
@@ -19,9 +17,7 @@
 			<Primary>beta12</Primary>
 		</Symbol>
 		<Type>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</Type>
 		<Expression>
 			<Value>12</Value>
@@ -32,9 +28,7 @@
 			<Primary>tetha_12</Primary>
 		</Symbol>
 		<Type>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</Type>
 		<Expression>
 			<Value>12</Value>
@@ -45,9 +39,7 @@
 			<Primary>lupin</Primary>
 		</Symbol>
 		<Type>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</Type>
 		<Expression>
 			<Function>
@@ -118,15 +110,11 @@
 				<Primary>a</Primary>
 			</Symbol>
 			<Type>
-				<Primary>
-					<Primary>int</Primary>
-				</Primary>
+				<T></T>
 			</Type>
 		</Args>
 		<ReturnTypes>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</ReturnTypes>
 		<Body>
 			<Value>
@@ -157,9 +145,7 @@
 			<Primary>n</Primary>
 		</Symbol>
 		<Type>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</Type>
 		<Expression>
 			<Value>40</Value>
@@ -174,15 +160,11 @@
 				<Primary>n</Primary>
 			</Symbol>
 			<Type>
-				<Primary>
-					<Primary>int</Primary>
-				</Primary>
+				<T></T>
 			</Type>
 		</Args>
 		<ReturnTypes>
-			<Primary>
-				<Primary>int</Primary>
-			</Primary>
+			<T></T>
 		</ReturnTypes>
 		<Body>
 			<IfCondition>
@@ -204,49 +186,49 @@
 					<Primary>n</Primary>
 				</Value>
 			</IfBody>
-			<ElseBody>
-				<Value>
+		</Body>
+		<Body>
+			<Value>
+				<Function>
+					<Primary>fib</Primary>
+				</Function>
+				<Arguments>
 					<Function>
-						<Primary>fib</Primary>
+						<Primary>int</Primary>
+						<Additional>
+							<Primary>add</Primary>
+						</Additional>
 					</Function>
 					<Arguments>
 						<Function>
 							<Primary>int</Primary>
 							<Additional>
-								<Primary>add</Primary>
+								<Primary>sub</Primary>
 							</Additional>
 						</Function>
 						<Arguments>
-							<Function>
-								<Primary>int</Primary>
-								<Additional>
-									<Primary>sub</Primary>
-								</Additional>
-							</Function>
-							<Arguments>
-								<Primary>n</Primary>
-							</Arguments>
-							<Arguments>
-								<Value>1</Value>
-							</Arguments>
+							<Primary>n</Primary>
 						</Arguments>
 						<Arguments>
-							<Function>
-								<Primary>int</Primary>
-								<Additional>
-									<Primary>sub</Primary>
-								</Additional>
-							</Function>
-							<Arguments>
-								<Primary>n</Primary>
-							</Arguments>
-							<Arguments>
-								<Value>2</Value>
-							</Arguments>
+							<Value>1</Value>
 						</Arguments>
 					</Arguments>
-				</Value>
-			</ElseBody>
+					<Arguments>
+						<Function>
+							<Primary>int</Primary>
+							<Additional>
+								<Primary>sub</Primary>
+							</Additional>
+						</Function>
+						<Arguments>
+							<Primary>n</Primary>
+						</Arguments>
+						<Arguments>
+							<Value>2</Value>
+						</Arguments>
+					</Arguments>
+				</Arguments>
+			</Value>
 		</Body>
 	</Body>
 	<Body>
@@ -258,9 +240,7 @@
 				<Primary>res</Primary>
 			</Symbol>
 			<Type>
-				<Primary>
-					<Primary>int</Primary>
-				</Primary>
+				<T></T>
 			</Type>
 			<Expression>
 				<Function>
@@ -270,6 +250,14 @@
 					<Primary>n</Primary>
 				</Arguments>
 			</Expression>
+		</Body>
+		<Body>
+			<Function>
+				<Primary>println</Primary>
+			</Function>
+			<Arguments>
+				<Primary>res</Primary>
+			</Arguments>
 		</Body>
 	</Body>
 </ProgramAST>

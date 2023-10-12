@@ -4,6 +4,7 @@ import "fmt"
 
 type AST interface {
 	fmt.Stringer
+	ast()
 }
 
 // unions

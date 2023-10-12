@@ -1,27 +1,18 @@
 package ast
 
-import (
-	"fmt"
-	"strings"
-)
-
-type TypeAST struct {
-	Primary SymbolAST `parser:"@@"`
-	Generic []TypeAST `parser:"('<' @@+ '>')?"`
+type Type interface {
+	AST
+	tp()
 }
 
-func (t TypeAST) String() string {
-	var buf strings.Builder
-	fmt.Fprintf(&buf, "%s", &t.Primary)
-	if t.Generic != nil {
-		fmt.Fprint(&buf, "< ")
-		for _, g := range t.Generic {
-			fmt.Fprintf(&buf, "%s ", &g)
-		}
-		fmt.Fprint(&buf, ">")
-	}
-	return buf.String()
+type IntType struct {
+	T struct{} `parser:"'int'"`
+}
+
+func (i *IntType) String() string {
+	return "int"
 }
 
 // part of ...
-func (t TypeAST) atom() {}
+func (i *IntType) tp()  {}
+func (i *IntType) ast() {}

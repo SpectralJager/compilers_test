@@ -24,4 +24,7 @@ var Parser = participle.MustBuild[ast.ProgramAST](
 		&ast.IntAST{},
 		&ast.SCallAST{},
 	),
+	participle.Union[ast.Type](
+		&ast.IntType{},
+	),
 )

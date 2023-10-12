@@ -12,3 +12,4 @@ func (r *ReturnAST) String() string {
 
 // part of ...
 func (r *ReturnAST) locl() {}
+func (r *ReturnAST) ast()  {}

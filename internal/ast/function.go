@@ -9,10 +9,10 @@ type FunctionAST struct {
 	Symbol SymbolAST `parser:"'@fn' @@"`
 	Args   []struct {
 		Symbol SymbolAST `parser:"@@"`
-		Type   TypeAST   `parser:"':'@@"`
+		Type   Type      `parser:"':'@@"`
 	} `parser:"'(' @@* ')'"`
-	ReturnTypes []TypeAST `parser:"('<' @@+ '>')?"`
-	Body        []LOCAL   `parser:"'{' @@+ '}'"`
+	ReturnTypes []Type  `parser:"('<' @@+ '>')?"`
+	Body        []LOCAL `parser:"'{' @@+ '}'"`
 }
 
 func (f *FunctionAST) String() string {
@@ -25,7 +25,7 @@ func (f *FunctionAST) String() string {
 	if f.ReturnTypes != nil {
 		fmt.Fprint(&buf, "<")
 		for _, s := range f.ReturnTypes {
-			fmt.Fprintf(&buf, " %s", &s)
+			fmt.Fprintf(&buf, " %s", s)
 		}
 		fmt.Fprint(&buf, ">")
 	}
@@ -39,3 +39,4 @@ func (f *FunctionAST) String() string {
 
 // part of ...
 func (f *FunctionAST) glob() {}
+func (f *FunctionAST) ast()  {}

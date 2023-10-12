@@ -7,8 +7,7 @@ type Type interface {
 	tp()
 }
 
-func (t IntegerType) tp() {}
-
 type IntegerType struct{}
 
 func (i IntegerType) String() string { return "int" }
+func (t IntegerType) tp()            {}

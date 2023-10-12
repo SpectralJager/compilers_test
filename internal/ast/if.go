@@ -40,3 +40,4 @@ func (f *IfAST) String() string {
 
 // part of ...
 func (f *IfAST) locl() {}
+func (f *IfAST) ast()  {}

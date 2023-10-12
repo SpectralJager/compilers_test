@@ -8,19 +8,36 @@ import (
 	"grimlang/internal/object"
 	tp "grimlang/internal/type"
 	"log"
+	"sync"
+)
+
+type (
+	fnName   struct{}
+	retTypes struct{}
+	token    struct{}
 )
 
 func _GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
+	wg := new(sync.WaitGroup)
+	mx := new(sync.Mutex)
 	m := ir.NewModule(prog.Name)
 	for _, gl := range prog.Body {
 		switch gl := gl.(type) {
 		case *ast.FunctionAST:
-			m.WriteFunctions(_GenFunction(gl))
+			wg.Add(1)
+			go func() {
+				res := _GenFunction(gl)
+				mx.Lock()
+				m.WriteFunctions(res)
+				mx.Unlock()
+				wg.Done()
+			}()
 		default:
 			m.WriteInstrs(_GenGlobal(context.TODO(), gl)...)
 		}
 	}
 	m.WriteInstrs(ir.Call(ir.NewSymbol("main", nil), object.NewInt(0)))
+	wg.Wait()
 	return m
 }
 
@@ -35,10 +52,10 @@ func _GenGlobal(ctx context.Context, node ast.GLOBAL) []*ir.InstrIR {
 }
 
 func _GenFunction(fn *ast.FunctionAST) *ir.FunctionIR {
-	ctx := context.WithValue(context.TODO(), "fnName", fn.Symbol.String())
-	ctx = context.WithValue(ctx, "retTypes", fn.ReturnTypes)
+	ctx := context.WithValue(context.TODO(), fnName{}, fn.Symbol.String())
+	ctx = context.WithValue(ctx, retTypes{}, fn.ReturnTypes)
 	tok := 0
-	ctx = context.WithValue(ctx, "token", &tok)
+	ctx = context.WithValue(ctx, token{}, &tok)
 	fir := ir.NewFunction(*_GenSymbol(ctx, fn.Symbol))
 
 	for i := len(fn.Args) - 1; i >= 0; i-- {
@@ -115,7 +132,7 @@ func _GenSCall(ctx context.Context, sc *ast.SCallAST) []*ir.InstrIR {
 func _GenRet(ctx context.Context, rt *ast.ReturnAST) []*ir.InstrIR {
 	code := make([]*ir.InstrIR, 0)
 	code = append(code, _GenExpr(ctx, rt.Value)...)
-	if retTypes, ok := ctx.Value("retTypes").([]ast.TypeAST); ok {
+	if retTypes, ok := ctx.Value(retTypes{}).([]ast.Type); ok {
 		l := object.NewInt(1)
 		tp := _GenType(ctx, retTypes[0])
 		code = append(code, ir.StackType(tp))
@@ -131,7 +148,7 @@ func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
 	code := make([]*ir.InstrIR, 0)
 	code = append(code, _GenExpr(ctx, ifel.IfCondition)...)
 
-	tmp := ctx.Value("token").(*int)
+	tmp := ctx.Value(token{}).(*int)
 	tok := *tmp
 	*tmp += 1
 
@@ -145,8 +162,7 @@ func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
 	}
 	thenCode = append(thenCode, ir.Br(ifendLable))
 
-	if ifel.Elif != nil {
-	} else if ifel.ElseBody != nil {
+	if ifel.ElseBody != nil {
 		elseLabel := ir.NewSymbol(fmt.Sprintf("else_%08x", tok), nil)
 		elseCode := make([]*ir.InstrIR, 0)
 		elseCode = append(elseCode, ir.Lable(elseLabel))
@@ -179,6 +195,10 @@ func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR {
 	return ir.NewSymbol(sm.Primary, s)
 }
 
-func _GenType(ctx context.Context, t ast.TypeAST) tp.Type {
-	return &tp.IntegerType{}
+func _GenType(ctx context.Context, t ast.Type) tp.Type {
+	switch t.(type) {
+	case *ast.IntType:
+		return &tp.IntegerType{}
+	}
+	return nil
 }

@@ -23,3 +23,4 @@ func (a *SCallAST) String() string {
 // part of ...
 func (a *SCallAST) expr() {}
 func (a *SCallAST) locl() {}
+func (a *SCallAST) ast()  {}

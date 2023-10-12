@@ -22,3 +22,4 @@ func (s *SymbolAST) String() string {
 // part of ...
 func (s *SymbolAST) atom() {}
 func (s *SymbolAST) expr() {}
+func (s *SymbolAST) ast()  {}

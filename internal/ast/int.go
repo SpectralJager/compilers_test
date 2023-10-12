@@ -13,3 +13,4 @@ func (a *IntAST) String() string {
 // part of ...
 func (a *IntAST) expr() {}
 func (a *IntAST) atom() {}
+func (a *IntAST) ast()  {}
