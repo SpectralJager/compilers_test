@@ -1,8 +1,12 @@
 @fn main() {
-    (int/add 12 10)
-    (int/sub 50 (func 10)) 
-}
-
-@fn func(a:int) <int> {
-    @ret (int/add 12 10 a);
+    @var tmp:int = 0;
+    @if (int/lt tmp 2) {
+        @var res:int = (int/add 20 48);
+        @var test:int = 0;
+        @if (int/eq res 68) {
+            @set tmp = res;
+            @var test:int = 0;
+        }
+    }
+    @var res:int = 0;
 }

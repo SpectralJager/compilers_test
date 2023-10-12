@@ -13,6 +13,7 @@ const (
 	OP_NOP InstrKind = iota
 
 	OP_VAR_NEW
+	OP_VAR_FREE
 	OP_VAR_LOAD
 	OP_VAR_SAVE
 
@@ -38,6 +39,8 @@ func (ir InstrKind) String() string {
 		return "nop"
 	case OP_VAR_NEW:
 		return "var.new"
+	case OP_VAR_FREE:
+		return "var.free"
 	case OP_VAR_LOAD:
 		return "var.load"
 	case OP_VAR_SAVE:
@@ -89,9 +92,16 @@ func Nop() *InstrIR {
 	return &InstrIR{Op: OP_NOP}
 }
 
-func VarNew(name *SymbolIR) *InstrIR {
+func VarNew(name *SymbolIR, t tp.Type) *InstrIR {
 	return &InstrIR{
 		Op:   OP_VAR_NEW,
+		Args: []IR{name, t},
+	}
+}
+
+func VarFree(name *SymbolIR) *InstrIR {
+	return &InstrIR{
+		Op:   OP_VAR_FREE,
 		Args: []IR{name},
 	}
 }

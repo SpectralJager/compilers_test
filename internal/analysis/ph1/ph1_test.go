@@ -1,14 +1,15 @@
-package gen
+package ph1
 
 import (
 	"fmt"
+	"grimlang/internal/gen"
 	"grimlang/internal/parser"
 	"os"
 	"testing"
 )
 
-func TestGenIr(t *testing.T) {
-	data, err := os.ReadFile("../../src/fib.grim")
+func TestPh1(t *testing.T) {
+	data, err := os.ReadFile("../../../src/func.grim")
 	if err != nil {
 		t.Fatalf("can't read file: %v", err)
 	}
@@ -17,6 +18,8 @@ func TestGenIr(t *testing.T) {
 		t.Fatalf("can't parse file: %v", err)
 	}
 	prog.Name = "test"
-	mod := GenModule(prog)
+	mod := gen.GenModule(prog)
+	fmt.Println(mod.String())
+	AnalyseModule(mod)
 	fmt.Println(mod.String())
 }

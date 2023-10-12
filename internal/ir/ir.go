@@ -2,6 +2,7 @@ package ir
 
 import (
 	"fmt"
+	tp "grimlang/internal/type"
 	"log"
 	"strings"
 )
@@ -52,6 +53,10 @@ func (ir *ModuleIR) String() string {
 type FunctionIR struct {
 	Name SymbolIR
 	Code []*InstrIR
+	Meta struct {
+		Args    []tp.Type
+		Returns []tp.Type
+	}
 }
 
 func NewFunction(name SymbolIR) *FunctionIR {
@@ -64,7 +69,23 @@ func (ir *FunctionIR) WriteInstrs(instrs ...*InstrIR) {
 
 func (ir *FunctionIR) String() string {
 	var buf strings.Builder
-	fmt.Fprintf(&buf, ".%s:\n", ir.Name.String())
+	fmt.Fprintf(&buf, ".%s: ", ir.Name.String())
+	if ir.Meta.Args != nil {
+		for _, arg := range ir.Meta.Args {
+			fmt.Fprintf(&buf, "%s ", arg.String())
+		}
+	} else {
+		fmt.Fprintf(&buf, "void ")
+	}
+	fmt.Fprintf(&buf, "-> ")
+	if ir.Meta.Returns != nil {
+		for _, ret := range ir.Meta.Returns {
+			fmt.Fprintf(&buf, "%s ", ret.String())
+		}
+	} else {
+		fmt.Fprintf(&buf, "void")
+	}
+	fmt.Fprint(&buf, "\n")
 	for _, instr := range ir.Code {
 		if instr.Op == OP_LABEL {
 			fmt.Fprintf(&buf, "%s\n", instr.String())

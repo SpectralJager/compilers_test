@@ -18,6 +18,7 @@ var Parser = participle.MustBuild[ast.ProgramAST](
 		&ast.VarAST{},
 		&ast.ReturnAST{},
 		&ast.IfAST{},
+		ast.SetAST{},
 	),
 	participle.Union[ast.EXPR](
 		&ast.SymbolAST{},

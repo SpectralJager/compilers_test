@@ -17,7 +17,7 @@ type (
 	token    struct{}
 )
 
-func _GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
+func GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
 	wg := new(sync.WaitGroup)
 	mx := new(sync.Mutex)
 	m := ir.NewModule(prog.Name)
@@ -58,12 +58,20 @@ func _GenFunction(fn *ast.FunctionAST) *ir.FunctionIR {
 	ctx = context.WithValue(ctx, token{}, &tok)
 	fir := ir.NewFunction(*_GenSymbol(ctx, fn.Symbol))
 
+	for _, arg := range fn.Args {
+		fir.Meta.Args = append(fir.Meta.Args, _GenType(ctx, arg.Type))
+	}
+
+	for _, rets := range fn.ReturnTypes {
+		fir.Meta.Returns = append(fir.Meta.Returns, _GenType(ctx, rets))
+	}
+
 	for i := len(fn.Args) - 1; i >= 0; i-- {
 		arg := fn.Args[i]
 		sm := _GenSymbol(ctx, arg.Symbol)
 		tp := _GenType(ctx, arg.Type)
 		fir.WriteInstrs(
-			ir.VarNew(sm),
+			ir.VarNew(sm, tp),
 			ir.StackType(tp),
 			ir.VarSave(sm),
 		)
@@ -80,6 +88,8 @@ func _GenLocal(ctx context.Context, node ast.LOCAL) []*ir.InstrIR {
 	switch node := node.(type) {
 	case *ast.VarAST:
 		return _GenVar(ctx, node)
+	case *ast.SetAST:
+		return _GenSet(ctx, node)
 	case *ast.SCallAST:
 		return _GenSCall(ctx, node)
 	case *ast.ReturnAST:
@@ -111,9 +121,17 @@ func _GenVar(ctx context.Context, vr *ast.VarAST) []*ir.InstrIR {
 	m := ir.NewModule("")
 	sm := _GenSymbol(ctx, vr.Symbol)
 	tp := _GenType(ctx, vr.Type)
-	m.WriteInstrs(ir.VarNew(sm))
+	m.WriteInstrs(ir.VarNew(sm, tp))
 	m.WriteInstrs(_GenExpr(ctx, vr.Expression)...)
 	m.WriteInstrs(ir.StackType(tp))
+	m.WriteInstrs(ir.VarSave(sm))
+	return m.Init
+}
+
+func _GenSet(ctx context.Context, st *ast.SetAST) []*ir.InstrIR {
+	m := ir.NewModule("")
+	sm := _GenSymbol(ctx, st.Symbol)
+	m.WriteInstrs(_GenExpr(ctx, st.Expression)...)
 	m.WriteInstrs(ir.VarSave(sm))
 	return m.Init
 }
@@ -152,8 +170,8 @@ func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
 	tok := *tmp
 	*tmp += 1
 
-	ifbeginLable := ir.NewSymbol(fmt.Sprintf("ifbegin_%08x", tok))
-	ifendLable := ir.NewSymbol(fmt.Sprintf("ifend_%08x", tok))
+	ifbeginLable := ir.NewSymbol(fmt.Sprintf("begin_if_%08x", tok))
+	ifendLable := ir.NewSymbol(fmt.Sprintf("end_if_%08x", tok))
 
 	thenCode := make([]*ir.InstrIR, 0)
 	thenCode = append(thenCode, ir.Lable(ifbeginLable))

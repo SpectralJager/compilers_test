@@ -9,6 +9,7 @@ var Lexer = lexer.MustStateful(lexer.Rules{
 
 		{Name: "Function", Pattern: `@fn`},
 		{Name: "Varible", Pattern: `@var`},
+		{Name: "Set", Pattern: `@set`},
 		{Name: "While", Pattern: `@while`},
 		{Name: "If", Pattern: `@if`},
 		{Name: "Return", Pattern: `@ret`},
