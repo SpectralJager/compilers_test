@@ -76,20 +76,15 @@ func (ir *FunctionIR) String() string {
 }
 
 type SymbolIR struct {
-	Primary   string
-	Secondary *SymbolIR
+	Ident string
 }
 
-func NewSymbol(p string, s *SymbolIR) *SymbolIR {
+func NewSymbol(ident string) *SymbolIR {
 	return &SymbolIR{
-		Primary:   p,
-		Secondary: s,
+		Ident: ident,
 	}
 }
 
 func (ir *SymbolIR) String() string {
-	if ir.Secondary == nil {
-		return ir.Primary
-	}
-	return fmt.Sprintf("%s/%s", ir.Primary, ir.Secondary.String())
+	return ir.Ident
 }

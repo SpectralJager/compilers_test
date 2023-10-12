@@ -36,7 +36,7 @@ func _GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
 			m.WriteInstrs(_GenGlobal(context.TODO(), gl)...)
 		}
 	}
-	m.WriteInstrs(ir.Call(ir.NewSymbol("main", nil), object.NewInt(0)))
+	m.WriteInstrs(ir.Call(ir.NewSymbol("main"), object.NewInt(0)))
 	wg.Wait()
 	return m
 }
@@ -152,8 +152,8 @@ func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
 	tok := *tmp
 	*tmp += 1
 
-	ifbeginLable := ir.NewSymbol(fmt.Sprintf("ifbegin_%08x", tok), nil)
-	ifendLable := ir.NewSymbol(fmt.Sprintf("ifend_%08x", tok), nil)
+	ifbeginLable := ir.NewSymbol(fmt.Sprintf("ifbegin_%08x", tok))
+	ifendLable := ir.NewSymbol(fmt.Sprintf("ifend_%08x", tok))
 
 	thenCode := make([]*ir.InstrIR, 0)
 	thenCode = append(thenCode, ir.Lable(ifbeginLable))
@@ -163,7 +163,7 @@ func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
 	thenCode = append(thenCode, ir.Br(ifendLable))
 
 	if ifel.ElseBody != nil {
-		elseLabel := ir.NewSymbol(fmt.Sprintf("else_%08x", tok), nil)
+		elseLabel := ir.NewSymbol(fmt.Sprintf("else_%08x", tok))
 		elseCode := make([]*ir.InstrIR, 0)
 		elseCode = append(elseCode, ir.Lable(elseLabel))
 		for _, lc := range ifel.ElseBody {
@@ -188,11 +188,7 @@ func _GenInt(ctx context.Context, in ast.IntAST) *object.Integer {
 }
 
 func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR {
-	var s *ir.SymbolIR
-	if sm.Additional != nil {
-		s = _GenSymbol(ctx, *sm.Additional)
-	}
-	return ir.NewSymbol(sm.Primary, s)
+	return ir.NewSymbol(sm.String())
 }
 
 func _GenType(ctx context.Context, t ast.Type) tp.Type {
