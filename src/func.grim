@@ -1,5 +1,4 @@
 @fn main() {
-    @var tmp:int = 0;
     @if (int/lt tmp 2) {
         @var res:int = (int/add 20 48);
         @var test:int = 0;

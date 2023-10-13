@@ -27,6 +27,18 @@ exists:
 	return fmt.Errorf("symbol %s already exists", sm.Name())
 }
 
+func (t SymbolTable) GetVar(name string) Symbol {
+	for _, s := range t {
+		switch s := s.(type) {
+		case *VariableSymbol:
+			if s.Name() == name {
+				return s
+			}
+		}
+	}
+	return nil
+}
+
 func (t SymbolTable) GetVars(scope string) []Symbol {
 	ret := make([]Symbol, 0)
 	for _, s := range t {

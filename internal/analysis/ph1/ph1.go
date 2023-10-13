@@ -83,6 +83,26 @@ func AnaliseFunction(ctx context.Context, f *ir.FunctionIR) {
 			if err != nil {
 				panic(err)
 			}
+		case ir.OP_VAR_SAVE:
+			name := inst.Args[0].(*ir.SymbolIR).String()
+			sm := lcls.GetVar(name)
+			if sm == nil {
+				sm = ctx.Value(globals{}).(*analysis.SymbolTable).GetVar(name)
+				if sm == nil {
+					panic(fmt.Errorf("Symbol %s not found", name))
+				} else {
+					sm, ok := sm.(*analysis.VariableSymbol)
+					if !ok {
+						panic(fmt.Errorf("Symbol %s found, but it is not a variable: %T", name, sm))
+					}
+				}
+			} else {
+				sm, ok := sm.(*analysis.VariableSymbol)
+				if !ok {
+					panic(fmt.Errorf("Symbol %s found, but it is not a variable: %T", name, sm))
+				}
+
+			}
 		case ir.OP_LABEL:
 			if strings.Contains(inst.Args[0].String(), "begin") {
 				lbl := inst.Args[0].String()
