@@ -1,218 +1,262 @@
 package gen
 
 import (
-	"context"
 	"fmt"
 	"grimlang/internal/ast"
 	"grimlang/internal/ir"
 	"grimlang/internal/object"
 	tp "grimlang/internal/type"
-	"log"
-	"sync"
 )
 
-type (
-	fnName   struct{}
-	retTypes struct{}
-	token    struct{}
-)
+type GenContext struct {
+	CurrentScope string
+	ReturnType   *tp.Type
+}
 
-func GenModule(prog *ast.ProgramAST) *ir.ModuleIR {
-	wg := new(sync.WaitGroup)
-	mx := new(sync.Mutex)
-	m := ir.NewModule(prog.Name)
+func (g GenContext) Copy() GenContext {
+	return g
+}
+
+type IRGenerator struct{}
+
+func (g IRGenerator) GenerateModule(prog *ast.ProgramAST) (ir.Module, error) {
+	module := ir.NewModule(prog.Name)
+	global := ir.NewFunction("global")
 	for _, gl := range prog.Body {
+		ctx := GenContext{CurrentScope: "global"}
 		switch gl := gl.(type) {
+		case *ast.VarAST:
+			res, err := g.GenerateGlobal(ctx, gl)
+			if err != nil {
+				return module, err
+			}
+			global.PushInstructions(res...)
 		case *ast.FunctionAST:
-			wg.Add(1)
-			go func() {
-				res := _GenFunction(gl)
-				mx.Lock()
-				m.WriteFunctions(res)
-				mx.Unlock()
-				wg.Done()
-			}()
-		default:
-			m.WriteInstrs(_GenGlobal(context.TODO(), gl)...)
+			fn, err := g.GenerateFunction(ctx, gl)
+			if err != nil {
+				return module, err
+			}
+			module.PushFunctions(fn)
 		}
 	}
-	m.WriteInstrs(ir.Call(ir.NewSymbol("main"), object.NewInt(0)))
-	wg.Wait()
-	return m
+	module.SetGlobal(global)
+	return module, nil
 }
 
-func _GenGlobal(ctx context.Context, node ast.GLOBAL) []*ir.InstrIR {
-	switch node := node.(type) {
-	case *ast.VarAST:
-		return _GenVar(ctx, node)
-	default:
-		log.Fatalf("can't generate global code from %T", node)
-	}
-	return nil
-}
+func (g IRGenerator) GenerateFunction(ctx GenContext, fn *ast.FunctionAST) (ir.Function, error) {
+	fir := ir.NewFunction(fn.Symbol.String())
 
-func _GenFunction(fn *ast.FunctionAST) *ir.FunctionIR {
-	ctx := context.WithValue(context.TODO(), fnName{}, fn.Symbol.String())
-	ctx = context.WithValue(ctx, retTypes{}, fn.ReturnTypes)
-	tok := 0
-	ctx = context.WithValue(ctx, token{}, &tok)
-	fir := ir.NewFunction(*_GenSymbol(ctx, fn.Symbol))
-
-	for _, arg := range fn.Args {
-		fir.Meta.Args = append(fir.Meta.Args, _GenType(ctx, arg.Type))
-	}
-
-	for _, rets := range fn.ReturnTypes {
-		fir.Meta.Returns = append(fir.Meta.Returns, _GenType(ctx, rets))
+	ctx.CurrentScope = "local"
+	if fn.ReturnTypes != nil {
+		t, err := g.GenerateType(ctx, fn.ReturnTypes)
+		if err != nil {
+			return fir, err
+		}
+		ctx.ReturnType = &t
 	}
 
 	for i := len(fn.Args) - 1; i >= 0; i-- {
 		arg := fn.Args[i]
-		sm := _GenSymbol(ctx, arg.Symbol)
-		tp := _GenType(ctx, arg.Type)
-		fir.WriteInstrs(
-			ir.VarNew(sm, tp),
-			ir.StackType(tp),
-			ir.VarSave(sm),
+		t, err := g.GenerateType(ctx, arg.Type)
+		if err != nil {
+			return fir, err
+		}
+		fir.PushInstructions(
+			ir.VarNew(arg.Symbol.String(), t),
+			ir.VarSave(arg.Symbol.String()),
 		)
 	}
 
 	for _, lc := range fn.Body {
-		fir.WriteInstrs(_GenLocal(ctx, lc)...)
-	}
-
-	return fir
-}
-
-func _GenLocal(ctx context.Context, node ast.LOCAL) []*ir.InstrIR {
-	switch node := node.(type) {
-	case *ast.VarAST:
-		return _GenVar(ctx, node)
-	case *ast.SetAST:
-		return _GenSet(ctx, node)
-	case *ast.SCallAST:
-		return _GenSCall(ctx, node)
-	case *ast.ReturnAST:
-		return _GenRet(ctx, node)
-	case *ast.IfAST:
-		return _GenIf(ctx, node)
-	}
-	return nil
-}
-
-func _GenExpr(ctx context.Context, ex ast.EXPR) []*ir.InstrIR {
-	switch ex := ex.(type) {
-	case *ast.SCallAST:
-		return _GenSCall(ctx, ex)
-	case *ast.IntAST:
-		code := make([]*ir.InstrIR, 0)
-		code = append(code, ir.ConstLoadInt(_GenInt(ctx, *ex)))
-		return code
-	case *ast.SymbolAST:
-		sm := _GenSymbol(ctx, *ex)
-		code := make([]*ir.InstrIR, 0)
-		code = append(code, ir.VarLoad(sm))
-		return code
-	}
-	return nil
-}
-
-func _GenVar(ctx context.Context, vr *ast.VarAST) []*ir.InstrIR {
-	m := ir.NewModule("")
-	sm := _GenSymbol(ctx, vr.Symbol)
-	tp := _GenType(ctx, vr.Type)
-	m.WriteInstrs(ir.VarNew(sm, tp))
-	m.WriteInstrs(_GenExpr(ctx, vr.Expression)...)
-	m.WriteInstrs(ir.StackType(tp))
-	m.WriteInstrs(ir.VarSave(sm))
-	return m.Init
-}
-
-func _GenSet(ctx context.Context, st *ast.SetAST) []*ir.InstrIR {
-	m := ir.NewModule("")
-	sm := _GenSymbol(ctx, st.Symbol)
-	m.WriteInstrs(_GenExpr(ctx, st.Expression)...)
-	m.WriteInstrs(ir.VarSave(sm))
-	return m.Init
-}
-
-func _GenSCall(ctx context.Context, sc *ast.SCallAST) []*ir.InstrIR {
-	code := make([]*ir.InstrIR, 0)
-	for _, arg := range sc.Arguments {
-		code = append(code, _GenExpr(ctx, arg)...)
-	}
-	l := object.NewInt(len(sc.Arguments))
-	sm := _GenSymbol(ctx, sc.Function)
-	code = append(code, ir.Call(sm, l))
-	return code
-}
-
-func _GenRet(ctx context.Context, rt *ast.ReturnAST) []*ir.InstrIR {
-	code := make([]*ir.InstrIR, 0)
-	code = append(code, _GenExpr(ctx, rt.Value)...)
-	if retTypes, ok := ctx.Value(retTypes{}).([]ast.Type); ok {
-		l := object.NewInt(1)
-		tp := _GenType(ctx, retTypes[0])
-		code = append(code, ir.StackType(tp))
-		code = append(code, ir.Return(l))
-	} else {
-		l := object.NewInt(0)
-		code = append(code, ir.Return(l))
-	}
-	return code
-}
-
-func _GenIf(ctx context.Context, ifel *ast.IfAST) []*ir.InstrIR {
-	code := make([]*ir.InstrIR, 0)
-	code = append(code, _GenExpr(ctx, ifel.IfCondition)...)
-
-	tmp := ctx.Value(token{}).(*int)
-	tok := *tmp
-	*tmp += 1
-
-	ifbeginLable := ir.NewSymbol(fmt.Sprintf("begin_if_%08x", tok))
-	ifendLable := ir.NewSymbol(fmt.Sprintf("end_if_%08x", tok))
-
-	thenCode := make([]*ir.InstrIR, 0)
-	thenCode = append(thenCode, ir.Lable(ifbeginLable))
-	for _, lc := range ifel.IfBody {
-		thenCode = append(thenCode, _GenLocal(ctx, lc)...)
-	}
-	thenCode = append(thenCode, ir.Br(ifendLable))
-
-	if ifel.ElseBody != nil {
-		elseLabel := ir.NewSymbol(fmt.Sprintf("else_%08x", tok))
-		elseCode := make([]*ir.InstrIR, 0)
-		elseCode = append(elseCode, ir.Lable(elseLabel))
-		for _, lc := range ifel.ElseBody {
-			elseCode = append(elseCode, _GenLocal(ctx, lc)...)
+		res, err := g.GenerateLocal(ctx, lc)
+		if err != nil {
+			return fir, err
 		}
-		elseCode = append(elseCode, ir.Br(ifendLable))
-
-		code = append(code, ir.BrTrue(ifbeginLable, elseLabel))
-		code = append(code, thenCode...)
-		code = append(code, elseCode...)
-		code = append(code, ir.Lable(ifendLable))
-	} else {
-		code = append(code, ir.BrTrue(ifbeginLable, ifendLable))
-		code = append(code, thenCode...)
-		code = append(code, ir.Lable(ifendLable))
+		fir.PushInstructions(res...)
 	}
-	return code
+	return fir, nil
 }
 
-func _GenInt(ctx context.Context, in ast.IntAST) *object.Integer {
-	return &object.Integer{Value: in.Value}
+func (g IRGenerator) GenerateGlobal(ctx GenContext, gl ast.GLOBAL) ([]ir.Instruction, error) {
+	switch gl := gl.(type) {
+	case *ast.VarAST:
+		return g.GenerateVariable(ctx, gl)
+	default:
+		return nil, fmt.Errorf("can't generate global instructions for %T", gl)
+	}
 }
 
-func _GenSymbol(ctx context.Context, sm ast.SymbolAST) *ir.SymbolIR {
-	return ir.NewSymbol(sm.String())
+func (g IRGenerator) GenerateLocal(ctx GenContext, lc ast.LOCAL) ([]ir.Instruction, error) {
+	switch lc := lc.(type) {
+	case *ast.VarAST:
+		return g.GenerateVariable(ctx, lc)
+	case *ast.SetAST:
+		return g.GenerateSet(ctx, lc)
+	case *ast.SCallAST:
+		return g.GenerateCall(ctx, lc)
+	case *ast.ReturnAST:
+		return g.GenerateReturn(ctx, lc)
+	case *ast.IfAST:
+		return g.GenerateIf(ctx, lc)
+	default:
+		return nil, fmt.Errorf("can't generate local instructions for %T", lc)
+	}
 }
 
-func _GenType(ctx context.Context, t ast.Type) tp.Type {
-	switch t.(type) {
+func (g IRGenerator) GenerateExpression(ctx GenContext, exp ast.EXPR) ([]ir.Instruction, error) {
+	switch exp := exp.(type) {
+	case *ast.SCallAST:
+		return g.GenerateCall(ctx, exp)
+	case *ast.SymbolAST:
+		code := make([]ir.Instruction, 0)
+		code = append(code,
+			ir.VarLoad(exp.String()),
+		)
+		return code, nil
+	case *ast.IntAST:
+		code := make([]ir.Instruction, 0)
+		obj, err := g.GenerateObject(ctx, exp)
+		if err != nil {
+			return nil, err
+		}
+		code = append(code,
+			ir.ConstLoad(obj),
+		)
+		return code, nil
+	default:
+		return nil, fmt.Errorf("can't generate expression from %T", exp)
+	}
+}
+
+func (g IRGenerator) GenerateObject(ctx GenContext, at ast.ATOM) (object.Object, error) {
+	switch at := at.(type) {
+	case *ast.IntAST:
+		return object.NewInt(at.Value), nil
+	default:
+		return object.Object{}, fmt.Errorf("can't generate object from %T", at)
+	}
+}
+
+func (g IRGenerator) GenerateType(ctx GenContext, t ast.Type) (tp.Type, error) {
+	switch t := t.(type) {
 	case *ast.IntType:
-		return &tp.IntegerType{}
+		return tp.NewInt(), nil
+	default:
+		return tp.Type{}, fmt.Errorf("can't generate type from %T", t)
 	}
-	return nil
+}
+
+func (g IRGenerator) GenerateVariable(ctx GenContext, vr *ast.VarAST) ([]ir.Instruction, error) {
+	res, err := g.GenerateExpression(ctx, vr.Expression)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := g.GenerateType(ctx, vr.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	code := make([]ir.Instruction, 0)
+	code = append(code, res...)
+	code = append(code, ir.VarNew(vr.Symbol.String(), t))
+	code = append(code, ir.StackType(t))
+	code = append(code, ir.VarSave(vr.Symbol.String()))
+	return code, nil
+}
+
+func (g IRGenerator) GenerateSet(ctx GenContext, st *ast.SetAST) ([]ir.Instruction, error) {
+	res, err := g.GenerateExpression(ctx, st.Expression)
+	if err != nil {
+		return nil, err
+	}
+
+	code := make([]ir.Instruction, 0)
+	code = append(code, res...)
+	code = append(code, ir.VarSave(st.Symbol.String()))
+	return code, nil
+}
+
+func (g IRGenerator) GenerateCall(ctx GenContext, call *ast.SCallAST) ([]ir.Instruction, error) {
+	code := make([]ir.Instruction, 0)
+	for _, arg := range call.Arguments {
+		res, err := g.GenerateExpression(ctx, arg)
+		if err != nil {
+			return nil, err
+		}
+		code = append(code, res...)
+	}
+	code = append(code, ir.Call(call.Function.String(), object.NewInt(len(call.Arguments))))
+	return code, nil
+}
+
+func (g IRGenerator) GenerateReturn(ctx GenContext, ret *ast.ReturnAST) ([]ir.Instruction, error) {
+	code := make([]ir.Instruction, 0)
+	if ret.Value != nil {
+		res, err := g.GenerateExpression(ctx, ret.Value)
+		if err != nil {
+			return nil, err
+		}
+		code = append(code, res...)
+	}
+	count := 0
+	if ctx.ReturnType != nil {
+		count = 1
+		code = append(code, ir.StackType(*ctx.ReturnType))
+	}
+	code = append(code, ir.Return(object.NewInt(count)))
+	return code, nil
+}
+
+func (g IRGenerator) GenerateIf(ctx GenContext, bl *ast.IfAST) ([]ir.Instruction, error) {
+	ctx = ctx.Copy()
+	ctx.CurrentScope = RandStringBytes(8)
+	code := make([]ir.Instruction, 0)
+	thenLabel := fmt.Sprintf("begin_if_%s", ctx.CurrentScope)
+	endLabel := fmt.Sprintf("end_if_%s", ctx.CurrentScope)
+	res, err := g.GenerateExpression(ctx, bl.IfCondition)
+	if err != nil {
+		return nil, err
+	}
+	code = append(code, res...)
+	thenCode, err := g.GenerateBlock(ctx, bl.IfBody)
+	if err != nil {
+		return nil, err
+	}
+	if bl.ElseBody != nil {
+		elseLabel := fmt.Sprintf("else_%s", ctx.CurrentScope)
+		code = append(code, ir.BrTrue(thenLabel, elseLabel))
+		code = append(code, ir.Label(thenLabel))
+		code = append(code, thenCode...)
+		code = append(code, ir.Br(endLabel))
+		elseCode := make([]ir.Instruction, 0)
+		elseCode = append(elseCode, ir.Label(elseLabel))
+		res, err := g.GenerateBlock(ctx, bl.ElseBody)
+		if err != nil {
+			return nil, err
+		}
+		elseCode = append(elseCode, res...)
+		// elseCode = append(elseCode, ir.Br(endLabel))
+		code = append(code, elseCode...)
+		code = append(code, ir.Label(endLabel))
+	} else {
+		code = append(code, ir.BrTrue(thenLabel, endLabel))
+		code = append(code, ir.Label(thenLabel))
+		code = append(code, thenCode...)
+		code = append(code, ir.Label(endLabel))
+	}
+
+	return code, nil
+}
+
+func (g IRGenerator) GenerateBlock(ctx GenContext, locals []ast.LOCAL) ([]ir.Instruction, error) {
+	code := make([]ir.Instruction, 0)
+	for _, lc := range locals {
+		res, err := g.GenerateLocal(ctx, lc)
+		if err != nil {
+			return nil, err
+		}
+		code = append(code, res...)
+	}
+	return code, nil
 }

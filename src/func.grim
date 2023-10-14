@@ -8,4 +8,5 @@
         }
     }
     @var res:int = 0;
+    @ret;
 }

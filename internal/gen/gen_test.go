@@ -17,6 +17,9 @@ func TestGenIr(t *testing.T) {
 		t.Fatalf("can't parse file: %v", err)
 	}
 	prog.Name = "test"
-	mod := GenModule(prog)
+	mod, err := IRGenerator{}.GenerateModule(prog)
+	if err != nil {
+		t.Fatalf("can't generate module: %v", err)
+	}
 	fmt.Println(mod.String())
 }

@@ -2,24 +2,66 @@ package tp
 
 import "fmt"
 
-type Type interface {
-	fmt.Stringer
-	tp()
+type Type struct {
+	Kind    TypeKind
+	SubType *Type
 }
 
-type IntegerType struct{}
-
-func (i IntegerType) String() string { return "int" }
-func (t IntegerType) tp()            {}
-
-type BooleanType struct{}
-
-func (i BooleanType) String() string { return "bool" }
-func (t BooleanType) tp()            {}
-
-type VariaticType struct {
-	Subtype Type
+func NewInt() Type {
+	return Type{
+		Kind: Int,
+	}
 }
 
-func (i VariaticType) String() string { return "..." + i.Subtype.String() }
-func (t VariaticType) tp()            {}
+func NewBool() Type {
+	return Type{
+		Kind: Boolean,
+	}
+}
+
+func NewVoid() Type {
+	return Type{
+		Kind: Void,
+	}
+}
+
+func NewVariatic(subType *Type) Type {
+	return Type{
+		Kind:    Variatic,
+		SubType: subType,
+	}
+}
+
+func (t Type) String() string {
+	switch t.Kind {
+	case Void, Int, Boolean:
+		return string(t.Kind)
+	case Variatic:
+		return fmt.Sprintf("...%s", t.SubType.String())
+	default:
+		return "undefined"
+	}
+}
+
+func (t Type) Compare(other Type) bool {
+	switch t.Kind {
+	case Void, Int, Boolean:
+		return t.Kind == other.Kind
+	case Variatic:
+		if t.Kind == other.Kind {
+			return t.SubType.Compare(*other.SubType)
+		}
+		return false
+	default:
+		return false
+	}
+}
+
+type TypeKind string
+
+const (
+	Void     TypeKind = "void"
+	Int      TypeKind = "int"
+	Boolean  TypeKind = "bool"
+	Variatic TypeKind = "variatic"
+)
