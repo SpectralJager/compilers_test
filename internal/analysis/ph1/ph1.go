@@ -46,6 +46,18 @@ func AnalyseModule(m *ir.ModuleIR) {
 			if err != nil {
 				panic(err)
 			}
+		case ir.OP_VAR_SAVE:
+			name := inst.Args[0].(*ir.SymbolIR).String()
+			sm := glbs.GetVar(name)
+			if sm == nil {
+				panic(fmt.Errorf("symbol %s not found", name))
+			} else {
+				sm, ok := sm.(*analysis.VariableSymbol)
+				if !ok {
+					panic(fmt.Errorf("symbol %s found, but it is not a variable: %T", name, sm))
+				}
+
+			}
 		}
 	}
 
@@ -89,17 +101,17 @@ func AnaliseFunction(ctx context.Context, f *ir.FunctionIR) {
 			if sm == nil {
 				sm = ctx.Value(globals{}).(*analysis.SymbolTable).GetVar(name)
 				if sm == nil {
-					panic(fmt.Errorf("Symbol %s not found", name))
+					panic(fmt.Errorf("symbol %s not found", name))
 				} else {
 					sm, ok := sm.(*analysis.VariableSymbol)
 					if !ok {
-						panic(fmt.Errorf("Symbol %s found, but it is not a variable: %T", name, sm))
+						panic(fmt.Errorf("symbol %s found, but it is not a variable: %T", name, sm))
 					}
 				}
 			} else {
 				sm, ok := sm.(*analysis.VariableSymbol)
 				if !ok {
-					panic(fmt.Errorf("Symbol %s found, but it is not a variable: %T", name, sm))
+					panic(fmt.Errorf("symbol %s found, but it is not a variable: %T", name, sm))
 				}
 
 			}
