@@ -6,7 +6,13 @@
             @set tmp = res;
             @var test:int = 0;
         }
+    else =>
+        (println 12)
     }
     @var res:int = 0;
     @ret;
+}
+
+@fn some_func(arg1:int arg2:int) <int> {
+    @ret (int/add arg1 arg2);
 }

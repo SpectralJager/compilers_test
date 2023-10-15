@@ -8,7 +8,7 @@ import (
 )
 
 func TestGenIr(t *testing.T) {
-	data, err := os.ReadFile("../../src/fib.grim")
+	data, err := os.ReadFile("../../src/func.grim")
 	if err != nil {
 		t.Fatalf("can't read file: %v", err)
 	}

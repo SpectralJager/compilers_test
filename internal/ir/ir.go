@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-type MetaData struct{}
+type MetaData struct {
+	Type     *tp.Type
+	ArgTypes []tp.Type
+}
 
 type Module struct {
 	Name      string
@@ -65,17 +68,29 @@ func (f *Function) InsertInstructions(index int, instructions ...Instruction) er
 	return nil
 }
 
-func (f *Function) GetMeta() MetaData {
-	return f.Meta
-}
-
-func (f *Function) PutMeta(meta MetaData) {
-	f.Meta = meta
-}
-
 func (f Function) String() string {
 	var buf strings.Builder
 	fmt.Fprintf(&buf, ".%s =>\n", f.Name)
+	fmt.Fprint(&buf, ";")
+	if f.Meta.ArgTypes != nil {
+		for _, arg := range f.Meta.ArgTypes {
+			fmt.Fprintf(&buf, " %s", arg)
+		}
+		fmt.Fprint(&buf, " ->")
+		if f.Meta.Type != nil {
+			fmt.Fprintf(&buf, " %s", f.Meta.Type)
+		} else {
+			fmt.Fprint(&buf, " void")
+		}
+	} else {
+		fmt.Fprint(&buf, " void ->")
+		if f.Meta.Type != nil {
+			fmt.Fprintf(&buf, " %s", f.Meta.Type)
+		} else {
+			fmt.Fprint(&buf, " void")
+		}
+	}
+	fmt.Fprint(&buf, "\n")
 	for _, code := range f.Body {
 		fmt.Fprintf(&buf, "\t%s\n", code)
 	}

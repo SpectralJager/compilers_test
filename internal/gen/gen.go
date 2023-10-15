@@ -14,7 +14,10 @@ type GenContext struct {
 }
 
 func (g GenContext) Copy() GenContext {
-	return g
+	return GenContext{
+		CurrentScope: g.CurrentScope,
+		ReturnType:   g.ReturnType,
+	}
 }
 
 type IRGenerator struct{}
@@ -22,8 +25,8 @@ type IRGenerator struct{}
 func (g IRGenerator) GenerateModule(prog *ast.ProgramAST) (ir.Module, error) {
 	module := ir.NewModule(prog.Name)
 	global := ir.NewFunction("global")
+	ctx := GenContext{CurrentScope: "global"}
 	for _, gl := range prog.Body {
-		ctx := GenContext{CurrentScope: "global"}
 		switch gl := gl.(type) {
 		case *ast.VarAST:
 			res, err := g.GenerateGlobal(ctx, gl)
@@ -45,13 +48,13 @@ func (g IRGenerator) GenerateModule(prog *ast.ProgramAST) (ir.Module, error) {
 
 func (g IRGenerator) GenerateFunction(ctx GenContext, fn *ast.FunctionAST) (ir.Function, error) {
 	fir := ir.NewFunction(fn.Symbol.String())
-
 	ctx.CurrentScope = "local"
 	if fn.ReturnTypes != nil {
 		t, err := g.GenerateType(ctx, fn.ReturnTypes)
 		if err != nil {
 			return fir, err
 		}
+		fir.Meta.Type = &t
 		ctx.ReturnType = &t
 	}
 
@@ -63,8 +66,10 @@ func (g IRGenerator) GenerateFunction(ctx GenContext, fn *ast.FunctionAST) (ir.F
 		}
 		fir.PushInstructions(
 			ir.VarNew(arg.Symbol.String(), t),
+			ir.StackType(t),
 			ir.VarSave(arg.Symbol.String()),
 		)
+		fir.Meta.ArgTypes = append(fir.Meta.ArgTypes, t)
 	}
 
 	for _, lc := range fn.Body {
