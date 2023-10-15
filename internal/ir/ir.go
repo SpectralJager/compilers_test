@@ -167,7 +167,7 @@ func (instr Instruction) String() string {
 	case OP_NOP:
 		return string(instr.Kind)
 	case OP_VAR_NEW:
-		return fmt.Sprintf("%s: %s -> %s", instr.Kind, instr.Identifier, instr.Type)
+		return fmt.Sprintf("%s: %s of %s", instr.Kind, instr.Identifier, instr.Type)
 	case OP_VAR_FREE:
 		return fmt.Sprintf("%s: %s", instr.Kind, instr.Identifier)
 	case OP_VAR_LOAD:
