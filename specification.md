@@ -6,6 +6,8 @@
 - bool
 - list<Type>
 - hashmap<Type>
+- enum
+- null<type>
 ## User defined types
 - struct {Field:Type ...}
 ## Language constructions
@@ -44,3 +46,7 @@ else =>
 ### Error 
 - Error rising -> @raise message;
 - Error handling -> @catch expression => |msg| (println msg);
+## Examples
+```
+
+```
