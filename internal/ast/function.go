@@ -11,7 +11,7 @@ type FunctionAST struct {
 		Symbol SymbolAST `parser:"@@"`
 		Type   Type      `parser:"':'@@"`
 	} `parser:"'(' @@* ')'"`
-	ReturnTypes []Type  `parser:"('<' @@+ '>')?"`
+	ReturnTypes Type    `parser:"('<' @@ '>')?"`
 	Body        []LOCAL `parser:"'{' @@+ '}'"`
 }
 
@@ -23,11 +23,7 @@ func (f *FunctionAST) String() string {
 	}
 	fmt.Fprint(&buf, ")")
 	if f.ReturnTypes != nil {
-		fmt.Fprint(&buf, "<")
-		for _, s := range f.ReturnTypes {
-			fmt.Fprintf(&buf, " %s", s)
-		}
-		fmt.Fprint(&buf, ">")
+		fmt.Fprintf(&buf, "<%s>", f.ReturnTypes)
 	}
 	fmt.Fprint(&buf, "{\n")
 	for _, s := range f.Body {
