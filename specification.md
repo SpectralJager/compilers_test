@@ -6,7 +6,6 @@
 - bool
 - list<Type>
 - hashmap<Type>
-- enum
 - null<type>
 ## User defined types
 - struct {Field:Type ...}
