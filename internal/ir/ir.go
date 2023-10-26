@@ -185,9 +185,9 @@ func (instr Instruction) String() string {
 	case OP_BR:
 		return fmt.Sprintf("%s: %s", instr.Kind, instr.Label)
 	case OP_BR_TRUE:
-		return fmt.Sprintf("%s: %s ?: %s", instr.Kind, instr.Label, instr.LabelElse)
+		return fmt.Sprintf("%s: %s ? %s", instr.Kind, instr.Label, instr.LabelElse)
 	case OP_BR_FALSE:
-		return fmt.Sprintf("%s: %s ?: %s", instr.Kind, instr.Label, instr.LabelElse)
+		return fmt.Sprintf("%s: %s ? %s", instr.Kind, instr.Label, instr.LabelElse)
 	case OP_STACK_TYPE:
 		return fmt.Sprintf("%s: %s", instr.Kind, instr.Type)
 	default:

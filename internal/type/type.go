@@ -7,6 +7,10 @@ type Type struct {
 	SubType *Type
 }
 
+func ToPtr(t Type) *Type {
+	return &t
+}
+
 func NewInt() Type {
 	return Type{
 		Kind: Int,
@@ -25,10 +29,10 @@ func NewVoid() Type {
 	}
 }
 
-func NewVariatic(subType *Type) Type {
+func NewVariatic(subType Type) Type {
 	return Type{
 		Kind:    Variatic,
-		SubType: subType,
+		SubType: &subType,
 	}
 }
 
