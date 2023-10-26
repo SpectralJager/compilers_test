@@ -21,6 +21,35 @@ func NewSemanticContext() *SemanticContext {
 			NewFunctionSymbol(
 				"int/add",
 				[]tp.Type{
+					tp.NewInt(),
+					tp.NewInt(),
+					tp.NewVariatic(tp.NewInt()),
+				},
+				tp.ToPtr(tp.NewInt()),
+			),
+			NewFunctionSymbol(
+				"int/sub",
+				[]tp.Type{
+					tp.NewInt(),
+					tp.NewInt(),
+					tp.NewVariatic(tp.NewInt()),
+				},
+				tp.ToPtr(tp.NewInt()),
+			),
+			NewFunctionSymbol(
+				"int/mul",
+				[]tp.Type{
+					tp.NewInt(),
+					tp.NewInt(),
+					tp.NewVariatic(tp.NewInt()),
+				},
+				tp.ToPtr(tp.NewInt()),
+			),
+			NewFunctionSymbol(
+				"int/div",
+				[]tp.Type{
+					tp.NewInt(),
+					tp.NewInt(),
 					tp.NewVariatic(tp.NewInt()),
 				},
 				tp.ToPtr(tp.NewInt()),
@@ -29,11 +58,42 @@ func NewSemanticContext() *SemanticContext {
 	}
 }
 
+func (c *SemanticContext) IsExist(sm Symbol) bool {
+	for _, s := range c.SymbolTable {
+		switch s.Kind {
+		case Function, Type:
+			if s.Name == sm.Name {
+				return true
+			}
+		case Global:
+			if s.Name == sm.Name {
+				return sm.Kind != Local
+			}
+		}
+	}
+	return false
+}
+
 func (c *SemanticContext) AppendSymbol(sm Symbol) error {
 	switch sm.Kind {
+	case Function, Global:
+		if c.IsExist(sm) {
+			return fmt.Errorf("symbol %s already exists", sm.String())
+		}
+		c.SymbolTable = append(c.SymbolTable, sm)
 	default:
 		return fmt.Errorf("can't append symbol to table, symbol kind is %s", sm.Kind)
 	}
+	return nil
+}
+
+func (c *SemanticContext) String() string {
+	var buf strings.Builder
+	fmt.Fprint(&buf, "SymbolTable =>\n")
+	for _, sm := range c.SymbolTable {
+		fmt.Fprintf(&buf, "\t%s\n", sm.String())
+	}
+	return buf.String()
 }
 
 type SymbolKind string
@@ -97,10 +157,24 @@ func (s *Symbol) String() string {
 	case Function:
 		var buf strings.Builder
 		fmt.Fprintf(&buf, "func:%s => ", s.Name)
-		for _, tp := range s.Args {
-			fmt.Fprintf(&buf, "%s ", tp)
+		if s.Args != nil {
+			for _, arg := range s.Args {
+				fmt.Fprintf(&buf, " %s", arg)
+			}
+			fmt.Fprint(&buf, " ->")
+			if s.Type != nil {
+				fmt.Fprintf(&buf, " %s", s.Type)
+			} else {
+				fmt.Fprint(&buf, " void")
+			}
+		} else {
+			fmt.Fprint(&buf, " void ->")
+			if s.Type != nil {
+				fmt.Fprintf(&buf, " %s", s.Type)
+			} else {
+				fmt.Fprint(&buf, " void")
+			}
 		}
-		fmt.Fprintf(&buf, "-> %s ", s.Type)
 		return buf.String()
 	default:
 		return fmt.Sprintf("undefined:%s", s.Name)
@@ -113,6 +187,18 @@ func SemanticModule(ctx *SemanticContext, module ir.Module) error {
 		err := ctx.AppendSymbol(fs)
 		if err != nil {
 			return err
+		}
+	}
+	for _, instr := range module.Global.Body {
+		switch instr.Kind {
+		case ir.OP_VAR_NEW:
+			vr := NewGlobalSymbol(instr.Identifier, instr.Type)
+			err := ctx.AppendSymbol(vr)
+			if err != nil {
+				return err
+			}
+		case ir.OP_VAR_SAVE:
+
 		}
 	}
 	return nil

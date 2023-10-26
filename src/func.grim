@@ -1,3 +1,5 @@
+@var temp:int = 0;
+
 @fn main() {
     @if (int/lt tmp 2) {
         @var res:int = (int/add 20 48);

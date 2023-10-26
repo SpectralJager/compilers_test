@@ -23,6 +23,9 @@ func TestSemantic(t *testing.T) {
 		t.Fatalf("can't generate module: %v", err)
 	}
 	ctx := NewSemanticContext()
-	SemanticModule(ctx, mod)
-	fmt.Println(ctx.SymbolTable)
+	err = SemanticModule(ctx, mod)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(ctx)
 }
