@@ -124,8 +124,10 @@ func (g IRGenerator) GenerateExpression(ctx GenContext, exp ast.EXPR) ([]ir.Inst
 		if err != nil {
 			return nil, err
 		}
+		instr := ir.ConstLoad(obj)
+		instr.Type = tp.NewInt()
 		code = append(code,
-			ir.ConstLoad(obj),
+			instr,
 		)
 		return code, nil
 	default:
