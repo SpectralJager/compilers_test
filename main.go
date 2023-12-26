@@ -1,6 +1,12 @@
 package main
 
-import "grimlang/ast"
+import (
+	"grimlang/ast"
+	"grimlang/context"
+	"grimlang/eval"
+	"log"
+	"os"
+)
 
 var tree = &ast.Module{
 	Kind: ":main",
@@ -23,4 +29,12 @@ var tree = &ast.Module{
 			},
 		},
 	},
+}
+
+func main() {
+	builtinContext := context.NewContext("builtint", nil)
+	if err := eval.EvalModule(builtinContext, tree); err != nil {
+		log.Fatalf("something goes wrong -> %s", err.Error())
+	}
+	os.Exit(0)
 }

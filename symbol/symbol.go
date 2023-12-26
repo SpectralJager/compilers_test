@@ -2,6 +2,7 @@ package symbol
 
 import (
 	"fmt"
+	"grimlang/ast"
 	"grimlang/builtin"
 	"grimlang/dtype"
 	"grimlang/object"
@@ -51,7 +52,7 @@ func (sm *VariableSymbol) Name() string {
 type FunctionSymbol struct {
 	Identifier string
 	Type       dtype.Type
-	Fn         any
+	Fn         *ast.FunctionDecl
 }
 
 func (*FunctionSymbol) Kind() SymbolKind { return Function }
@@ -103,6 +104,7 @@ func (ctx *ModuleSymbol) Insert(sym Symbol) error {
 // -------------------------------------------------------
 type BuiltinTypeSymbol struct {
 	ModuleSymbol
+	Type dtype.Type
 }
 
 func (*BuiltinTypeSymbol) Kind() SymbolKind { return BuiltinType }
