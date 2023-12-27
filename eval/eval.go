@@ -71,10 +71,12 @@ func (state *EvalState) EvalLocal(ctx context.Context, lc ast.Local) error {
 	case *ast.SymbolCall:
 		_, err := state.EvalSymbolCall(ctx, lc)
 		return err
-	case *ast.ConstantDecl:
-		return state.NewConstantSymbol(ctx, lc)
 	case *ast.ReturnStmt:
 		return state.EvalReturn(ctx, lc)
+	case *ast.ConstantDecl:
+		return state.NewConstantSymbol(ctx, lc)
+	case *ast.VariableDecl:
+		return state.NewVariableSymbol(ctx, lc)
 	default:
 		return fmt.Errorf("eval: unexpected local %T", lc)
 	}
@@ -250,6 +252,24 @@ func (state *EvalState) NewConstantSymbol(ctx context.Context, cnst *ast.Constan
 	return ctx.Insert(
 		&symbol.ConstantSymbol{
 			Identifier: cnst.Identifier,
+			Value:      value,
+		},
+	)
+}
+
+func (state *EvalState) NewVariableSymbol(ctx context.Context, vr *ast.VariableDecl) error {
+	value, err := state.EvalExpression(ctx, vr.Value)
+	if err != nil {
+		return err
+	}
+	typ, err := state.EvalType(ctx, vr.Type)
+	if err != nil {
+		return err
+	}
+	return ctx.Insert(
+		&symbol.VariableSymbol{
+			Identifier: vr.Identifier,
+			Type:       typ,
 			Value:      value,
 		},
 	)
