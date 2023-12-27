@@ -21,7 +21,6 @@ const (
 	Function
 	Module
 	BuiltinFunction
-	BuiltinType
 )
 
 // =======================================================
@@ -94,17 +93,13 @@ func (ctx *ModuleSymbol) Search(ident string) Symbol {
 	return nil
 }
 func (ctx *ModuleSymbol) Insert(sym Symbol) error {
-	if sym := ctx.Search(sym.Name()); sym != nil {
-		return fmt.Errorf("symbol '%s' already defined in scope '%s'", sym.Name(), ctx.Scope())
+	for _, symb := range ctx.Symbols {
+		if symb.Name() == sym.Name() {
+			return fmt.Errorf("symbol '%s' already defined in scope '%s'", sym.Name(), ctx.Scope())
+		}
 	}
 	ctx.Symbols = append(ctx.Symbols, sym)
 	return nil
 }
 
 // -------------------------------------------------------
-type BuiltinTypeSymbol struct {
-	ModuleSymbol
-	Type dtype.Type
-}
-
-func (*BuiltinTypeSymbol) Kind() SymbolKind { return BuiltinType }

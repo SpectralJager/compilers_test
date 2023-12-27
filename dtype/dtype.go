@@ -15,6 +15,7 @@ type TypeKind uint
 
 const (
 	Int TypeKind = 1 << iota
+	Variatic
 	Function
 )
 
@@ -30,6 +31,16 @@ func (*IntType) Kind() TypeKind { return Int }
 func (*IntType) Name() string   { return "int" }
 func (t *IntType) Compare(other Type) bool {
 	return compare(t, other)
+}
+
+type VariaticType struct {
+	Child Type
+}
+
+func (*VariaticType) Kind() TypeKind  { return Variatic }
+func (tp *VariaticType) Name() string { return fmt.Sprintf("...%s", tp.Child.Name()) }
+func (tp *VariaticType) Compare(other Type) bool {
+	return compare(tp, other)
 }
 
 type FunctionType struct {

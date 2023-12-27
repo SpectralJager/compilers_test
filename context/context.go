@@ -41,8 +41,10 @@ func (ctx *_context) Search(ident string) symbol.Symbol {
 }
 
 func (ctx *_context) Insert(sym symbol.Symbol) error {
-	if res := ctx.Search(sym.Name()); res != nil {
-		return fmt.Errorf("symbol '%s' already defined in scope '%s'", sym.Name(), ctx.Scope())
+	for _, symb := range ctx.symbols {
+		if symb.Name() == sym.Name() {
+			return fmt.Errorf("symbol '%s' already defined in scope '%s'", sym.Name(), ctx.Scope())
+		}
 	}
 	ctx.symbols = append(ctx.symbols, sym)
 	return nil

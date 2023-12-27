@@ -98,6 +98,11 @@ type SymbolCall struct {
 	Arguments []Expression
 }
 
+type ReturnStmt struct {
+	_local
+	Value Expression
+}
+
 type SymbolExpr struct {
 	_expression
 	Identifier string
@@ -110,7 +115,7 @@ type IntAtom struct {
 	Value int
 }
 
-type PrimitiveType struct {
+type IntType struct {
 	_type
-	Symbol SymbolExpr
+	Identifier string
 }
