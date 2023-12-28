@@ -18,6 +18,6 @@ func IoPrintln(args ...object.Object) (object.Object, error) {
 		}
 		vals = append(vals, arg.(*object.StringObject).Value)
 	}
-	fmt.Println(strings.Join(vals, " "))
+	fmt.Printf("%s\n", strings.Join(vals, " "))
 	return nil, nil
 }
