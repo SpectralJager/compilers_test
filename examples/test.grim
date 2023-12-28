@@ -1,17 +1,18 @@
 (@module :main
-    (@const n 10)
+    (@const n 35)
 
-    (@fn add [a::int b::int] <int> :do
-        (@return (int/add a b))
+    (@fn fib [n::int] <int> :do
+        (@if (int/lt n 2) :then
+            (@return n) 
+        ) 
+        (@return (int/add
+            (fib (int/sub n 1))
+            (fib (int/sub n 2))))
     )
 
     (@fn main :do
-        (@var temp :of int 0)
-        (@while (int/lt temp 10) :do
-            (@set temp (add temp 1)) 
-        :else
-            (@set temp (add n n))
-        )
-        (exit temp)
+        (@var res :of int (fib n))
+        (io/println "fib of" (int/toString n) "equal" (int/toString res)) 
+        (exit 0)
     )
 )

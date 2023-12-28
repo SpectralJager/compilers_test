@@ -92,6 +92,12 @@ func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (
 	switch ex := ex.(type) {
 	case *ast.IntAtom:
 		return state.EvalAtom(ctx, ex)
+	case *ast.FloatAtom:
+		return state.EvalAtom(ctx, ex)
+	case *ast.StringAtom:
+		return state.EvalAtom(ctx, ex)
+	case *ast.BoolAtom:
+		return state.EvalAtom(ctx, ex)
 	case *ast.SymbolCall:
 		return state.EvalSymbolCall(ctx, ex)
 	case *ast.SymbolExpr:
@@ -108,7 +114,7 @@ func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Objec
 	case *ast.BoolAtom:
 		return &object.BoolObject{Value: at.Value}, nil
 	case *ast.StringAtom:
-		return &object.StringObject{Value: at.Value}, nil
+		return &object.StringObject{Value: at.Value[1 : len(at.Value)-1]}, nil
 	case *ast.FloatAtom:
 		return &object.FloatObject{Value: at.Value}, nil
 	default:

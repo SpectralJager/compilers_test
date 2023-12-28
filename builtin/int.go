@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"grimlang/dtype"
 	"grimlang/object"
+	"strconv"
 )
 
 func IntAdd(args ...object.Object) (object.Object, error) {
@@ -162,12 +163,12 @@ func IntGeq(args ...object.Object) (object.Object, error) {
 
 func IntEq(args ...object.Object) (object.Object, error) {
 	if len(args) < 2 {
-		return nil, fmt.Errorf("add: expect atleast 2 arguments, got %d", len(args))
+		return nil, fmt.Errorf("eq: expect atleast 2 arguments, got %d", len(args))
 	}
 	var target *object.IntObject
 	for i, arg := range args {
 		if !new(dtype.IntType).Compare(arg.Type()) {
-			return nil, fmt.Errorf("add: argument #%d should be int, got %s", i, arg.Type().Name())
+			return nil, fmt.Errorf("eq: argument #%d should be int, got %s", i, arg.Type().Name())
 		}
 		if i == 0 {
 			target = arg.(*object.IntObject)
@@ -178,4 +179,15 @@ func IntEq(args ...object.Object) (object.Object, error) {
 		}
 	}
 	return &object.BoolObject{Value: true}, nil
+}
+
+func IntToString(args ...object.Object) (object.Object, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("toString: expect 1 argument, got %d", len(args))
+	}
+	arg := args[0]
+	if !new(dtype.IntType).Compare(arg.Type()) {
+		return nil, fmt.Errorf("toString: argument should be int, got %s", arg.Type().Name())
+	}
+	return &object.StringObject{Value: strconv.Itoa(arg.(*object.IntObject).Value)}, nil
 }
