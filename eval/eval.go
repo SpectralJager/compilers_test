@@ -73,6 +73,12 @@ func (state *EvalState) EvalLocal(ctx context.Context, lc ast.Local) error {
 		return err
 	case *ast.ReturnStmt:
 		return state.EvalReturn(ctx, lc)
+	case *ast.SetStmt:
+		return state.EvalSet(ctx, lc)
+	case *ast.IfStmt:
+		return state.EvalIf(ctx, lc)
+	case *ast.WhileStmt:
+		return state.EvalWhile(ctx, lc)
 	case *ast.ConstantDecl:
 		return state.NewConstantSymbol(ctx, lc)
 	case *ast.VariableDecl:
@@ -99,6 +105,12 @@ func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Objec
 	switch at := at.(type) {
 	case *ast.IntAtom:
 		return &object.IntObject{Value: at.Value}, nil
+	case *ast.BoolAtom:
+		return &object.BoolObject{Value: at.Value}, nil
+	case *ast.StringAtom:
+		return &object.StringObject{Value: at.Value}, nil
+	case *ast.FloatAtom:
+		return &object.FloatObject{Value: at.Value}, nil
 	default:
 		return nil, fmt.Errorf("eval: unexpected atom %T", at)
 	}
@@ -108,12 +120,31 @@ func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (dtype.Type, 
 	switch tp := tp.(type) {
 	case *ast.IntType:
 		return &dtype.IntType{}, nil
+	case *ast.BoolType:
+		return &dtype.BoolType{}, nil
+	case *ast.StringType:
+		return &dtype.StringType{}, nil
+	case *ast.FloatType:
+		return &dtype.FloatType{}, nil
 	default:
 		return nil, fmt.Errorf("eval: unexpected type %T", tp)
 	}
 }
 
 // ================================================================
+
+func (state *EvalState) EvalLocals(ctx context.Context, lcs []ast.Local) error {
+	for _, lc := range lcs {
+		err := state.EvalLocal(ctx, lc)
+		if err != nil {
+			return err
+		}
+		if state.IsReturn {
+			break
+		}
+	}
+	return nil
+}
 
 func (state *EvalState) EvalSymbol(ctx context.Context, sm *ast.SymbolExpr) (symbol.Symbol, error) {
 	symb := ctx.Search(sm.Identifier)
@@ -170,14 +201,9 @@ func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, 
 			return nil, err
 		}
 	}
-	for _, lc := range fn.Body {
-		err := state.EvalLocal(localContext, lc)
-		if err != nil {
-			return nil, err
-		}
-		if state.IsReturn {
-			break
-		}
+	err := state.EvalLocals(localContext, fn.Body)
+	if err != nil {
+		return nil, err
 	}
 	switch {
 	case fn.Return != nil && state.IsReturn:
@@ -239,6 +265,105 @@ func (state *EvalState) EvalReturn(ctx context.Context, rt *ast.ReturnStmt) erro
 		return err
 	}
 	state.SetReturn(ret)
+	return nil
+}
+
+func (state *EvalState) EvalSet(ctx context.Context, st *ast.SetStmt) error {
+	val, err := state.EvalExpression(ctx, st.Value)
+	if err != nil {
+		return err
+	}
+	symb, err := state.EvalSymbol(ctx, st.Symbol)
+	if err != nil {
+		return err
+	}
+	if symb.Kind() != symbol.Variable {
+		return fmt.Errorf("eval: can't assign new value to non variable symbol %s", symb.Name())
+	}
+	symbVar := symb.(*symbol.VariableSymbol)
+	if !symbVar.Type.Compare(val.Type()) {
+		return fmt.Errorf("eval: mismatch types of variable %s of %s and value of %s", symbVar.Identifier, symbVar.Type.Name(), val.Type().Name())
+	}
+	symbVar.Value = val
+	return nil
+}
+
+func (state *EvalState) EvalIf(ctx context.Context, st *ast.IfStmt) error {
+	type condStruct struct {
+		obj  object.Object
+		body []ast.Local
+	}
+	conditions := []condStruct{}
+
+	cond, err := state.EvalExpression(ctx, st.Condition)
+	if err != nil {
+		return err
+	}
+	conditions = append(conditions, condStruct{
+		obj:  cond,
+		body: st.ThenBody,
+	})
+
+	for _, elif := range st.Elif {
+		cond, err = state.EvalExpression(ctx, elif.Condition)
+		if err != nil {
+			return err
+		}
+		conditions = append(conditions, condStruct{
+			obj:  cond,
+			body: elif.Body,
+		})
+	}
+	localContext := context.NewContext(ctx.Scope()+"_if", ctx)
+	for _, cond := range conditions {
+		if cond.obj.Kind() != object.Bool {
+			return fmt.Errorf("eval: condition should be bool value, got %s", cond.obj.Type().Name())
+		}
+		condBool := cond.obj.(*object.BoolObject)
+		if !condBool.Value {
+			continue
+		}
+		err := state.EvalLocals(localContext, cond.body)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	if len(st.ElseBody) != 0 {
+		err := state.EvalLocals(localContext, st.ElseBody)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error {
+	cond, err := state.EvalExpression(ctx, st.Condition)
+	if err != nil {
+		return err
+	}
+	if cond.Kind() != object.Bool {
+		return fmt.Errorf("eval: condition should be bool value, got %s", cond.Type().Name())
+	}
+	localContext := context.NewContext(ctx.Scope()+"_while", ctx)
+	if cond.(*object.BoolObject).Value {
+		for cond.(*object.BoolObject).Value {
+			err = state.EvalLocals(localContext, st.ThenBody)
+			if err != nil {
+				return err
+			}
+			cond, err = state.EvalExpression(ctx, st.Condition)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		err = state.EvalLocals(localContext, st.ElseBody)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

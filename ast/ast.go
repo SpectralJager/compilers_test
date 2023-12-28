@@ -59,63 +59,123 @@ func (*_type) typ() {}
 
 type Module struct {
 	_ast
-	Kind string
-	Body []Global
+	Kind string   `parser:"'(' '@module' @(':main') "`
+	Body []Global `parser:" @@+ ')'"`
 }
 
 type ConstantDecl struct {
 	_global
 	_local
-	Identifier string
-	Value      Atom
+	Identifier string `parser:"'(' '@const' @Symbol "`
+	Value      Atom   `parser:" @@ ')'"`
 }
 
 type VariableDecl struct {
 	_local
-	Identifier string
-	Type       Type
-	Value      Expression
+	Identifier string     `parser:"'(' '@var' @Symbol "`
+	Type       Type       `parser:" ':of' @@ "`
+	Value      Expression `parser:" @@ ')'"`
 }
 
 type FunctionDecl struct {
 	_global
-	Identifier string
-	Arguments  []*VariableDefn
-	Return     Type
-	Body       []Local
+	Identifier string          `parser:"'(' '@fn' @Symbol "`
+	Arguments  []*VariableDefn `parser:"('[' @@+ ']')?"`
+	Return     Type            `parser:"('<' @@ '>')?"`
+	Body       []Local         `parser:"':do' @@+ ')'"`
 }
 
 type VariableDefn struct {
 	_ast
-	Identifier string
-	Type       Type
+	Identifier string `parser:" @Symbol "`
+	Type       Type   `parser:" '::' @@ "`
 }
 
 type SymbolCall struct {
 	_local
 	_expression
-	Call      *SymbolExpr
-	Arguments []Expression
+	Call      *SymbolExpr  `parser:"'(' @@"`
+	Arguments []Expression `parser:" @@* ')'"`
 }
 
 type ReturnStmt struct {
 	_local
-	Value Expression
+	Value Expression `parser:" '(' '@return' @@? ')'"`
+}
+
+type SetStmt struct {
+	_local
+	Symbol *SymbolExpr `parser:"'(' '@set' @@"`
+	Value  Expression  `parser:"@@ ')'"`
+}
+
+type IfStmt struct {
+	_local
+	Condition Expression `parser:"'(' '@if' @@"`
+	ThenBody  []Local    `parser:"':then' @@+ "`
+	Elif      []Elif     `parser:"@@*"`
+	ElseBody  []Local    `parser:"(':else' @@+)? ')'"`
+}
+
+type WhileStmt struct {
+	_local
+	Condition Expression `parser:"'(' '@while' @@"`
+	ThenBody  []Local    `parser:"':do' @@+ "`
+	ElseBody  []Local    `parser:"(':else' @@+)? ')'"`
 }
 
 type SymbolExpr struct {
 	_expression
-	Identifier string
-	Next       *SymbolExpr
+	Identifier string      `parser:"@Symbol"`
+	Next       *SymbolExpr `parser:"('/' @@)?"`
 }
 
 type IntAtom struct {
 	_expression
 	_atom
-	Value int
+	Value int `parser:"@Integer"`
+}
+
+type BoolAtom struct {
+	_expression
+	_atom
+	Value bool `parser:"@Boolean"`
+}
+
+type FloatAtom struct {
+	_expression
+	_atom
+	Value float64 `parser:"@Float"`
+}
+
+type StringAtom struct {
+	_expression
+	_atom
+	Value string `parser:"@String"`
 }
 
 type IntType struct {
 	_type
-	Identifier string
+	Identifier string `parser:"@'int'"`
+}
+
+type BoolType struct {
+	_type
+	Identifier string `parser:"@'bool'"`
+}
+
+type FloatType struct {
+	_type
+	Identifier string `parser:"@'float'"`
+}
+type StringType struct {
+	_type
+	Identifier string `parser:"@'string'"`
+}
+
+// ======================================
+
+type Elif struct {
+	Condition Expression `parser:"':elif' @@"`
+	Body      []Local    `parser:"'=>' @@+"`
 }

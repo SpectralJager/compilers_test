@@ -1,0 +1,17 @@
+(@module :main
+    (@const n 10)
+
+    (@fn add [a::int b::int] <int> :do
+        (@return (int/add a b))
+    )
+
+    (@fn main :do
+        (@var temp :of int 0)
+        (@while (int/lt temp 10) :do
+            (@set temp (add temp 1)) 
+        :else
+            (@set temp (add n n))
+        )
+        (exit temp)
+    )
+)

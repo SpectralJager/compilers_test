@@ -11,6 +11,9 @@ type ObjectKind uint
 
 const (
 	Int ObjectKind = 3 << iota
+	Float
+	Bool
+	String
 )
 
 // =============================
@@ -21,3 +24,24 @@ type IntObject struct {
 
 func (*IntObject) Kind() ObjectKind { return Int }
 func (*IntObject) Type() dtype.Type { return &dtype.IntType{} }
+
+type FloatObject struct {
+	Value float64
+}
+
+func (*FloatObject) Kind() ObjectKind { return Float }
+func (*FloatObject) Type() dtype.Type { return &dtype.FloatType{} }
+
+type BoolObject struct {
+	Value bool
+}
+
+func (*BoolObject) Kind() ObjectKind { return Bool }
+func (*BoolObject) Type() dtype.Type { return &dtype.BoolType{} }
+
+type StringObject struct {
+	Value string
+}
+
+func (*StringObject) Kind() ObjectKind { return String }
+func (*StringObject) Type() dtype.Type { return &dtype.StringType{} }

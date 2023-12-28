@@ -15,6 +15,9 @@ type TypeKind uint
 
 const (
 	Int TypeKind = 1 << iota
+	Float
+	Bool
+	String
 	Variatic
 	Function
 )
@@ -31,6 +34,30 @@ func (*IntType) Kind() TypeKind { return Int }
 func (*IntType) Name() string   { return "int" }
 func (t *IntType) Compare(other Type) bool {
 	return compare(t, other)
+}
+
+type FloatType struct{}
+
+func (*FloatType) Kind() TypeKind { return Float }
+func (*FloatType) Name() string   { return "float" }
+func (tp *FloatType) Compare(other Type) bool {
+	return compare(tp, other)
+}
+
+type BoolType struct{}
+
+func (*BoolType) Kind() TypeKind { return Bool }
+func (*BoolType) Name() string   { return "bool" }
+func (tp *BoolType) Compare(other Type) bool {
+	return compare(tp, other)
+}
+
+type StringType struct{}
+
+func (*StringType) Kind() TypeKind { return String }
+func (*StringType) Name() string   { return "string" }
+func (tp *StringType) Compare(other Type) bool {
+	return compare(tp, other)
 }
 
 type VariaticType struct {

@@ -22,17 +22,3 @@ func Exit(args ...object.Object) (object.Object, error) {
 	os.Exit(code.Value)
 	return nil, nil
 }
-
-func IntAdd(args ...object.Object) (object.Object, error) {
-	if len(args) < 2 {
-		return nil, fmt.Errorf("add: expect atleast 2 arguments, got %d", len(args))
-	}
-	res := 0
-	for i, arg := range args {
-		if !new(dtype.IntType).Compare(arg.Type()) {
-			return nil, fmt.Errorf("add: argument #%d should be int, got %s", i, arg.Type().Name())
-		}
-		res += arg.(*object.IntObject).Value
-	}
-	return &object.IntObject{Value: res}, nil
-}
