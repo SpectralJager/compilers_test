@@ -1,5 +1,5 @@
 (@module :main
-    (@const n 10)
+    (@const n 35)
 
     (@fn fib [n::int] <int> :do
         (@if (int/lt n 2) :then

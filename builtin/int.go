@@ -191,3 +191,25 @@ func IntToString(args ...object.Object) (object.Object, error) {
 	}
 	return &object.StringObject{Value: strconv.Itoa(arg.(*object.IntObject).Value)}, nil
 }
+
+func IntToFloat(args ...object.Object) (object.Object, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("toFloat: expect 1 argument, got %d", len(args))
+	}
+	arg := args[0]
+	if !new(dtype.IntType).Compare(arg.Type()) {
+		return nil, fmt.Errorf("toFloat: argument should be int, got %s", arg.Type().Name())
+	}
+	return &object.FloatObject{Value: float64(arg.(*object.IntObject).Value)}, nil
+}
+
+func IntToBool(args ...object.Object) (object.Object, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("toBool: expect 1 argument, got %d", len(args))
+	}
+	arg := args[0]
+	if !new(dtype.IntType).Compare(arg.Type()) {
+		return nil, fmt.Errorf("toBool: argument should be int, got %s", arg.Type().Name())
+	}
+	return &object.BoolObject{Value: arg.(*object.IntObject).Value != 0}, nil
+}
