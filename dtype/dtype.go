@@ -14,11 +14,13 @@ type Type interface {
 type TypeKind uint
 
 const (
-	Int TypeKind = 1 << iota
+	Any TypeKind = 1 << iota
+	Int
 	Float
 	Bool
 	String
 	Variatic
+	List
 	Function
 )
 
@@ -27,6 +29,13 @@ func compare(t1, t2 Type) bool {
 }
 
 // =============================
+type AnyType struct{}
+
+func (*AnyType) Kind() TypeKind { return Any }
+func (*AnyType) Name() string   { return "any" }
+func (t *AnyType) Compare(other Type) bool {
+	return true
+}
 
 type IntType struct{}
 
@@ -67,6 +76,16 @@ type VariaticType struct {
 func (*VariaticType) Kind() TypeKind  { return Variatic }
 func (tp *VariaticType) Name() string { return fmt.Sprintf("...%s", tp.Child.Name()) }
 func (tp *VariaticType) Compare(other Type) bool {
+	return compare(tp, other)
+}
+
+type ListType struct {
+	Child Type
+}
+
+func (*ListType) Kind() TypeKind  { return List }
+func (tp *ListType) Name() string { return fmt.Sprintf("list<%s>", tp.Child.Name()) }
+func (tp *ListType) Compare(other Type) bool {
 	return compare(tp, other)
 }
 

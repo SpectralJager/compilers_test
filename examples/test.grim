@@ -1,18 +1,11 @@
 (@module :main
     (@const n 35)
 
-    (@fn fib [n::int] <int> :do
-        (@if (int/lt n 2) :then
-            (@return n) 
-        ) 
-        (@return (int/add
-            (fib (int/sub n 1))
-            (fib (int/sub n 2))))
-    )
-
     (@fn main :do
-        (@var res :of int (fib n))
-        (io/println "fib of" (int/toString n) "equal" (int/toString res)) 
+        (@var temp :of list<int> list<int>{1 2 3 4 5})
+        (io/println "list[1] =" (int/toString (list/get temp 1)))
+        (list/set temp 1 (int/mul 2 (list/get temp 1)))
+        (io/println "list[1] =" (int/toString (list/get temp 1)))
         (exit 0)
     )
 )

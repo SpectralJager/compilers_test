@@ -97,6 +97,7 @@ func FloatLt(args ...object.Object) (object.Object, error) {
 		if target.Value >= arg.(*object.FloatObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.FloatObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -117,6 +118,7 @@ func FloatGt(args ...object.Object) (object.Object, error) {
 		if target.Value <= arg.(*object.FloatObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.FloatObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -137,6 +139,7 @@ func FloatLeq(args ...object.Object) (object.Object, error) {
 		if target.Value > arg.(*object.FloatObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.FloatObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -157,6 +160,7 @@ func FloatGeq(args ...object.Object) (object.Object, error) {
 		if target.Value < arg.(*object.FloatObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.FloatObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -177,6 +181,7 @@ func FloatEq(args ...object.Object) (object.Object, error) {
 		if target.Value != arg.(*object.FloatObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.FloatObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }

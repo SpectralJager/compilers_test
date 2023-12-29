@@ -97,6 +97,7 @@ func IntLt(args ...object.Object) (object.Object, error) {
 		if target.Value >= arg.(*object.IntObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.IntObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -117,6 +118,7 @@ func IntGt(args ...object.Object) (object.Object, error) {
 		if target.Value <= arg.(*object.IntObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.IntObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -137,6 +139,7 @@ func IntLeq(args ...object.Object) (object.Object, error) {
 		if target.Value > arg.(*object.IntObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.IntObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -157,6 +160,7 @@ func IntGeq(args ...object.Object) (object.Object, error) {
 		if target.Value < arg.(*object.IntObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.IntObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }
@@ -177,6 +181,7 @@ func IntEq(args ...object.Object) (object.Object, error) {
 		if target.Value != arg.(*object.IntObject).Value {
 			return &object.BoolObject{Value: false}, nil
 		}
+		target = arg.(*object.IntObject)
 	}
 	return &object.BoolObject{Value: true}, nil
 }

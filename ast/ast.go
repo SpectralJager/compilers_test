@@ -154,6 +154,13 @@ type StringAtom struct {
 	Value string `parser:"@String"`
 }
 
+type ListAtom struct {
+	_expression
+	_atom
+	Type  *ListType    `parser:"@@"`
+	Items []Expression `parser:"'{' @@* '}'"`
+}
+
 type IntType struct {
 	_type
 	Identifier string `parser:"@'int'"`
@@ -171,6 +178,11 @@ type FloatType struct {
 type StringType struct {
 	_type
 	Identifier string `parser:"@'string'"`
+}
+
+type ListType struct {
+	_type
+	Child Type `parser:"'list' '<' @@ '>'"`
 }
 
 // ======================================

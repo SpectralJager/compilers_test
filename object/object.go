@@ -14,6 +14,7 @@ const (
 	Float
 	Bool
 	String
+	List
 )
 
 // =============================
@@ -45,3 +46,11 @@ type StringObject struct {
 
 func (*StringObject) Kind() ObjectKind { return String }
 func (*StringObject) Type() dtype.Type { return &dtype.StringType{} }
+
+type ListObject struct {
+	ChildType dtype.Type
+	Items     []Object
+}
+
+func (*ListObject) Kind() ObjectKind     { return List }
+func (obj *ListObject) Type() dtype.Type { return &dtype.ListType{Child: obj.ChildType} }

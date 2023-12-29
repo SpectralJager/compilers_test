@@ -64,24 +64,27 @@ var (
 			&WhileStmt{},
 		),
 		participle.Union[Expression](
-			&SymbolCall{},
-			&SymbolExpr{},
 			&IntAtom{},
 			&BoolAtom{},
 			&FloatAtom{},
 			&StringAtom{},
+			&ListAtom{},
+			&SymbolCall{},
+			&SymbolExpr{},
 		),
 		participle.Union[Atom](
 			&IntAtom{},
 			&BoolAtom{},
 			&FloatAtom{},
 			&StringAtom{},
+			&ListAtom{},
 		),
 		participle.Union[Type](
 			&IntType{},
 			&BoolType{},
 			&FloatType{},
 			&StringType{},
+			&ListType{},
 		),
 	)
 )

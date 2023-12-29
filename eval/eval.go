@@ -98,6 +98,8 @@ func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (
 		return state.EvalAtom(ctx, ex)
 	case *ast.BoolAtom:
 		return state.EvalAtom(ctx, ex)
+	case *ast.ListAtom:
+		return state.EvalAtom(ctx, ex)
 	case *ast.SymbolCall:
 		return state.EvalSymbolCall(ctx, ex)
 	case *ast.SymbolExpr:
@@ -117,6 +119,8 @@ func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Objec
 		return &object.StringObject{Value: at.Value[1 : len(at.Value)-1]}, nil
 	case *ast.FloatAtom:
 		return &object.FloatObject{Value: at.Value}, nil
+	case *ast.ListAtom:
+		return state.EvalList(ctx, at)
 	default:
 		return nil, fmt.Errorf("eval: unexpected atom %T", at)
 	}
@@ -132,6 +136,12 @@ func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (dtype.Type, 
 		return &dtype.StringType{}, nil
 	case *ast.FloatType:
 		return &dtype.FloatType{}, nil
+	case *ast.ListType:
+		itemType, err := state.EvalType(ctx, tp.Child)
+		if err != nil {
+			return nil, err
+		}
+		return &dtype.ListType{Child: itemType}, nil
 	default:
 		return nil, fmt.Errorf("eval: unexpected type %T", tp)
 	}
@@ -371,6 +381,25 @@ func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error 
 		}
 	}
 	return nil
+}
+
+func (state *EvalState) EvalList(ctx context.Context, lst *ast.ListAtom) (object.Object, error) {
+	itemType, err := state.EvalType(ctx, lst.Type.Child)
+	if err != nil {
+		return nil, err
+	}
+	items := []object.Object{}
+	for i, item := range lst.Items {
+		obj, err := state.EvalExpression(ctx, item)
+		if err != nil {
+			return nil, err
+		}
+		if !itemType.Compare(obj.Type()) {
+			return nil, fmt.Errorf("eval: wrong %dth list<%s> item type -> %s", i, itemType.Name(), obj.Type().Name())
+		}
+		items = append(items, obj)
+	}
+	return &object.ListObject{ChildType: itemType, Items: items}, nil
 }
 
 // ================================================================
