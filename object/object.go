@@ -1,56 +1,44 @@
 package object
 
-import "grimlang/dtype"
-
-type Object interface {
-	Kind() ObjectKind
-	Type() dtype.Type
-}
-
 type ObjectKind uint
 
 const (
-	Int ObjectKind = 3 << iota
-	Float
-	Bool
-	String
-	List
+	_ ObjectKind = 1 << iota
+	VariableSymbol
+	ConstantSymbol
+	FunctionSymbol
+	BuiltinSymbol
+	ModuleSymbol
+	RecordSymbol
+
+	AnyType
+	NullType
+	IntType
+	FloatType
+	StringType
+	BoolType
+	ListType
+	RecordType
+	FunctionType
+
+	NullLitteral
+	IntLitteral
+	FloatLitteral
+	StringLitteral
+	BoolLitteral
+	ListLitteral
+	RecordLitteral
+
+	IsSymbol   = VariableSymbol | ConstantSymbol | FunctionSymbol | BuiltinSymbol | ModuleSymbol | RecordSymbol
+	IsType     = AnyType | NullType | IntType | FloatType | StringType | BoolType | ListType | RecordType | FunctionType
+	IsLitteral = NullLitteral | IntLitteral | FloatLitteral | StringLitteral | BoolLitteral | ListLitteral | RecordLitteral
 )
 
-// =============================
-
-type IntObject struct {
-	Value int
+func Is(a, b ObjectKind) bool {
+	return a&b != 0
 }
 
-func (*IntObject) Kind() ObjectKind { return Int }
-func (*IntObject) Type() dtype.Type { return &dtype.IntType{} }
-
-type FloatObject struct {
-	Value float64
+type Object interface {
+	Kind() ObjectKind
+	Inspect() string
 }
-
-func (*FloatObject) Kind() ObjectKind { return Float }
-func (*FloatObject) Type() dtype.Type { return &dtype.FloatType{} }
-
-type BoolObject struct {
-	Value bool
-}
-
-func (*BoolObject) Kind() ObjectKind { return Bool }
-func (*BoolObject) Type() dtype.Type { return &dtype.BoolType{} }
-
-type StringObject struct {
-	Value string
-}
-
-func (*StringObject) Kind() ObjectKind { return String }
-func (*StringObject) Type() dtype.Type { return &dtype.StringType{} }
-
-type ListObject struct {
-	ChildType dtype.Type
-	Items     []Object
-}
-
-func (*ListObject) Kind() ObjectKind     { return List }
-func (obj *ListObject) Type() dtype.Type { return &dtype.ListType{Child: obj.ChildType} }
