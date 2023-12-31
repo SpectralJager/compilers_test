@@ -2,10 +2,6 @@
     (@const n 35)
 
     (@fn main :do
-        (@var temp :of list<int> list<int>{1 2 3 4 5})
-        (io/println "list[1] =" (int/toString (list/get temp 1)))
-        (list/set temp 1 (int/mul 2 (list/get temp 1)))
-        (io/println "list[1] =" (int/toString (list/get temp 1)))
-        (exit 0)
+        (exit n)
     )
 )

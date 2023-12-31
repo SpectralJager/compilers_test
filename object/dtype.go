@@ -5,28 +5,33 @@ import (
 	"strings"
 )
 
+type DType interface {
+	Object
+	Compare(DType) bool
+}
+
+func compare(a, b DType) bool {
+	return Is(a.Kind(), b.Kind()) && a.Inspect() == b.Inspect()
+}
+
 type DTypeAny struct{}
 type DTypeInt struct{}
 type DTypeFloat struct{}
 type DTypeString struct{}
 type DTypeBool struct{}
-
 type DTypeList struct {
-	ChildType Object
+	ChildType DType
 }
-
 type DTypeNull struct {
-	ChildType Object
+	ChildType DType
 }
-
 type DTypeRecord struct {
 	Identifier string
-	FieldsType []Object
+	FieldsType []DType
 }
-
 type DTypeFunction struct {
-	ArgumentsType []Object
-	ReturnType    Object
+	ArgumentsType []DType
+	ReturnType    DType
 }
 
 func (*DTypeAny) Kind() ObjectKind      { return AnyType }
@@ -59,4 +64,32 @@ func (dt *DTypeFunction) Inspect() string {
 		args = append(args, arg.Inspect())
 	}
 	return fmt.Sprintf("fn[%s]<%s>", strings.Join(args, " "), dt.ReturnType.Inspect())
+}
+
+func (tp *DTypeAny) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeInt) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeFloat) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeString) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeBool) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeList) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeNull) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeRecord) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeFunction) Compare(other DType) bool {
+	return compare(tp, other)
 }

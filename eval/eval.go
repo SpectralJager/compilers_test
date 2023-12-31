@@ -1,26 +1,24 @@
-package runtime
+package eval
 
 import (
 	"fmt"
 	"grimlang/ast"
 	"grimlang/context"
-	"grimlang/dtype"
 	"grimlang/object"
-	"grimlang/symbol"
 )
 
 type EvalState struct {
 	GlobalContext context.Context
-	Return        object.Object
+	Return        object.Litteral
 	IsReturn      bool
 }
 
-func (state *EvalState) SetReturn(obj object.Object) {
+func (state *EvalState) SetReturn(obj object.Litteral) {
 	state.IsReturn = true
 	state.Return = obj
 }
 
-func (state *EvalState) GetReturn() object.Object {
+func (state *EvalState) GetReturn() object.Litteral {
 	state.IsReturn = false
 	ret := state.Return
 	state.Return = nil
@@ -42,10 +40,10 @@ func (state *EvalState) EvalModule(ctx context.Context, md *ast.Module) error {
 		if mainSymbol == nil {
 			return fmt.Errorf("function main not found")
 		}
-		if mainSymbol.Kind() != symbol.Function {
+		if !object.Is(mainSymbol.Kind(), object.FunctionSymbol) {
 			return fmt.Errorf("main should be function")
 		}
-		mainFunc := mainSymbol.(*symbol.FunctionSymbol)
+		mainFunc := mainSymbol.(*object.SymbolFunction)
 		_, err := state.EvalFunction(globalContext, mainFunc.Fn, nil)
 		return err
 	default:
@@ -88,7 +86,7 @@ func (state *EvalState) EvalLocal(ctx context.Context, lc ast.Local) error {
 	}
 }
 
-func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (object.Object, error) {
+func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (object.Litteral, error) {
 	switch ex := ex.(type) {
 	case *ast.IntAtom:
 		return state.EvalAtom(ctx, ex)
@@ -109,16 +107,16 @@ func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (
 	}
 }
 
-func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Object, error) {
+func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Litteral, error) {
 	switch at := at.(type) {
 	case *ast.IntAtom:
-		return &object.IntObject{Value: at.Value}, nil
+		return &object.LitteralInt{Value: at.Value}, nil
 	case *ast.BoolAtom:
-		return &object.BoolObject{Value: at.Value}, nil
+		return &object.LitteralBool{Value: at.Value}, nil
 	case *ast.StringAtom:
-		return &object.StringObject{Value: at.Value[1 : len(at.Value)-1]}, nil
+		return &object.LitteralString{Value: at.Value[1 : len(at.Value)-1]}, nil
 	case *ast.FloatAtom:
-		return &object.FloatObject{Value: at.Value}, nil
+		return &object.LitteralFloat{Value: at.Value}, nil
 	case *ast.ListAtom:
 		return state.EvalList(ctx, at)
 	default:
@@ -126,22 +124,22 @@ func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Objec
 	}
 }
 
-func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (dtype.Type, error) {
+func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (object.DType, error) {
 	switch tp := tp.(type) {
 	case *ast.IntType:
-		return &dtype.IntType{}, nil
+		return &object.DTypeInt{}, nil
 	case *ast.BoolType:
-		return &dtype.BoolType{}, nil
+		return &object.DTypeBool{}, nil
 	case *ast.StringType:
-		return &dtype.StringType{}, nil
+		return &object.DTypeString{}, nil
 	case *ast.FloatType:
-		return &dtype.FloatType{}, nil
+		return &object.DTypeFloat{}, nil
 	case *ast.ListType:
 		itemType, err := state.EvalType(ctx, tp.Child)
 		if err != nil {
 			return nil, err
 		}
-		return &dtype.ListType{Child: itemType}, nil
+		return &object.DTypeList{ChildType: itemType}, nil
 	default:
 		return nil, fmt.Errorf("eval: unexpected type %T", tp)
 	}
@@ -162,7 +160,7 @@ func (state *EvalState) EvalLocals(ctx context.Context, lcs []ast.Local) error {
 	return nil
 }
 
-func (state *EvalState) EvalSymbol(ctx context.Context, sm *ast.SymbolExpr) (symbol.Symbol, error) {
+func (state *EvalState) EvalSymbol(ctx context.Context, sm *ast.SymbolExpr) (object.Symbol, error) {
 	symb := ctx.Search(sm.Identifier)
 	if symb == nil {
 		return nil, fmt.Errorf("eval: symbol %s not found", sm.Identifier)
@@ -171,29 +169,29 @@ func (state *EvalState) EvalSymbol(ctx context.Context, sm *ast.SymbolExpr) (sym
 		return symb, nil
 	}
 	switch symb := symb.(type) {
-	case *symbol.ModuleSymbol:
+	case *object.SymbolModule:
 		return state.EvalSymbol(symb, sm.Next)
 	default:
 		return nil, fmt.Errorf("eval: symbol %s not found", sm.Next.Identifier)
 	}
 }
 
-func (state *EvalState) EvalSymbolExpression(ctx context.Context, sm *ast.SymbolExpr) (object.Object, error) {
+func (state *EvalState) EvalSymbolExpression(ctx context.Context, sm *ast.SymbolExpr) (object.Litteral, error) {
 	symb, err := state.EvalSymbol(ctx, sm)
 	if err != nil {
 		return nil, err
 	}
 	switch symb := symb.(type) {
-	case *symbol.ConstantSymbol:
+	case *object.SymbolConstant:
 		return symb.Value, nil
-	case *symbol.VariableSymbol:
+	case *object.SymbolVariable:
 		return symb.Value, nil
 	default:
 		return nil, fmt.Errorf("eval: can't get object from symbol %s of %T", symb.Name(), symb)
 	}
 }
 
-func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, args []object.Object) (object.Object, error) {
+func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, args []object.Litteral) (object.Litteral, error) {
 	localContext := context.NewContext(fn.Identifier, state.GlobalContext)
 	if len(args) != len(fn.Arguments) {
 		return nil, fmt.Errorf("eval: %s expect %d arguments, got %d", fn.Identifier, len(fn.Arguments), len(args))
@@ -204,12 +202,12 @@ func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, 
 			return nil, err
 		}
 		if !args[i].Type().Compare(argType) {
-			return nil, fmt.Errorf("eval: %s expect %dth argument be %s, got %s", fn.Identifier, i, argType.Name(), args[i].Type().Name())
+			return nil, fmt.Errorf("eval: %s expect %dth argument be %s, got %s", fn.Identifier, i, argType.Inspect(), args[i].Type().Inspect())
 		}
 		err = localContext.Insert(
-			&symbol.VariableSymbol{
+			&object.SymbolVariable{
 				Identifier: arg.Identifier,
-				Type:       argType,
+				ValueType:  argType,
 				Value:      args[i],
 			},
 		)
@@ -229,11 +227,11 @@ func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, 
 		}
 		ret := state.GetReturn()
 		if ret == nil {
-			return nil, fmt.Errorf("eval: function expect return %s, got nothing", retType.Name())
+			return nil, fmt.Errorf("eval: function expect return %s, got nothing", retType.Inspect())
 		}
 		state.Return = nil
 		if !retType.Compare(ret.Type()) {
-			return nil, fmt.Errorf("eval: function expect return %s, got %s", retType.Name(), ret.Type().Name())
+			return nil, fmt.Errorf("eval: function expect return %s, got %s", retType.Inspect(), ret.Type().Inspect())
 		}
 		return ret, nil
 	case fn.Return != nil && !state.IsReturn:
@@ -241,19 +239,19 @@ func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, 
 		if err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("eval: function expect return %s, got nothing", retType.Name())
+		return nil, fmt.Errorf("eval: function expect return %s, got nothing", retType.Inspect())
 	case state.IsReturn:
 		state.Return = nil
 	}
 	return nil, nil
 }
 
-func (state *EvalState) EvalSymbolCall(ctx context.Context, sc *ast.SymbolCall) (object.Object, error) {
+func (state *EvalState) EvalSymbolCall(ctx context.Context, sc *ast.SymbolCall) (object.Litteral, error) {
 	tempSymb, err := state.EvalSymbol(ctx, sc.Call)
 	if err != nil {
 		return nil, err
 	}
-	params := []object.Object{}
+	params := []object.Litteral{}
 	for _, param := range sc.Arguments {
 		obj, err := state.EvalExpression(ctx, param)
 		if err != nil {
@@ -262,10 +260,10 @@ func (state *EvalState) EvalSymbolCall(ctx context.Context, sc *ast.SymbolCall) 
 		params = append(params, obj)
 	}
 	switch tempSymb := tempSymb.(type) {
-	case *symbol.FunctionSymbol:
+	case *object.SymbolFunction:
 		return state.EvalFunction(ctx, tempSymb.Fn, params)
-	case *symbol.BuiltinFunctionSymbol:
-		return tempSymb.Callee(params...)
+	case *object.SymbolBuiltin:
+		return tempSymb.Fn(params...)
 	default:
 		return nil, fmt.Errorf("eval: unexpected %s symbol %T", tempSymb.Name(), tempSymb)
 	}
@@ -293,12 +291,12 @@ func (state *EvalState) EvalSet(ctx context.Context, st *ast.SetStmt) error {
 	if err != nil {
 		return err
 	}
-	if symb.Kind() != symbol.Variable {
+	if object.Is(symb.Kind(), object.VariableSymbol) {
 		return fmt.Errorf("eval: can't assign new value to non variable symbol %s", symb.Name())
 	}
-	symbVar := symb.(*symbol.VariableSymbol)
-	if !symbVar.Type.Compare(val.Type()) {
-		return fmt.Errorf("eval: mismatch types of variable %s of %s and value of %s", symbVar.Identifier, symbVar.Type.Name(), val.Type().Name())
+	symbVar := symb.(*object.SymbolVariable)
+	if !symbVar.ValueType.Compare(val.Type()) {
+		return fmt.Errorf("eval: mismatch types of variable %s of %s and value of %s", symbVar.Identifier, symbVar.Value.Inspect(), val.Type().Inspect())
 	}
 	symbVar.Value = val
 	return nil
@@ -306,7 +304,7 @@ func (state *EvalState) EvalSet(ctx context.Context, st *ast.SetStmt) error {
 
 func (state *EvalState) EvalIf(ctx context.Context, st *ast.IfStmt) error {
 	type condStruct struct {
-		obj  object.Object
+		obj  object.Litteral
 		body []ast.Local
 	}
 	conditions := []condStruct{}
@@ -332,10 +330,10 @@ func (state *EvalState) EvalIf(ctx context.Context, st *ast.IfStmt) error {
 	}
 	localContext := context.NewContext(ctx.Scope()+"_if", ctx)
 	for _, cond := range conditions {
-		if cond.obj.Kind() != object.Bool {
-			return fmt.Errorf("eval: condition should be bool value, got %s", cond.obj.Type().Name())
+		if object.Is(cond.obj.Kind(), object.BoolLitteral) {
+			return fmt.Errorf("eval: condition should be bool value, got %s", cond.obj.Type().Inspect())
 		}
-		condBool := cond.obj.(*object.BoolObject)
+		condBool := cond.obj.(*object.LitteralBool)
 		if !condBool.Value {
 			continue
 		}
@@ -359,12 +357,12 @@ func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error 
 	if err != nil {
 		return err
 	}
-	if cond.Kind() != object.Bool {
-		return fmt.Errorf("eval: condition should be bool value, got %s", cond.Type().Name())
+	if object.Is(cond.Kind(), object.BoolLitteral) {
+		return fmt.Errorf("eval: condition should be bool value, got %s", cond.Type().Inspect())
 	}
 	localContext := context.NewContext(ctx.Scope()+"_while", ctx)
-	if cond.(*object.BoolObject).Value {
-		for cond.(*object.BoolObject).Value {
+	if cond.(*object.LitteralBool).Value {
+		for cond.(*object.LitteralBool).Value {
 			err = state.EvalLocals(localContext, st.ThenBody)
 			if err != nil {
 				return err
@@ -383,23 +381,23 @@ func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error 
 	return nil
 }
 
-func (state *EvalState) EvalList(ctx context.Context, lst *ast.ListAtom) (object.Object, error) {
+func (state *EvalState) EvalList(ctx context.Context, lst *ast.ListAtom) (object.Litteral, error) {
 	itemType, err := state.EvalType(ctx, lst.Type.Child)
 	if err != nil {
 		return nil, err
 	}
-	items := []object.Object{}
+	items := []object.Litteral{}
 	for i, item := range lst.Items {
 		obj, err := state.EvalExpression(ctx, item)
 		if err != nil {
 			return nil, err
 		}
 		if !itemType.Compare(obj.Type()) {
-			return nil, fmt.Errorf("eval: wrong %dth list<%s> item type -> %s", i, itemType.Name(), obj.Type().Name())
+			return nil, fmt.Errorf("eval: wrong %dth list<%s> item type -> %s", i, itemType.Inspect(), obj.Type().Inspect())
 		}
 		items = append(items, obj)
 	}
-	return &object.ListObject{ChildType: itemType, Items: items}, nil
+	return &object.LitteralList{ItemType: itemType, Items: items}, nil
 }
 
 // ================================================================
@@ -410,7 +408,7 @@ func (state *EvalState) NewConstantSymbol(ctx context.Context, cnst *ast.Constan
 		return err
 	}
 	return ctx.Insert(
-		&symbol.ConstantSymbol{
+		&object.SymbolConstant{
 			Identifier: cnst.Identifier,
 			Value:      value,
 		},
@@ -427,16 +425,16 @@ func (state *EvalState) NewVariableSymbol(ctx context.Context, vr *ast.VariableD
 		return err
 	}
 	return ctx.Insert(
-		&symbol.VariableSymbol{
+		&object.SymbolVariable{
 			Identifier: vr.Identifier,
-			Type:       typ,
+			ValueType:  typ,
 			Value:      value,
 		},
 	)
 }
 
 func (state *EvalState) NewFunctionSymbol(ctx context.Context, fn *ast.FunctionDecl) error {
-	args := []dtype.Type{}
+	args := []object.DType{}
 	for _, arg := range fn.Arguments {
 		typ, err := state.EvalType(ctx, arg.Type)
 		if err != nil {
@@ -444,7 +442,7 @@ func (state *EvalState) NewFunctionSymbol(ctx context.Context, fn *ast.FunctionD
 		}
 		args = append(args, typ)
 	}
-	var ret dtype.Type
+	var ret object.DType
 	if fn.Return != nil {
 		var err error
 		ret, err = state.EvalType(ctx, fn.Return)
@@ -453,12 +451,12 @@ func (state *EvalState) NewFunctionSymbol(ctx context.Context, fn *ast.FunctionD
 		}
 	}
 	return ctx.Insert(
-		&symbol.FunctionSymbol{
+		&object.SymbolFunction{
 			Identifier: fn.Identifier,
 			Fn:         fn,
-			Type: &dtype.FunctionType{
-				Args:   args,
-				Return: ret,
+			FunctionType: object.DTypeFunction{
+				ArgumentsType: args,
+				ReturnType:    ret,
 			},
 		},
 	)

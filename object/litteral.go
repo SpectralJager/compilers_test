@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+type Litteral interface {
+	Object
+	Type() DType
+}
+
 type LitteralNull struct{}
 
 type LitteralInt struct {
@@ -24,13 +29,13 @@ type LitteralBool struct {
 }
 
 type LitteralList struct {
-	ItemType Object
-	Items    []Object
+	ItemType DType
+	Items    []Litteral
 }
 
 type LitteralRecord struct {
 	Identifier string
-	Fields     []Object
+	Fields     []Litteral
 }
 
 func (*LitteralNull) Kind() ObjectKind   { return NullLitteral }
@@ -59,4 +64,35 @@ func (lit *LitteralRecord) Inspect() string {
 		fields = append(fields, fmt.Sprintf("%d::%s", i, field.Inspect()))
 	}
 	return fmt.Sprintf("%s{%s}", lit.Identifier, strings.Join(fields, " "))
+}
+
+func (*LitteralNull) Type() DType {
+	return &DTypeAny{}
+}
+func (*LitteralInt) Type() DType {
+	return &DTypeInt{}
+}
+func (*LitteralFloat) Type() DType {
+	return &DTypeFloat{}
+}
+func (*LitteralString) Type() DType {
+	return &DTypeString{}
+}
+func (*LitteralBool) Type() DType {
+	return &DTypeBool{}
+}
+func (lt *LitteralList) Type() DType {
+	return &DTypeList{
+		ChildType: lt.ItemType,
+	}
+}
+func (lt *LitteralRecord) Type() DType {
+	fields := []DType{}
+	for _, field := range lt.Fields {
+		fields = append(fields, field.Type())
+	}
+	return &DTypeRecord{
+		Identifier: lt.Identifier,
+		FieldsType: fields,
+	}
 }
