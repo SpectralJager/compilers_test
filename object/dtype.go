@@ -25,8 +25,10 @@ type DTypeList struct {
 type DTypeNull struct {
 	ChildType DType
 }
+type DTypeVariatic struct {
+	ChildType DType
+}
 type DTypeRecord struct {
-	Identifier string
 	FieldsType []DType
 }
 type DTypeFunction struct {
@@ -41,22 +43,24 @@ func (*DTypeString) Kind() ObjectKind   { return StringType }
 func (*DTypeBool) Kind() ObjectKind     { return BoolType }
 func (*DTypeList) Kind() ObjectKind     { return ListType }
 func (*DTypeNull) Kind() ObjectKind     { return NullType }
+func (*DTypeVariatic) Kind() ObjectKind { return VariaticType }
 func (*DTypeRecord) Kind() ObjectKind   { return RecordType }
 func (*DTypeFunction) Kind() ObjectKind { return FunctionType }
 
-func (*DTypeAny) Inspect() string     { return "any" }
-func (*DTypeInt) Inspect() string     { return "int" }
-func (*DTypeFloat) Inspect() string   { return "float" }
-func (*DTypeString) Inspect() string  { return "string" }
-func (*DTypeBool) Inspect() string    { return "bool" }
-func (dt *DTypeList) Inspect() string { return "list<" + dt.ChildType.Inspect() + ">" }
-func (dt *DTypeNull) Inspect() string { return "null<" + dt.ChildType.Inspect() + ">" }
+func (*DTypeAny) Inspect() string         { return "any" }
+func (*DTypeInt) Inspect() string         { return "int" }
+func (*DTypeFloat) Inspect() string       { return "float" }
+func (*DTypeString) Inspect() string      { return "string" }
+func (*DTypeBool) Inspect() string        { return "bool" }
+func (dt *DTypeList) Inspect() string     { return "list<" + dt.ChildType.Inspect() + ">" }
+func (dt *DTypeNull) Inspect() string     { return "null<" + dt.ChildType.Inspect() + ">" }
+func (dt *DTypeVariatic) Inspect() string { return "..." + dt.ChildType.Inspect() }
 func (dt *DTypeRecord) Inspect() string {
 	fields := []string{}
 	for _, field := range dt.FieldsType {
 		fields = append(fields, field.Inspect())
 	}
-	return fmt.Sprintf("%s{%s}", dt.Identifier, strings.Join(fields, " "))
+	return fmt.Sprintf("record{%s}", strings.Join(fields, " "))
 }
 func (dt *DTypeFunction) Inspect() string {
 	args := []string{}
@@ -85,6 +89,9 @@ func (tp *DTypeList) Compare(other DType) bool {
 	return compare(tp, other)
 }
 func (tp *DTypeNull) Compare(other DType) bool {
+	return compare(tp, other)
+}
+func (tp *DTypeVariatic) Compare(other DType) bool {
 	return compare(tp, other)
 }
 func (tp *DTypeRecord) Compare(other DType) bool {

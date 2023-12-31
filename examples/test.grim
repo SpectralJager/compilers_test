@@ -1,6 +1,15 @@
 (@module :main
     (@const n 35)
 
+    (@fn fib [n::int] <int> :do
+        (@if (int/lt n 2) :then
+            (@return n) 
+        ) 
+        (@return (int/add 
+            (fib (int/sub n 1))
+            (fib (int/sub n 2))))
+    )
+
     (@fn main :do
         (exit n)
     )

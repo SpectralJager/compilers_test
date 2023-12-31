@@ -34,8 +34,6 @@ type LitteralList struct {
 }
 
 type LitteralRecord struct {
-	Identifier string
-	Fields     []Litteral
 }
 
 func (*LitteralNull) Kind() ObjectKind   { return NullLitteral }
@@ -59,11 +57,7 @@ func (lit *LitteralList) Inspect() string {
 	return fmt.Sprintf("'(%s)", strings.Join(items, " "))
 }
 func (lit *LitteralRecord) Inspect() string {
-	fields := []string{}
-	for i, field := range lit.Fields {
-		fields = append(fields, fmt.Sprintf("%d::%s", i, field.Inspect()))
-	}
-	return fmt.Sprintf("%s{%s}", lit.Identifier, strings.Join(fields, " "))
+	return ""
 }
 
 func (*LitteralNull) Type() DType {
@@ -87,12 +81,5 @@ func (lt *LitteralList) Type() DType {
 	}
 }
 func (lt *LitteralRecord) Type() DType {
-	fields := []DType{}
-	for _, field := range lt.Fields {
-		fields = append(fields, field.Type())
-	}
-	return &DTypeRecord{
-		Identifier: lt.Identifier,
-		FieldsType: fields,
-	}
+	return nil
 }

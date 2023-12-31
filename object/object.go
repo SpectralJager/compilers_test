@@ -13,6 +13,7 @@ const (
 
 	AnyType
 	NullType
+	VariaticType
 	IntType
 	FloatType
 	StringType

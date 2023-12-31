@@ -19,6 +19,7 @@ var (
 			{Name: "Set", Pattern: `@set`},
 			{Name: "If", Pattern: `@if`},
 			{Name: "While", Pattern: `@while`},
+			{Name: "Record", Pattern: `@record`},
 
 			{Name: "MainKW", Pattern: `:main`},
 			{Name: "DoKW", Pattern: `:do`},
@@ -26,6 +27,7 @@ var (
 			{Name: "ThenKW", Pattern: `:then`},
 			{Name: "ElifKW", Pattern: `:elif`},
 			{Name: "ElseKW", Pattern: `:else`},
+			{Name: "FieldsKW", Pattern: `:fields`},
 
 			{Name: "String", Pattern: `"(\\"|[^"])*"`},
 			{Name: "Float", Pattern: `[-+]?[0-9]+\.[0-9]+`},

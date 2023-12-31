@@ -42,7 +42,7 @@ type SymbolModule struct {
 type SymbolRecord struct {
 	Identifier string
 	RecordType DTypeRecord
-	Fields     []Symbol
+	Fields     []string
 }
 
 func (*SymbolVariable) Kind() ObjectKind { return VariableSymbol }
@@ -72,7 +72,7 @@ func (sm *SymbolModule) Inspect() string {
 	return fmt.Sprintf("===%s\n\t%s\n", sm.Identifier, strings.Join(symbols, "\n\t"))
 }
 func (sm *SymbolRecord) Inspect() string {
-	return fmt.Sprintf("%s -> %s", sm.Identifier, sm.RecordType.Inspect())
+	return ""
 }
 
 func (sm *SymbolVariable) Name() string { return sm.Identifier }
@@ -85,20 +85,9 @@ func (sm *SymbolRecord) Name() string   { return sm.Identifier }
 func (ctx *SymbolModule) Scope() string {
 	return ctx.Identifier
 }
-func (ctx *SymbolRecord) Scope() string {
-	return ctx.Identifier
-}
 
 func (ctx *SymbolModule) Search(ident string) Symbol {
 	for _, symb := range ctx.Symbols {
-		if symb.Name() == ident {
-			return symb
-		}
-	}
-	return nil
-}
-func (ctx *SymbolRecord) Search(ident string) Symbol {
-	for _, symb := range ctx.Fields {
 		if symb.Name() == ident {
 			return symb
 		}
@@ -111,12 +100,5 @@ func (ctx *SymbolModule) Insert(symbol Symbol) error {
 		return fmt.Errorf("symbols %s already defined in %s", symbol.Name(), ctx.Identifier)
 	}
 	ctx.Symbols = append(ctx.Symbols, symbol)
-	return nil
-}
-func (ctx *SymbolRecord) Insert(symbol Symbol) error {
-	if ctx.Search(symbol.Name()) != nil {
-		return fmt.Errorf("symbols %s already defined in %s", symbol.Name(), ctx.Identifier)
-	}
-	ctx.Fields = append(ctx.Fields, symbol)
 	return nil
 }

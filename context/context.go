@@ -3,6 +3,8 @@ package context
 import (
 	"fmt"
 	"grimlang/builtin"
+	builtinInt "grimlang/builtin/int"
+	builtinIo "grimlang/builtin/io"
 	"grimlang/object"
 )
 
@@ -35,6 +37,9 @@ func (ctx *_context) Search(ident string) object.Symbol {
 			return symb
 		}
 	}
+	if ctx.prev == nil {
+		return nil
+	}
 	return ctx.prev.Search(ident)
 }
 func (ctx *_context) Insert(symbol object.Symbol) error {
@@ -59,6 +64,73 @@ func NewBuiltinContext() Context {
 					},
 				},
 				Fn: builtin.Exit,
+			},
+			&object.SymbolModule{
+				Identifier: "int",
+				Symbols: []object.Symbol{
+					&object.SymbolBuiltin{
+						Identifier: "add",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeInt{},
+								},
+							},
+							ReturnType: &object.DTypeInt{},
+						},
+						Fn: builtinInt.IntAdd,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "sub",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeInt{},
+								},
+							},
+							ReturnType: &object.DTypeInt{},
+						},
+						Fn: builtinInt.IntSub,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "lt",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeInt{},
+								},
+							},
+							ReturnType: &object.DTypeBool{},
+						},
+						Fn: builtinInt.IntLt,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "toString",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeInt{},
+							},
+							ReturnType: &object.DTypeString{},
+						},
+						Fn: builtinInt.IntToString,
+					},
+				},
+			},
+			&object.SymbolModule{
+				Identifier: "io",
+				Symbols: []object.Symbol{
+					&object.SymbolBuiltin{
+						Identifier: "println",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeString{},
+								},
+							},
+						},
+						Fn: builtinIo.Println,
+					},
+				},
 			},
 		},
 	}

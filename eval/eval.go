@@ -330,7 +330,7 @@ func (state *EvalState) EvalIf(ctx context.Context, st *ast.IfStmt) error {
 	}
 	localContext := context.NewContext(ctx.Scope()+"_if", ctx)
 	for _, cond := range conditions {
-		if object.Is(cond.obj.Kind(), object.BoolLitteral) {
+		if !object.Is(cond.obj.Kind(), object.BoolLitteral) {
 			return fmt.Errorf("eval: condition should be bool value, got %s", cond.obj.Type().Inspect())
 		}
 		condBool := cond.obj.(*object.LitteralBool)
