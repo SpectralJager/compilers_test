@@ -29,6 +29,8 @@ type DTypeVariatic struct {
 	ChildType DType
 }
 type DTypeRecord struct {
+	Scope      string
+	Identifier string
 	FieldsType []DType
 }
 type DTypeFunction struct {
@@ -60,7 +62,7 @@ func (dt *DTypeRecord) Inspect() string {
 	for _, field := range dt.FieldsType {
 		fields = append(fields, field.Inspect())
 	}
-	return fmt.Sprintf("record{%s}", strings.Join(fields, " "))
+	return fmt.Sprintf("%s/%s{%s}", dt.Scope, dt.Identifier, strings.Join(fields, " "))
 }
 func (dt *DTypeFunction) Inspect() string {
 	args := []string{}

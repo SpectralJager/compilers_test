@@ -59,6 +59,8 @@ func (state *EvalState) EvalGlobal(ctx context.Context, gl ast.Global) error {
 		return state.NewConstantSymbol(ctx, gl)
 	case *ast.FunctionDecl:
 		return state.NewFunctionSymbol(ctx, gl)
+	case *ast.RecordDefn:
+		return state.NewRecordSymbol(ctx, gl)
 	default:
 		return fmt.Errorf("eval: unexpected global statement %T", gl)
 	}
@@ -98,6 +100,8 @@ func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (
 		return state.EvalAtom(ctx, ex)
 	case *ast.ListAtom:
 		return state.EvalAtom(ctx, ex)
+	case *ast.NewExpr:
+		return state.EvalNew(ctx, ex)
 	case *ast.SymbolCall:
 		return state.EvalSymbolCall(ctx, ex)
 	case *ast.SymbolExpr:
@@ -140,6 +144,16 @@ func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (object.DType
 			return nil, err
 		}
 		return &object.DTypeList{ChildType: itemType}, nil
+	case *ast.RecordType:
+		symbol, err := state.EvalSymbol(ctx, tp.Symbol)
+		if err != nil {
+			return nil, err
+		}
+		if !object.Is(symbol.Kind(), object.RecordSymbol) {
+			return nil, fmt.Errorf("eval: expecte record symbol, got %T", symbol)
+		}
+		recordSymbol := symbol.(*object.SymbolRecord)
+		return &recordSymbol.RecordType, nil
 	default:
 		return nil, fmt.Errorf("eval: unexpected type %T", tp)
 	}
@@ -171,9 +185,14 @@ func (state *EvalState) EvalSymbol(ctx context.Context, sm *ast.SymbolExpr) (obj
 	switch symb := symb.(type) {
 	case *object.SymbolModule:
 		return state.EvalSymbol(symb, sm.Next)
-	default:
-		return nil, fmt.Errorf("eval: symbol %s not found", sm.Next.Identifier)
+	case *object.SymbolVariable:
+		if !object.Is(symb.Value.Kind(), object.RecordLitteral) {
+			break
+		}
+		recordLit := symb.Value.(*object.LitteralRecord)
+		return state.EvalSymbol(recordLit, sm.Next)
 	}
+	return nil, fmt.Errorf("eval: symbol %s not found", sm.Next.Identifier)
 }
 
 func (state *EvalState) EvalSymbolExpression(ctx context.Context, sm *ast.SymbolExpr) (object.Litteral, error) {
@@ -400,6 +419,41 @@ func (state *EvalState) EvalList(ctx context.Context, lst *ast.ListAtom) (object
 	return &object.LitteralList{ItemType: itemType, Items: items}, nil
 }
 
+func (state *EvalState) EvalNew(ctx context.Context, rec *ast.NewExpr) (object.Litteral, error) {
+	symbol, err := state.EvalSymbol(ctx, rec.Symbol)
+	if err != nil {
+		return nil, err
+	}
+	if !object.Is(symbol.Kind(), object.RecordSymbol) {
+		return nil, fmt.Errorf("eval: expected record symbol, got %T", symbol)
+	}
+	recordSymb := symbol.(*object.SymbolRecord)
+	if len(rec.Fields) != len(recordSymb.RecordType.FieldsType) {
+		return nil, fmt.Errorf("eval: record have %d fields, get %d", len(recordSymb.RecordType.FieldsType), len(rec.Fields))
+	}
+	fields := []object.Symbol{}
+	for i, field := range rec.Fields {
+		obj, err := state.EvalExpression(ctx, field)
+		if err != nil {
+			return nil, err
+		}
+		if !recordSymb.RecordType.FieldsType[i].Compare(obj.Type()) {
+			return nil, fmt.Errorf("eval: record field #%d should be %s, got %s", i, recordSymb.RecordType.FieldsType[i].Inspect(), obj.Type().Inspect())
+		}
+		fields = append(fields,
+			&object.SymbolVariable{
+				Identifier: recordSymb.Fields[i].Name(),
+				ValueType:  recordSymb.RecordType.FieldsType[i],
+				Value:      obj,
+			},
+		)
+	}
+	return &object.LitteralRecord{
+		RecordType: recordSymb.RecordType,
+		Fields:     fields,
+	}, nil
+}
+
 // ================================================================
 
 func (state *EvalState) NewConstantSymbol(ctx context.Context, cnst *ast.ConstantDecl) error {
@@ -458,6 +512,36 @@ func (state *EvalState) NewFunctionSymbol(ctx context.Context, fn *ast.FunctionD
 				ArgumentsType: args,
 				ReturnType:    ret,
 			},
+		},
+	)
+}
+
+func (state *EvalState) NewRecordSymbol(ctx context.Context, rec *ast.RecordDefn) error {
+	types := []object.DType{}
+	fields := []*object.SymbolVariable{}
+	for _, field := range rec.Fields {
+		typ, err := state.EvalType(ctx, field.Type)
+		if err != nil {
+			return err
+		}
+		types = append(types, typ)
+		fields = append(fields,
+			&object.SymbolVariable{
+				Identifier: field.Identifier,
+				ValueType:  typ,
+			},
+		)
+	}
+	return ctx.Insert(
+		&object.SymbolRecord{
+			Identifier: rec.Identifier,
+			Scope:      ctx.Scope(),
+			RecordType: object.DTypeRecord{
+				Scope:      ctx.Scope(),
+				Identifier: rec.Identifier,
+				FieldsType: types,
+			},
+			Fields: fields,
 		},
 	)
 }

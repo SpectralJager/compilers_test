@@ -8,7 +8,7 @@ import (
 var (
 	Lexer = lexer.MustStateful(lexer.Rules{
 		"Root": {
-			{Name: "comment", Pattern: `//[^\n]*\n`},
+			{Name: "comment", Pattern: `;[^\n]*\n`},
 			{Name: "whitespace", Pattern: `[ \t\r\n]+`},
 
 			{Name: "Module", Pattern: `@module`},
@@ -20,6 +20,7 @@ var (
 			{Name: "If", Pattern: `@if`},
 			{Name: "While", Pattern: `@while`},
 			{Name: "Record", Pattern: `@record`},
+			{Name: "New", Pattern: `@new`},
 
 			{Name: "MainKW", Pattern: `:main`},
 			{Name: "DoKW", Pattern: `:do`},
@@ -55,6 +56,7 @@ var (
 		participle.Union[Global](
 			&ConstantDecl{},
 			&FunctionDecl{},
+			&RecordDefn{},
 		),
 		participle.Union[Local](
 			&ConstantDecl{},
@@ -72,6 +74,7 @@ var (
 			&StringAtom{},
 			&ListAtom{},
 			&SymbolCall{},
+			&NewExpr{},
 			&SymbolExpr{},
 		),
 		participle.Union[Atom](
@@ -87,6 +90,7 @@ var (
 			&FloatType{},
 			&StringType{},
 			&ListType{},
+			&RecordType{},
 		),
 	)
 )

@@ -40,9 +40,10 @@ type SymbolModule struct {
 }
 
 type SymbolRecord struct {
+	Scope      string
 	Identifier string
 	RecordType DTypeRecord
-	Fields     []string
+	Fields     []*SymbolVariable
 }
 
 func (*SymbolVariable) Kind() ObjectKind { return VariableSymbol }
@@ -72,7 +73,7 @@ func (sm *SymbolModule) Inspect() string {
 	return fmt.Sprintf("===%s\n\t%s\n", sm.Identifier, strings.Join(symbols, "\n\t"))
 }
 func (sm *SymbolRecord) Inspect() string {
-	return ""
+	return fmt.Sprintf("%s -> %s", sm.Identifier, sm.RecordType.Inspect())
 }
 
 func (sm *SymbolVariable) Name() string { return sm.Identifier }
