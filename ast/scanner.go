@@ -31,7 +31,7 @@ var (
 			{Name: "FieldsKW", Pattern: `:fields`},
 
 			{Name: "String", Pattern: `"(\\"|[^"])*"`},
-			{Name: "Float", Pattern: `[-+]?[0-9]+\.[0-9]+`},
+			{Name: "Float", Pattern: `[-+]?[0-9]+\.[0-9]*`},
 			{Name: "Integer", Pattern: `[-+]?[0-9]+`},
 			{Name: "Boolean", Pattern: `(true|false)`},
 			{Name: "Symbol", Pattern: `[a-zA-Z_]+[a-zA-Z0-9_]*`},
@@ -72,7 +72,6 @@ var (
 			&BoolAtom{},
 			&FloatAtom{},
 			&StringAtom{},
-			&ListAtom{},
 			&SymbolCall{},
 			&NewExpr{},
 			&SymbolExpr{},
@@ -82,7 +81,6 @@ var (
 			&BoolAtom{},
 			&FloatAtom{},
 			&StringAtom{},
-			&ListAtom{},
 		),
 		participle.Union[Type](
 			&IntType{},

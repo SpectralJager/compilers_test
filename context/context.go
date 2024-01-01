@@ -3,8 +3,11 @@ package context
 import (
 	"fmt"
 	"grimlang/builtin"
+	builtinFloat "grimlang/builtin/float"
 	builtinInt "grimlang/builtin/int"
 	builtinIo "grimlang/builtin/io"
+	"grimlang/builtin/math"
+	builtinString "grimlang/builtin/string"
 	"grimlang/object"
 )
 
@@ -117,6 +120,63 @@ func NewBuiltinContext() Context {
 				},
 			},
 			&object.SymbolModule{
+				Identifier: "float",
+				Symbols: []object.Symbol{
+					&object.SymbolBuiltin{
+						Identifier: "add",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeFloat{},
+								},
+							},
+							ReturnType: &object.DTypeFloat{},
+						},
+						Fn: builtinFloat.FloatAdd,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "sub",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeFloat{},
+								},
+							},
+							ReturnType: &object.DTypeFloat{},
+						},
+						Fn: builtinFloat.FloatSub,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "toString",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeFloat{},
+							},
+							ReturnType: &object.DTypeString{},
+						},
+						Fn: builtinFloat.FloatToString,
+					},
+				},
+			},
+			&object.SymbolModule{
+				Identifier: "string",
+				Symbols: []object.Symbol{
+					&object.SymbolBuiltin{
+						Identifier: "format",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeString{},
+								&object.DTypeVariatic{
+									ChildType: &object.DTypeString{},
+								},
+							},
+							ReturnType: &object.DTypeString{},
+						},
+						Fn: builtinString.Format,
+					},
+				},
+			},
+			&object.SymbolModule{
 				Identifier: "io",
 				Symbols: []object.Symbol{
 					&object.SymbolBuiltin{
@@ -129,6 +189,32 @@ func NewBuiltinContext() Context {
 							},
 						},
 						Fn: builtinIo.Println,
+					},
+				},
+			},
+			&object.SymbolModule{
+				Identifier: "math",
+				Symbols: []object.Symbol{
+					&object.SymbolBuiltin{
+						Identifier: "sqrt",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeFloat{},
+							},
+							ReturnType: &object.DTypeFloat{},
+						},
+						Fn: math.Sqrt,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "pow",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeFloat{},
+								&object.DTypeFloat{},
+							},
+							ReturnType: &object.DTypeFloat{},
+						},
+						Fn: math.Pow,
 					},
 				},
 			},

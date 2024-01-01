@@ -98,8 +98,6 @@ func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (
 		return state.EvalAtom(ctx, ex)
 	case *ast.BoolAtom:
 		return state.EvalAtom(ctx, ex)
-	case *ast.ListAtom:
-		return state.EvalAtom(ctx, ex)
 	case *ast.NewExpr:
 		return state.EvalNew(ctx, ex)
 	case *ast.SymbolCall:
@@ -121,8 +119,6 @@ func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Litte
 		return &object.LitteralString{Value: at.Value[1 : len(at.Value)-1]}, nil
 	case *ast.FloatAtom:
 		return &object.LitteralFloat{Value: at.Value}, nil
-	case *ast.ListAtom:
-		return state.EvalList(ctx, at)
 	default:
 		return nil, fmt.Errorf("eval: unexpected atom %T", at)
 	}
@@ -157,6 +153,10 @@ func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (object.DType
 	default:
 		return nil, fmt.Errorf("eval: unexpected type %T", tp)
 	}
+}
+
+func (state *EvalState) EvalNew(ctx context.Context, ex *ast.NewExpr) (object.Litteral, error) {
+	switch ex.
 }
 
 // ================================================================

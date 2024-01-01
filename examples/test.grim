@@ -12,28 +12,35 @@
     )
 
     (@fn pointToString [pnt::point] <string> :do
-        (@return (string/format "($;$)" pnt/x pnt/y)) 
+        (@return (string/format "($$;$$)" 
+            (float/toString pnt/x)
+            (float/toString pnt/y)
+        )) 
     )
     
     (@fn vectorToString [vec::vector] <string> :do
-        (@return (string/format "vec{p0::$,p1::$}" (pointToString vec/p0) (pointToString vec/p1))) 
+        (@return (string/format "vec{p0::$$,p1::$$}" 
+            (pointToString vec/p0) 
+            (pointToString vec/p1)
+        )) 
     )
 
     (@fn vectorLength [vec::vector] <float> :do
-        (@return (math/root (int/add
-            (math/pow (int/sub vec/p1/x vec/p0/x) 2)
-            (math/pow (int/sub vec/p1/y vec/p0/y) 2)
-        )) 2)
+        (@return (math/sqrt 
+            (float/add
+                (math/pow (float/sub vec/p1/x vec/p0/x) 2.)
+                (math/pow (float/sub vec/p1/y vec/p0/y) 2.)
+            )
+        ))
     )
 
     (@fn main :do
-        (@var v :of vector (@new vector {
-            (@new point {0 0})
-            (@new point {2 2})
-        }))
-        (io/println (string/format "length of $ = $" 
-            (vectorToString v) 
-            (float/toString (vectorLength vec))))
+        (@var vectors :of list<vector> (@new list<vector> {
+            (@new vector {(@new point {0. 0.}) (@new point {2. 2.})})
+            (@new vector {(@new point {0. 0.}) (@new point {3. 5.})})
+            (@new vector {(@new point {0. 0.}) (@new point {7. 2.3})})
+            (@new vector {(@new point {0. 0.}) (@new point {1. 1.})})
+        })
         (exit 0)
     )
 )
