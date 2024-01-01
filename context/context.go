@@ -6,6 +6,7 @@ import (
 	builtinFloat "grimlang/builtin/float"
 	builtinInt "grimlang/builtin/int"
 	builtinIo "grimlang/builtin/io"
+	builtinList "grimlang/builtin/list"
 	"grimlang/builtin/math"
 	builtinString "grimlang/builtin/string"
 	"grimlang/object"
@@ -173,6 +174,32 @@ func NewBuiltinContext() Context {
 							ReturnType: &object.DTypeString{},
 						},
 						Fn: builtinString.Format,
+					},
+				},
+			},
+			&object.SymbolModule{
+				Identifier: "list",
+				Symbols: []object.Symbol{
+					&object.SymbolBuiltin{
+						Identifier: "len",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeList{},
+							},
+							ReturnType: &object.DTypeInt{},
+						},
+						Fn: builtinList.Len,
+					},
+					&object.SymbolBuiltin{
+						Identifier: "get",
+						FunctionType: object.DTypeFunction{
+							ArgumentsType: []object.DType{
+								&object.DTypeList{},
+								&object.DTypeInt{},
+							},
+							ReturnType: &object.DTypeAny{},
+						},
+						Fn: builtinList.Get,
 					},
 				},
 			},

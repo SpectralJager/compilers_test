@@ -12,11 +12,11 @@
     )
 
     (@fn pointToString [pnt::point] <string> :do
-        (@return (string/format "($;$)" pnt/x pnt/y)) 
+        (@return (string/format "($$;$$)" (float/toString pnt/x) (float/toString pnt/y)))
     )
     
     (@fn vectorToString [vec::vector] <string> :do
-        (@return (string/format "vec{p0::$,p1::$}" (pointToString vec/p0) (pointToString vec/p1))) 
+        (@return (string/format "vec{p0::$$,p1::$$}" (pointToString vec/p0) (pointToString vec/p1))) 
     )
 
     (@fn vectorLength [vec::vector] <float> :do

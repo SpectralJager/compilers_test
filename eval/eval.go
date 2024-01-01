@@ -156,7 +156,14 @@ func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (object.DType
 }
 
 func (state *EvalState) EvalNew(ctx context.Context, ex *ast.NewExpr) (object.Litteral, error) {
-	switch ex.
+	switch typ := ex.Type.(type) {
+	case *ast.ListType:
+		return state.EvalList(ctx, ex)
+	case *ast.RecordType:
+		return state.EvalRecord(ctx, ex)
+	default:
+		return nil, fmt.Errorf("eval: can't use such type in new expression: %T", typ)
+	}
 }
 
 // ================================================================
@@ -310,7 +317,7 @@ func (state *EvalState) EvalSet(ctx context.Context, st *ast.SetStmt) error {
 	if err != nil {
 		return err
 	}
-	if object.Is(symb.Kind(), object.VariableSymbol) {
+	if !object.Is(symb.Kind(), object.VariableSymbol) {
 		return fmt.Errorf("eval: can't assign new value to non variable symbol %s", symb.Name())
 	}
 	symbVar := symb.(*object.SymbolVariable)
@@ -376,12 +383,12 @@ func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error 
 	if err != nil {
 		return err
 	}
-	if object.Is(cond.Kind(), object.BoolLitteral) {
+	if !object.Is(cond.Kind(), object.BoolLitteral) {
 		return fmt.Errorf("eval: condition should be bool value, got %s", cond.Type().Inspect())
 	}
-	localContext := context.NewContext(ctx.Scope()+"_while", ctx)
 	if cond.(*object.LitteralBool).Value {
 		for cond.(*object.LitteralBool).Value {
+			localContext := context.NewContext(ctx.Scope()+"_while", ctx)
 			err = state.EvalLocals(localContext, st.ThenBody)
 			if err != nil {
 				return err
@@ -390,8 +397,10 @@ func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error 
 			if err != nil {
 				return err
 			}
+
 		}
 	} else {
+		localContext := context.NewContext(ctx.Scope()+"_while", ctx)
 		err = state.EvalLocals(localContext, st.ElseBody)
 		if err != nil {
 			return err
@@ -400,11 +409,15 @@ func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error 
 	return nil
 }
 
-func (state *EvalState) EvalList(ctx context.Context, lst *ast.ListAtom) (object.Litteral, error) {
-	itemType, err := state.EvalType(ctx, lst.Type.Child)
+func (state *EvalState) EvalList(ctx context.Context, lst *ast.NewExpr) (object.Litteral, error) {
+	typ, err := state.EvalType(ctx, lst.Type)
 	if err != nil {
 		return nil, err
 	}
+	if !object.Is(typ.Kind(), object.ListType) {
+		return nil, fmt.Errorf("eval: expect list, got %s", typ.Inspect())
+	}
+	itemType := typ.(*object.DTypeList).ChildType
 	items := []object.Litteral{}
 	for i, item := range lst.Items {
 		obj, err := state.EvalExpression(ctx, item)
@@ -419,37 +432,45 @@ func (state *EvalState) EvalList(ctx context.Context, lst *ast.ListAtom) (object
 	return &object.LitteralList{ItemType: itemType, Items: items}, nil
 }
 
-func (state *EvalState) EvalNew(ctx context.Context, rec *ast.NewExpr) (object.Litteral, error) {
-	symbol, err := state.EvalSymbol(ctx, rec.Symbol)
+func (state *EvalState) EvalRecord(ctx context.Context, rec *ast.NewExpr) (object.Litteral, error) {
+	typ, err := state.EvalType(ctx, rec.Type)
 	if err != nil {
 		return nil, err
 	}
-	if !object.Is(symbol.Kind(), object.RecordSymbol) {
-		return nil, fmt.Errorf("eval: expected record symbol, got %T", symbol)
+	if !object.Is(typ.Kind(), object.RecordType) {
+		return nil, fmt.Errorf("eval: expect list, got %s", typ.Inspect())
 	}
-	recordSymb := symbol.(*object.SymbolRecord)
-	if len(rec.Fields) != len(recordSymb.RecordType.FieldsType) {
-		return nil, fmt.Errorf("eval: record have %d fields, get %d", len(recordSymb.RecordType.FieldsType), len(rec.Fields))
+	recType := typ.(*object.DTypeRecord)
+	symb := ctx.Search(recType.Identifier)
+	if symb == nil {
+		return nil, fmt.Errorf("eval: symbol %s not found", recType.Identifier)
+	}
+	if !object.Is(symb.Kind(), object.RecordSymbol) {
+		return nil, fmt.Errorf("eval: expect record symbol,  got %T", symb)
+	}
+	recSymb := symb.(*object.SymbolRecord)
+	if len(rec.Items) != len(recType.FieldsType) {
+		return nil, fmt.Errorf("eval: record have %d fields, get %d", len(recType.FieldsType), len(rec.Items))
 	}
 	fields := []object.Symbol{}
-	for i, field := range rec.Fields {
+	for i, field := range rec.Items {
 		obj, err := state.EvalExpression(ctx, field)
 		if err != nil {
 			return nil, err
 		}
-		if !recordSymb.RecordType.FieldsType[i].Compare(obj.Type()) {
-			return nil, fmt.Errorf("eval: record field #%d should be %s, got %s", i, recordSymb.RecordType.FieldsType[i].Inspect(), obj.Type().Inspect())
+		if !recType.FieldsType[i].Compare(obj.Type()) {
+			return nil, fmt.Errorf("eval: record field #%d should be %s, got %s", i, recType.FieldsType[i].Inspect(), obj.Type().Inspect())
 		}
 		fields = append(fields,
 			&object.SymbolVariable{
-				Identifier: recordSymb.Fields[i].Name(),
-				ValueType:  recordSymb.RecordType.FieldsType[i],
+				Identifier: recSymb.Fields[i].Name(),
+				ValueType:  recSymb.RecordType.FieldsType[i],
 				Value:      obj,
 			},
 		)
 	}
 	return &object.LitteralRecord{
-		RecordType: recordSymb.RecordType,
+		RecordType: *recType,
 		Fields:     fields,
 	}, nil
 }

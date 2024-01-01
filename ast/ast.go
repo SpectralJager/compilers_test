@@ -138,8 +138,8 @@ type SymbolExpr struct {
 
 type NewExpr struct {
 	_expression
-	Symbol *SymbolExpr  `parser:"'(' '@new' @@"`
-	Fields []Expression `parser:"'{' @@+ '}'')'"`
+	Type  Type         `parser:"'(' '@new' @@"`
+	Items []Expression `parser:"'{' @@+ '}'')'"`
 }
 
 type IntAtom struct {
