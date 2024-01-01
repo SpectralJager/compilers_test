@@ -91,6 +91,12 @@ type VariableDefn struct {
 	Type       Type   `parser:" '::' @@ "`
 }
 
+type RecordDefn struct {
+	_global
+	Identifier string         `parser:"'(' '@record' @Symbol"`
+	Fields     []VariableDefn `parser:"':fields' @@+ ')'"`
+}
+
 type SymbolCall struct {
 	_local
 	_expression
@@ -130,6 +136,12 @@ type SymbolExpr struct {
 	Next       *SymbolExpr `parser:"('/' @@)?"`
 }
 
+type NewExpr struct {
+	_expression
+	Type  Type         `parser:"'(' '@new' @@"`
+	Items []Expression `parser:"'{' @@+ '}'')'"`
+}
+
 type IntAtom struct {
 	_expression
 	_atom
@@ -154,13 +166,6 @@ type StringAtom struct {
 	Value string `parser:"@String"`
 }
 
-type ListAtom struct {
-	_expression
-	_atom
-	Type  *ListType    `parser:"@@"`
-	Items []Expression `parser:"'{' @@* '}'"`
-}
-
 type IntType struct {
 	_type
 	Identifier string `parser:"@'int'"`
@@ -183,6 +188,11 @@ type StringType struct {
 type ListType struct {
 	_type
 	Child Type `parser:"'list' '<' @@ '>'"`
+}
+
+type RecordType struct {
+	_type
+	Symbol *SymbolExpr `parser:"@@"`
 }
 
 // ======================================

@@ -1,11 +1,55 @@
 (@module :main
     (@const n 35)
 
+    (@record point :fields
+        x::float
+        y::float 
+    )
+
+    (@record vector :fields
+        p0::point
+        p1::point 
+    )
+
+    (@fn pointToString [pnt::point] <string> :do
+        (@return (string/format "($$;$$)" 
+            (float/toString pnt/x)
+            (float/toString pnt/y)
+        )) 
+    )
+    
+    (@fn vectorToString [vec::vector] <string> :do
+        (@return (string/format "vec{p0::$$,p1::$$}" 
+            (pointToString vec/p0) 
+            (pointToString vec/p1)
+        )) 
+    )
+
+    (@fn vectorLength [vec::vector] <float> :do
+        (@return (math/sqrt 
+            (float/add
+                (math/pow (float/sub vec/p1/x vec/p0/x) 2.)
+                (math/pow (float/sub vec/p1/y vec/p0/y) 2.)
+            )
+        ))
+    )
+
     (@fn main :do
-        (@var temp :of list<int> list<int>{1 2 3 4 5})
-        (io/println "list[1] =" (int/toString (list/get temp 1)))
-        (list/set temp 1 (int/mul 2 (list/get temp 1)))
-        (io/println "list[1] =" (int/toString (list/get temp 1)))
+        (@var vectors :of list<vector> (@new list<vector> {
+            (@new vector { (@new point {0. 0.}) (@new point {2. 2.}) })
+            (@new vector { (@new point {0. 0.}) (@new point {3. 5.}) })
+            (@new vector { (@new point {0. 0.}) (@new point {7. 2.}) })
+            (@new vector { (@new point {0. 0.}) (@new point {1. 1.}) })
+        }))
+        (@var counter :of int 0)
+        (@while (int/lt  counter (list/len vectors)) :do
+            (@var vec :of vector (list/get vectors counter))
+            (io/println (string/format "length of $$ = $$"
+                (vectorToString vec)
+                (float/toString (vectorLength vec))
+            )) 
+            (@set counter (int/add counter 1))
+        )
         (exit 0)
     )
 )

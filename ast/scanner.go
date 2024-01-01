@@ -8,7 +8,7 @@ import (
 var (
 	Lexer = lexer.MustStateful(lexer.Rules{
 		"Root": {
-			{Name: "comment", Pattern: `//[^\n]*\n`},
+			{Name: "comment", Pattern: `;[^\n]*\n`},
 			{Name: "whitespace", Pattern: `[ \t\r\n]+`},
 
 			{Name: "Module", Pattern: `@module`},
@@ -19,6 +19,8 @@ var (
 			{Name: "Set", Pattern: `@set`},
 			{Name: "If", Pattern: `@if`},
 			{Name: "While", Pattern: `@while`},
+			{Name: "Record", Pattern: `@record`},
+			{Name: "New", Pattern: `@new`},
 
 			{Name: "MainKW", Pattern: `:main`},
 			{Name: "DoKW", Pattern: `:do`},
@@ -26,9 +28,10 @@ var (
 			{Name: "ThenKW", Pattern: `:then`},
 			{Name: "ElifKW", Pattern: `:elif`},
 			{Name: "ElseKW", Pattern: `:else`},
+			{Name: "FieldsKW", Pattern: `:fields`},
 
 			{Name: "String", Pattern: `"(\\"|[^"])*"`},
-			{Name: "Float", Pattern: `[-+]?[0-9]+\.[0-9]+`},
+			{Name: "Float", Pattern: `[-+]?[0-9]+\.[0-9]*`},
 			{Name: "Integer", Pattern: `[-+]?[0-9]+`},
 			{Name: "Boolean", Pattern: `(true|false)`},
 			{Name: "Symbol", Pattern: `[a-zA-Z_]+[a-zA-Z0-9_]*`},
@@ -53,6 +56,7 @@ var (
 		participle.Union[Global](
 			&ConstantDecl{},
 			&FunctionDecl{},
+			&RecordDefn{},
 		),
 		participle.Union[Local](
 			&ConstantDecl{},
@@ -68,8 +72,8 @@ var (
 			&BoolAtom{},
 			&FloatAtom{},
 			&StringAtom{},
-			&ListAtom{},
 			&SymbolCall{},
+			&NewExpr{},
 			&SymbolExpr{},
 		),
 		participle.Union[Atom](
@@ -77,7 +81,6 @@ var (
 			&BoolAtom{},
 			&FloatAtom{},
 			&StringAtom{},
-			&ListAtom{},
 		),
 		participle.Union[Type](
 			&IntType{},
@@ -85,6 +88,7 @@ var (
 			&FloatType{},
 			&StringType{},
 			&ListType{},
+			&RecordType{},
 		),
 	)
 )

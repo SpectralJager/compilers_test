@@ -2,23 +2,19 @@ package builtin
 
 import (
 	"fmt"
-	"grimlang/dtype"
 	"grimlang/object"
 	"os"
 )
 
-type BuiltinFunction func(args ...object.Object) (object.Object, error)
-
-// =========================
-func Exit(args ...object.Object) (object.Object, error) {
+func Exit(args ...object.Litteral) (object.Litteral, error) {
 	if len(args) != 1 {
 		return nil, fmt.Errorf("exit: expect 1 argument, got %d", len(args))
 	}
 	obj := args[0]
-	if !new(dtype.IntType).Compare(obj.Type()) {
-		return nil, fmt.Errorf("exit: exit code should be int, got %s", obj.Type().Name())
+	if !new(object.DTypeInt).Compare(obj.Type()) {
+		return nil, fmt.Errorf("exit: exit code should be int, got %s", obj.Type().Inspect())
 	}
-	code := args[0].(*object.IntObject)
+	code := args[0].(*object.LitteralInt)
 	os.Exit(code.Value)
 	return nil, nil
 }
