@@ -11,7 +11,7 @@
 
     (@fn main :do
         (@const n 30)
-        (io/println (string/format "fib($) = $" 
+        (io/println (string/format "fib($$) = $$" 
             (int/toString n) 
             (int/toString (fib n)))
         )
