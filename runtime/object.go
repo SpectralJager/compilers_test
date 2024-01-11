@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"grimlang/ast"
+	"strings"
 )
 
 type ObjectKind uint
@@ -46,6 +47,39 @@ type FieldObject struct {
 	Name  string
 	Type  *Type
 	Value *Object
+}
+
+func (obj *Object) String() string {
+	switch obj.Kind {
+	case OB_NIL:
+		return "nil"
+	case OB_INT:
+		return fmt.Sprintf("%d", obj.I)
+	case OB_FLOAT:
+		return fmt.Sprintf("%f", obj.F)
+	case OB_BOOL:
+		return fmt.Sprintf("%v", obj.B)
+	case OB_STRING:
+		return obj.S
+	case OB_LIST:
+		items := []string{}
+		for _, object := range obj.Items {
+			items = append(items, object.String())
+		}
+		return fmt.Sprintf("list<%s>{%s}", obj.Type, strings.Join(items, " "))
+	case OB_FUNC, OB_BUILTIN:
+		return fmt.Sprintf("%s", obj.Type)
+	case OB_RECORD:
+		fields := []string{}
+		for _, fld := range obj.Fields {
+			fields = append(fields, fld.String())
+		}
+		return fmt.Sprintf("record{%s}")
+	}
+}
+
+func (fldObj *FieldObject) String() string {
+	return fmt.Sprintf("%s::(%s)%s", fldObj.Name, fldObj.Type, fldObj.Value)
 }
 
 func NewNilObject() *Object {

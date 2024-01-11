@@ -61,7 +61,7 @@ func (tp *Type) String() string {
 
 type FieldType struct {
 	Name string
-	Type Type
+	Type *Type
 }
 
 func (fld *FieldType) String() string {
@@ -185,7 +185,7 @@ func CompareTypes(a, b *Type) bool {
 		}
 		for i, fldA := range a.Fields {
 			fldB := b.Fields[i]
-			if !CompareTypes(&fldA.Type, &fldB.Type) {
+			if !CompareTypes(fldA.Type, fldB.Type) {
 				return false
 			}
 		}
