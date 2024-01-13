@@ -34,7 +34,7 @@ type Type struct {
 	Return *Type
 
 	// fields for record
-	Fields []FieldType
+	Fields []*FieldType
 }
 
 func (tp *Type) String() string {
@@ -144,12 +144,19 @@ func NewFuncType(modulePath string, args []*Type, ret *Type) *Type {
 	}
 }
 
-func NewRecordType(name string, modulePath string, fields []FieldType) *Type {
+func NewRecordType(name string, modulePath string, fields []*FieldType) *Type {
 	return &Type{
 		Kind:    TY_RECORD,
 		Name:    name,
 		MdlPath: modulePath,
 		Fields:  fields,
+	}
+}
+
+func NewFieldType(name string, typ *Type) *FieldType {
+	return &FieldType{
+		Name: name,
+		Type: typ,
 	}
 }
 

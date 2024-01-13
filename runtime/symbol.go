@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -99,23 +98,4 @@ func NewModuleSymbol(scope string, identifier string) *Symbol {
 		Scope:      scope,
 		Identifier: identifier,
 	}
-}
-
-func RecordToType(record *Symbol) (*Type, error) {
-	if record.Kind != SK_Record {
-		return nil, errors.New("can't convert record symbol to type: expect record symbol")
-	}
-	fields := []FieldType{}
-	for i, fld := range record.Items {
-		if fld.Kind != SK_Field {
-			return nil, fmt.Errorf("can't convert record symbol to type: #%d field should be field symbol", i)
-		}
-		fields = append(fields,
-			FieldType{
-				Name: fld.Identifier,
-				Type: fld.Type,
-			},
-		)
-	}
-	return NewRecordType(record.Identifier, record.Scope, fields), nil
 }

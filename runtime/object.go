@@ -74,8 +74,9 @@ func (obj *Object) String() string {
 		for _, fld := range obj.Fields {
 			fields = append(fields, fld.String())
 		}
-		return fmt.Sprintf("record{%s}")
+		return fmt.Sprintf("record{%s}", strings.Join(fields, " "))
 	}
+	return ""
 }
 
 func (fldObj *FieldObject) String() string {
