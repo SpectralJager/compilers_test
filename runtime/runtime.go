@@ -8,18 +8,17 @@ const (
 	Variable // variable symbol
 	Constant // constant symbol
 	Module   // module symbol
-
 	Function // function symbol, type and litteral
 	Record   // record symbol, type and litteral
 	Void     // void type
-
-	Null    // null type and litteral
-	Int     // int type and litteral
-	Float   // float type and litteral
-	String  // string type and litteral
-	Bool    // bool type and litteral
-	List    // list type and litteral
-	Builtin // builtin function litteral
+	Any      // any type
+	Null     // null type and litteral
+	Int      // int type and litteral
+	Float    // float type and litteral
+	String   // string type and litteral
+	Bool     // bool type and litteral
+	List     // list type and litteral
+	Builtin  // builtin function litteral
 )
 
 var kindNames = map[Kind]string{
@@ -30,6 +29,7 @@ var kindNames = map[Kind]string{
 	Function:  "function",
 	Record:    "record",
 	Void:      "void",
+	Any:       "any",
 	Null:      "null",
 	Int:       "int",
 	Float:     "float",
@@ -90,7 +90,6 @@ type Litteral interface {
 }
 
 type Symbol interface {
-	Scope() string
 	Kind() Kind
 	Name() string
 
