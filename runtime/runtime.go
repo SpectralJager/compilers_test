@@ -59,8 +59,9 @@ type Type interface {
 	In(int) Type // get function's i'th argument type
 	Out() Type   // get function's return type
 	// record methods
-	NumField() int            // get number of record's fields
-	Field(int) Field          // get record's field by index
+	NumField() int   // get number of record's fields
+	Field(int) Field // get record's field by index
+	FieldIndex(string) int
 	FieldByName(string) Field // get record's field by name
 }
 
@@ -70,17 +71,14 @@ type Field interface {
 }
 
 type Litteral interface {
-	// general methods for all litterals
-	Kind() Kind    // get kind of value
-	Value() string // get string representation of value
-	Type() Type    // get type of litteral
+	Kind() Kind
+	Value() string
+	Type() Type
 
 	Int() int64
 	Float() float64
 	Bool() bool
 	String() string
-
-	SetInt(int64) Litteral
 
 	Item(int) Litteral
 	Len() Litteral
