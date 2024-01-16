@@ -59,12 +59,51 @@ type Type interface {
 	In(int) Type // get function's i'th argument type
 	Out() Type   // get function's return type
 	// record methods
-	NumField() int                  // get number of record's fields
-	Field(int) RecordField          // get record's field by index
-	FieldByName(string) RecordField // get record's field by name
+	NumField() int            // get number of record's fields
+	Field(int) Field          // get record's field by index
+	FieldByName(string) Field // get record's field by name
 }
 
-type RecordField interface{}
+type Field interface {
+	Name() string
+	Type() Type
+}
 
-type Litteral interface{}
-type Symbol interface{}
+type Litteral interface {
+	// general methods for all litterals
+	Kind() Kind    // get kind of value
+	Value() string // get string representation of value
+	Type() Type    // get type of litteral
+
+	Int() int64
+	Float() float64
+	Bool() bool
+	String() string
+
+	SetInt(int64) Litteral
+
+	Item(int) Litteral
+	Len() Litteral
+
+	Call(...Litteral) (Litteral, error)
+
+	Field(int) Litteral
+	FieldByName(string) Litteral
+}
+
+type Symbol interface {
+	Scope() string
+	Kind() Kind
+	Name() string
+
+	Type() Type
+	Value() Litteral
+	Set(Litteral) error
+}
+
+type Context interface {
+	Scope() string
+	Search(string) Symbol
+	Insert(Symbol) error
+	Update(Symbol) error
+}
