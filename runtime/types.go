@@ -43,6 +43,7 @@ func (typ _type) Compare(other Type) bool {
 		return false
 	}
 	switch typ.kind {
+	case Int, Float, String, Bool:
 	case List, Null:
 		return typ.subType.Compare(other.Subtype())
 	case Function:
@@ -188,38 +189,38 @@ func (fld _field) Type() Type {
 	return fld.tp
 }
 
-func NewField(name string, typ Type) Field {
+func NewField(name string, typ Type) _field {
 	return _field{
 		name: name,
 		tp:   typ,
 	}
 }
 
-func NewIntType() Type {
+func NewIntType() _type {
 	return _type{
 		kind: Int,
 	}
 }
 
-func NewFloatType() Type {
+func NewFloatType() _type {
 	return _type{
 		kind: Float,
 	}
 }
 
-func NewStringType() Type {
+func NewStringType() _type {
 	return _type{
 		kind: String,
 	}
 }
 
-func NewBoolType() Type {
+func NewBoolType() _type {
 	return _type{
 		kind: Bool,
 	}
 }
 
-func NewAnyType() Type {
+func NewAnyType() _type {
 	return _type{
 		kind: Any,
 	}
@@ -231,21 +232,21 @@ func NewVoidType() Type {
 	}
 }
 
-func NewNullType(sub Type) Type {
+func NewNullType(sub Type) _type {
 	return _type{
 		kind:    Null,
 		subType: sub,
 	}
 }
 
-func NewListType(item Type) Type {
+func NewListType(item Type) _type {
 	return _type{
 		kind:    List,
 		subType: item,
 	}
 }
 
-func NewFunctionType(ret Type, args ...Type) Type {
+func NewFunctionType(ret Type, args ...Type) _type {
 	if ret == nil {
 		ret = NewVoidType()
 	}
@@ -256,9 +257,9 @@ func NewFunctionType(ret Type, args ...Type) Type {
 	}
 }
 
-func NewRecordType(name string, fields ...Field) Type {
+func NewRecordType(name string, fields ...Field) _type {
 	if name == "" {
-		panic("record name can't be \"\"")
+		panic("record name can't be empty")
 	}
 	return _type{
 		kind:   Record,

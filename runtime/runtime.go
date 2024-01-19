@@ -52,6 +52,7 @@ type Type interface {
 	Kind() Kind        // get kind of type
 	Name() string      // get name of type
 	Compare(Type) bool // compare types
+	String() string
 	// methods for specific types
 	Subtype() Type // get list's items or null item type
 	// function methods
@@ -72,18 +73,18 @@ type Field interface {
 
 type Litteral interface {
 	Kind() Kind
-	Value() string
+	String() string
 	Type() Type
 
 	Int() int64
 	Float() float64
 	Bool() bool
-	String() string
+	Str() string
 
 	Item(int) Litteral
-	Len() Litteral
+	Len() int
 
-	Call(...Litteral) (Litteral, error)
+	Call(Context, ...Litteral) (Litteral, error)
 
 	Field(int) Litteral
 	FieldByName(string) Litteral
@@ -92,6 +93,7 @@ type Litteral interface {
 type Symbol interface {
 	Kind() Kind
 	Name() string
+	String() string
 
 	Type() Type
 	Value() Litteral
@@ -99,6 +101,7 @@ type Symbol interface {
 }
 
 type Context interface {
+	String() string
 	Scope() string
 	Search(string) Symbol
 	Insert(Symbol) error
