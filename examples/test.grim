@@ -1,3 +1,7 @@
 (@module :main
-    (@const n 40)
+    (@import "examples/test_v2.grim" :as t)
+    (@const n 20)
+    (@fn main :do
+        (exit (int/add t/n n))
+    )
 )

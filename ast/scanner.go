@@ -21,14 +21,17 @@ var (
 			{Name: "While", Pattern: `@while`},
 			{Name: "Record", Pattern: `@record`},
 			{Name: "New", Pattern: `@new`},
+			{Name: "Import", Pattern: `@import`},
 
 			{Name: "MainKW", Pattern: `:main`},
+			{Name: "CodeKW", Pattern: `:code`},
 			{Name: "DoKW", Pattern: `:do`},
 			{Name: "OfKW", Pattern: `:of`},
 			{Name: "ThenKW", Pattern: `:then`},
 			{Name: "ElifKW", Pattern: `:elif`},
 			{Name: "ElseKW", Pattern: `:else`},
 			{Name: "FieldsKW", Pattern: `:fields`},
+			{Name: "AsKW", Pattern: `:as`},
 
 			{Name: "String", Pattern: `"(\\"|[^"])*"`},
 			{Name: "Float", Pattern: `[-+]?[0-9]+\.[0-9]*`},
@@ -57,6 +60,7 @@ var (
 			&ConstantDecl{},
 			&FunctionDecl{},
 			&RecordDefn{},
+			&ImportDecl{},
 		),
 		participle.Union[Local](
 			&ConstantDecl{},

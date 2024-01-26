@@ -4,7 +4,6 @@ package runtime
 -----------<Enviroment
 builtin |>
 	int -> import(int)
-	main -> import(main)
 	exit -> fn[int] <void>
 	...
 int |>
@@ -42,6 +41,7 @@ const (
 	TY_String
 	TY_Bool
 	TY_List
+	TY_Variatic
 	TY_Function
 	// LItterals
 	LI_Int

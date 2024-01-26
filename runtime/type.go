@@ -41,6 +41,8 @@ func (typ *typ) Name() string {
 		return "string"
 	case TY_List:
 		return "list"
+	case TY_Variatic:
+		return "variatic"
 	case TY_Function:
 		return "fn"
 	default:
@@ -54,6 +56,8 @@ func (typ *typ) String() string {
 		return typ.Name()
 	case TY_List:
 		return fmt.Sprintf("%s<%s>", typ.Name(), typ.item.String())
+	case TY_Variatic:
+		return fmt.Sprintf("...%s", typ.item)
 	case TY_Function:
 		args := []string{}
 		for _, arg := range typ.args {
@@ -71,7 +75,7 @@ func (typ *typ) Compare(other Type) bool {
 	}
 	switch typ.kind {
 	case TY_Int, TY_Float, TY_Bool, TY_String, TY_Void:
-	case TY_List:
+	case TY_List, TY_Variatic:
 		return other.Item().Compare(typ.item)
 	case TY_Function:
 		if typ.NumIns() != other.NumIns() || !other.Out().Compare(typ.ret) {
@@ -87,7 +91,7 @@ func (typ *typ) Compare(other Type) bool {
 }
 
 func (typ *typ) Item() Type {
-	if typ.kind != TY_List {
+	if typ.kind != TY_List && typ.kind != TY_Variatic {
 		panic("can't get item type: type is not list")
 	}
 	if typ.item == nil {
@@ -154,6 +158,13 @@ func NewBoolType() *typ {
 func NewListType(item Type) *typ {
 	return &typ{
 		kind: TY_List,
+		item: item,
+	}
+}
+
+func NewVariaticType(item Type) *typ {
+	return &typ{
+		kind: TY_Variatic,
 		item: item,
 	}
 }
