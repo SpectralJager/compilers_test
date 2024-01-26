@@ -14,13 +14,18 @@ type Type interface {
 	NumIns() int
 	In(int) Type
 	Out() Type
+	NumFields() int
+	Field(string) (FieldType, int)
+	FieldByIndex(int) FieldType
 }
 
 type typ struct {
-	kind Kind
-	item Type
-	args []Type
-	ret  Type
+	name   string
+	kind   Kind
+	item   Type
+	args   []Type
+	ret    Type
+	fields []FieldType
 }
 
 func (typ *typ) Kind() Kind {
@@ -45,6 +50,8 @@ func (typ *typ) Name() string {
 		return "variatic"
 	case TY_Function:
 		return "fn"
+	case TY_Record:
+		return typ.name
 	default:
 		panic("can't get type name: unexpected kind of type")
 	}
@@ -64,6 +71,12 @@ func (typ *typ) String() string {
 			args = append(args, arg.String())
 		}
 		return fmt.Sprintf("%s[%s]<%s>", typ.Name(), strings.Join(args, " "), typ.ret.String())
+	case TY_Record:
+		fields := []string{}
+		for _, fld := range typ.fields {
+			fields = append(fields, fld.String())
+		}
+		return fmt.Sprintf("%s<%s>", typ.name, strings.Join(fields, " "))
 	default:
 		panic("can't get string of type: unexpected kind of type")
 	}
@@ -83,6 +96,16 @@ func (typ *typ) Compare(other Type) bool {
 		}
 		for i, in := range typ.args {
 			if !in.Compare(other.In(i)) {
+				return false
+			}
+		}
+	case TY_Record:
+		if typ.NumFields() != other.NumFields() || typ.Name() != other.Name() {
+			return false
+		}
+		for i, fld := range typ.fields {
+			oFld, j := other.Field(fld.Name())
+			if !oFld.Type().Compare(fld.Type()) || i != j {
 				return false
 			}
 		}
@@ -125,6 +148,35 @@ func (typ *typ) Out() Type {
 		return NewVoidType()
 	}
 	return typ.ret
+}
+
+func (typ *typ) NumFields() int {
+	if typ.kind != TY_Record {
+		panic("can't get number of fields: type is not record")
+	}
+	return len(typ.fields)
+}
+
+func (typ *typ) Field(name string) (FieldType, int) {
+	if typ.kind != TY_Record {
+		panic("can't get field: type is not record")
+	}
+	for i, fld := range typ.fields {
+		if fld.Name() == name {
+			return fld, i
+		}
+	}
+	return nil, -1
+}
+
+func (typ *typ) FieldByIndex(index int) FieldType {
+	if typ.kind != TY_Record {
+		panic("can't get field: type is not record")
+	}
+	if index >= typ.NumFields() || index < 0 {
+		panic("can't get field: index out of bounds")
+	}
+	return typ.fields[index]
 }
 
 func NewVoidType() *typ {
@@ -174,5 +226,43 @@ func NewFunctionType(out Type, ins ...Type) *typ {
 		kind: TY_Function,
 		args: ins,
 		ret:  out,
+	}
+}
+
+func NewRecordType(name string, fields ...FieldType) *typ {
+	return &typ{
+		kind:   TY_Record,
+		name:   name,
+		fields: fields,
+	}
+}
+
+type FieldType interface {
+	String() string
+	Name() string
+	Type() Type
+}
+
+type fieldType struct {
+	name string
+	typ  Type
+}
+
+func (f *fieldType) String() string {
+	return fmt.Sprintf("%s::%s", f.name, f.typ.String())
+}
+
+func (f *fieldType) Name() string {
+	return f.name
+}
+
+func (f *fieldType) Type() Type {
+	return f.typ
+}
+
+func NewFieldType(name string, typ Type) *fieldType {
+	return &fieldType{
+		name: name,
+		typ:  typ,
 	}
 }

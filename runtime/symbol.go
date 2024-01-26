@@ -37,7 +37,7 @@ func (symb *symbol) Name() string {
 
 func (symb *symbol) Type() Type {
 	switch symb.kind {
-	case SY_Builtin, SY_Function, SY_Variable:
+	case SY_Builtin, SY_Function, SY_Variable, SY_Record:
 		return symb.typ
 	case SY_Constant:
 		return symb.value.Type()
@@ -96,6 +96,8 @@ func (symb *symbol) String() string {
 		return fmt.Sprintf("%s -> %s", symb.name, symb.typ.String())
 	case SY_Import:
 		return fmt.Sprintf("%s -> import(%s)", symb.name, symb.path)
+	case SY_Record:
+		return fmt.Sprintf("%s -> record%s", symb.name, symb.typ.String()[len(symb.name):])
 	default:
 		panic("can't get string representation of symbol: unexpected symbol kind")
 	}
@@ -144,5 +146,13 @@ func NewImport(name string, path string) *symbol {
 		kind: SY_Import,
 		name: name,
 		path: path,
+	}
+}
+
+func NewRecord(typ Type) *symbol {
+	return &symbol{
+		kind: SY_Record,
+		name: typ.Name(),
+		typ:  typ,
 	}
 }

@@ -34,6 +34,7 @@ const (
 	SY_Function
 	SY_Builtin
 	SY_Import
+	SY_Record
 	// TYpes
 	TY_Void
 	TY_Int
@@ -43,10 +44,12 @@ const (
 	TY_List
 	TY_Variatic
 	TY_Function
+	TY_Record
 	// LItterals
 	LI_Int
 	LI_Float
 	LI_String
 	LI_Bool
 	LI_List
+	LI_Record
 )

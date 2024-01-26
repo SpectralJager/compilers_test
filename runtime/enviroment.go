@@ -66,3 +66,17 @@ func NewEnviroment(name string, parent Enviroment) *env {
 		symbols: map[string]Symbol{},
 	}
 }
+
+func NewEnviromentFromRecord(rec Litteral) *env {
+	if rec.Kind() != LI_Record {
+		panic("can't create enviroment: rec should be record")
+	}
+	env := NewEnviroment(rec.Type().Name(), nil)
+	for i := 0; i < rec.Type().NumFields(); i++ {
+		fld := rec.Type().FieldByIndex(i)
+		env.Insert(
+			rec.Field(fld.Name()),
+		)
+	}
+	return env
+}

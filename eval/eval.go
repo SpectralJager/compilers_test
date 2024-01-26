@@ -41,6 +41,8 @@ func EvalGlobal(state EvalState, env runtime.Enviroment, gl ast.Global) {
 		CreateFunction(state, env, gl)
 	case *ast.ImportDecl:
 		EvalImport(state, env, gl)
+	case *ast.RecordDefn:
+		CreateRecord(state, env, gl)
 	default:
 		panic("can't eval global: unexpected global node")
 	}
@@ -73,6 +75,9 @@ func EvalType(state EvalState, env runtime.Enviroment, typ ast.Type) runtime.Typ
 		return runtime.NewStringType()
 	case *ast.ListType:
 		return runtime.NewListType(EvalType(state, env, tp.Child))
+	case *ast.RecordType:
+		recSymb := EvalSymbol(state, env, tp.Symbol)
+		return recSymb.Type()
 	case nil:
 		return runtime.NewVoidType()
 	default:
@@ -89,6 +94,8 @@ func EvalExpression(state EvalState, env runtime.Enviroment, exp ast.Expression)
 	case *ast.SymbolCall:
 		EvalSymbolCall(state, env, exp)
 		return state.GetReturn()
+	case *ast.NewExpr:
+		return EvalNew(state, env, exp)
 	default:
 		panic("can't eval expression: unexpected expression node")
 	}
@@ -104,6 +111,43 @@ func EvalLocal(state EvalState, env runtime.Enviroment, lc ast.Local) {
 		EvalSymbolCall(state, env, lc)
 	case *ast.SetStmt:
 		EvalSet(state, env, lc)
+	case *ast.ReturnStmt:
+		EvalReturn(state, env, lc)
+	}
+}
+
+func EvalNew(state EvalState, env runtime.Enviroment, nw *ast.NewExpr) runtime.Litteral {
+	tp := EvalType(state, env, nw.Type)
+	items := []runtime.Litteral{}
+	for _, item := range nw.Items {
+		items = append(items, EvalExpression(state, env, item))
+	}
+	switch tp.Kind() {
+	case runtime.TY_Record:
+		fields := []runtime.Symbol{}
+		for i, item := range items {
+			fld := tp.FieldByIndex(i)
+			fields = append(fields,
+				runtime.NewVariable(
+					fld.Name(),
+					fld.Type(),
+					item,
+				),
+			)
+		}
+		return runtime.NewRecordLit(tp, fields...)
+	case runtime.TY_List:
+		return runtime.NewListLit(tp.Item(), items...)
+	default:
+		panic("can't eval new expression: unexpected type kind")
+	}
+}
+
+func EvalReturn(state EvalState, env runtime.Enviroment, ret *ast.ReturnStmt) {
+	if ret.Value == nil {
+		state.SetReturn(runtime.NewIntLit(0))
+	} else {
+		state.SetReturn(EvalExpression(state, env, ret.Value))
 	}
 }
 
@@ -135,6 +179,12 @@ func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) run
 		case runtime.SY_Import:
 			env := state.SearchGlobalEnv(s.Path())
 			return EvalSymbol(state, env, sm.Next)
+		case runtime.SY_Variable:
+			if s.Type().Kind() == runtime.TY_Record {
+				env := runtime.NewEnviromentFromRecord(s.Value())
+				return EvalSymbol(state, env, sm.Next)
+			}
+			fallthrough
 		default:
 			panic("can't eval symbol: unexpected symbol kind")
 		}
@@ -173,7 +223,7 @@ func EvalFunction(state EvalState, env runtime.Enviroment, fn runtime.Symbol, ar
 		panic("can't eval function: mismatched number of inputs")
 	}
 	for i, arg := range args {
-		if fn.Type().In(i).Compare(arg.Type()) {
+		if !fn.Type().In(i).Compare(arg.Type()) {
 			panic("can't eval function: argument type mismatch")
 		}
 		local.Insert(runtime.NewConstant(
@@ -233,6 +283,24 @@ func CreateFunction(state EvalState, env runtime.Enviroment, fn *ast.FunctionDec
 				args...,
 			),
 			fn,
+		),
+	)
+}
+
+func CreateRecord(state EvalState, env runtime.Enviroment, rec *ast.RecordDefn) {
+	fields := []runtime.FieldType{}
+	for _, fld := range rec.Fields {
+		fields = append(fields, runtime.NewFieldType(
+			fld.Identifier,
+			EvalType(state, env, fld.Type),
+		))
+	}
+	env.Insert(
+		runtime.NewRecord(
+			runtime.NewRecordType(
+				rec.Identifier,
+				fields...,
+			),
 		),
 	)
 }

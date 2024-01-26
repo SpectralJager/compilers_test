@@ -15,16 +15,18 @@ type Litteral interface {
 	ValueString() string
 	Len() int
 	Item(int) Litteral
+	Field(string) Symbol
 }
 
 type litteral struct {
-	kind  Kind
-	typ   Type
-	i     int64
-	f     float64
-	b     bool
-	s     string
-	items []Litteral
+	kind   Kind
+	typ    Type
+	i      int64
+	f      float64
+	b      bool
+	s      string
+	items  []Litteral
+	fields []Symbol
 }
 
 func (lit *litteral) Kind() Kind {
@@ -55,6 +57,12 @@ func (lit *litteral) String() string {
 			items = append(items, item.String())
 		}
 		return fmt.Sprintf("%s{%s}", lit.typ.String(), strings.Join(items, " "))
+	case LI_Record:
+		fields := []string{}
+		for _, fld := range lit.fields {
+			fields = append(fields, fmt.Sprintf("%s::%s", fld.Name(), fld.Value().String()))
+		}
+		return fmt.Sprintf("%s{%s}", lit.typ.String(), strings.Join(fields, " "))
 	default:
 		panic("can't get string representation of litteral: unexpected litteral kind")
 	}
@@ -105,6 +113,20 @@ func (lit *litteral) Item(index int) Litteral {
 	return lit.items[index]
 }
 
+func (lit *litteral) Field(name string) Symbol {
+	if lit.kind != LI_Record {
+		panic("can't get field: litteral should be record")
+	}
+	fld, i := lit.typ.Field(name)
+	if i == -1 {
+		panic("can't get field: field not found")
+	}
+	if !fld.Type().Compare(lit.fields[i].Type()) {
+		panic("can't get field: field type mismatched")
+	}
+	return lit.fields[i]
+}
+
 func NewIntLit(value int64) *litteral {
 	return &litteral{
 		kind: LI_Int,
@@ -147,5 +169,27 @@ func NewListLit(itemType Type, items ...Litteral) *litteral {
 		kind:  LI_List,
 		items: items,
 		typ:   NewListType(itemType),
+	}
+}
+
+func NewRecordLit(typ Type, fields ...Symbol) *litteral {
+	if typ.Kind() != TY_Record {
+		panic("can't create record: type should be record")
+	}
+	if len(fields) != typ.NumFields() {
+		panic("can't create record: number of fields not equal")
+	}
+	for i, fld := range fields {
+		if fld.Kind() != SY_Variable {
+			panic("can't create record: field should be variable")
+		}
+		if !fld.Type().Compare(typ.FieldByIndex(i).Type()) {
+			panic("can't create record: field type mismatched")
+		}
+	}
+	return &litteral{
+		kind:   LI_Record,
+		typ:    typ,
+		fields: fields,
 	}
 }

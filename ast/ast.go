@@ -145,7 +145,7 @@ type SymbolExpr struct {
 type NewExpr struct {
 	_expression
 	Type  Type         `parser:"'(' '@new' @@"`
-	Items []Expression `parser:"'{' @@+ '}'')'"`
+	Items []Expression `parser:"'{' @@* '}'')'"`
 }
 
 type IntAtom struct {

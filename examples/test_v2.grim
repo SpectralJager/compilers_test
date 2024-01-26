@@ -1,3 +1,11 @@
 (@module :code
-    (@const n 50)
+    (@record test :fields
+        a::int 
+    )
+
+    (@fn addTest[t1::test t2::test] <test> :do
+        (@return (@new test {
+            (int/add t1/a t2/a)
+        }))
+    )
 )

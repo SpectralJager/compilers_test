@@ -1,8 +1,14 @@
 (@module :main
     (@import "examples/test_v2.grim" :as t)
+
     (@const n 20)
+
     (@fn main :do
-        (@var a :of int 00)
-        (@set a t/n)
+        (@var a :of t/test (@new t/test {n}))
+        (@set a (t/addTest
+            a
+            (@new t/test {10}) 
+        ))
     )
+
 )
