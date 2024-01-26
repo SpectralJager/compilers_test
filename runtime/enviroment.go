@@ -40,7 +40,7 @@ func (env *env) Search(name string) Symbol {
 
 func (env *env) Insert(symbol Symbol) {
 	if symbol := env.SearchLocal(symbol.Name()); symbol != nil {
-		panic("symbol " + symbol.Name + " already defined in " + env.name)
+		panic("symbol " + symbol.Name() + " already defined in " + env.name)
 	}
 	env.symbols[symbol.Name()] = symbol
 }

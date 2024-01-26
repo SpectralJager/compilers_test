@@ -24,3 +24,29 @@ hash2::builtin|>
 	new_point -> fn[int int] <point>
 	...
 */
+
+type Kind uint
+
+const (
+	Undefined Kind = iota
+	// SYmbols
+	SY_Variable
+	SY_Constant
+	SY_Function
+	SY_Builtin
+	SY_Import
+	// TYpes
+	TY_Void
+	TY_Int
+	TY_Float
+	TY_String
+	TY_Bool
+	TY_List
+	TY_Function
+	// LItterals
+	LI_Int
+	LI_Float
+	LI_String
+	LI_Bool
+	LI_List
+)
