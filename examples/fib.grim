@@ -1,5 +1,4 @@
 (@module :main
-
     (@fn fib [n::int] <int> :do
         (@if (int/lt n 2) :then
             (@return n) 

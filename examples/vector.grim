@@ -1,30 +1,24 @@
-(@module :main
-    (@const n 35)
-
+(@module :code
     (@record point :fields
         x::float
         y::float 
     )
-
     (@record vector :fields
         p0::point
         p1::point 
     )
-
     (@fn pointToString [pnt::point] <string> :do
         (@return (string/format "($$;$$)" 
             (float/toString pnt/x)
             (float/toString pnt/y)
         )) 
     )
-    
     (@fn vectorToString [vec::vector] <string> :do
         (@return (string/format "vec{p0::$$,p1::$$}" 
             (pointToString vec/p0) 
             (pointToString vec/p1)
         )) 
     )
-
     (@fn vectorLength [vec::vector] <float> :do
         (@return (math/sqrt 
             (float/add
@@ -33,36 +27,10 @@
             )
         ))
     )
-
     (@fn vectorAdd [vec0::vector vec1::vector] <vector> :do 
         (@var resVec :of vector vec0)
         (@set resVec/p1/x (float/add resVec/p1/x (float/sub vec1/p1/x vec1/p0/x)))
         (@set resVec/p1/y (float/add resVec/p1/y (float/sub vec1/p1/y vec1/p0/y)))
         (@return resVec)
-    )
-
-    (@fn main :do
-        (@var vectors :of list<vector> (@new list<vector> {
-            (@new vector { (@new point {0. 0.}) (@new point {2. 2.}) })
-            (@new vector { (@new point {0. 0.}) (@new point {3. 5.}) })
-            (@new vector { (@new point {0. 0.}) (@new point {-7. 2.}) })
-            (@new vector { (@new point {0. 0.}) (@new point {1. 1.}) })
-        }))
-        (@var resVec :of vector (@new vector {(@new point {0. 0.}) (@new point {0. 0.})}))
-        (io/println "vectors:")
-        (@var counter :of int 0)
-        (@while (int/lt counter (list/len vectors)) :do 
-            (io/println (string/format "#$$ $$" 
-                (int/toString counter)
-                (vectorToString (list/get vectors counter)))
-            )
-            (@set resVec (vectorAdd resVec (list/get vectors counter)))
-            (@set counter (int/add counter 1)) 
-        )
-        (io/println (string/format "result length of $$ = $$"
-            (vectorToString resVec)
-            (float/toString (vectorLength resVec))
-        )) 
-        (exit 0)
     )
 )

@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"grimlang/ast"
+	"strings"
 )
 
 type Symbol interface {
@@ -97,7 +98,12 @@ func (symb *symbol) String() string {
 	case SY_Import:
 		return fmt.Sprintf("%s -> import(%s)", symb.name, symb.path)
 	case SY_Record:
-		return fmt.Sprintf("%s -> record%s", symb.name, symb.typ.String()[len(symb.name):])
+		fields := []string{}
+		for i := 0; i < symb.typ.NumFields(); i++ {
+			fld := symb.typ.FieldByIndex(i)
+			fields = append(fields, fld.String())
+		}
+		return fmt.Sprintf("%s -> record<%s>", symb.name, strings.Join(fields, " "))
 	default:
 		panic("can't get string representation of symbol: unexpected symbol kind")
 	}

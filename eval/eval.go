@@ -111,9 +111,79 @@ func EvalLocal(state EvalState, env runtime.Enviroment, lc ast.Local) {
 		EvalSymbolCall(state, env, lc)
 	case *ast.SetStmt:
 		EvalSet(state, env, lc)
+	case *ast.IfStmt:
+		EvalIf(state, env, lc)
+	case *ast.WhileStmt:
+		EvalWhile(state, env, lc)
 	case *ast.ReturnStmt:
 		EvalReturn(state, env, lc)
 	}
+}
+
+func EvalWhile(state EvalState, env runtime.Enviroment, stm *ast.WhileStmt) {
+	cond := EvalExpression(state, env, stm.Condition)
+	if cond.Kind() != runtime.LI_Bool {
+		panic("can't eval if statement: condition should be bool")
+	}
+	for cond.ValueBool() {
+		local := runtime.NewEnviroment(env.Name()+"_while", env)
+		for _, lc := range stm.ThenBody {
+			EvalLocal(state, local, lc)
+			if state.IsReturn() {
+				return
+			}
+		}
+		cond = EvalExpression(state, env, stm.Condition)
+		if cond.Kind() != runtime.LI_Bool {
+			panic("can't eval if statement: condition should be bool")
+		}
+	}
+	local := runtime.NewEnviroment(env.Name()+"_while", env)
+	for _, lc := range stm.ElseBody {
+		EvalLocal(state, local, lc)
+		if state.IsReturn() {
+			return
+		}
+	}
+}
+
+func EvalIf(state EvalState, env runtime.Enviroment, stm *ast.IfStmt) {
+	local := runtime.NewEnviroment(env.Name()+"_if", env)
+	cond := EvalExpression(state, local, stm.Condition)
+	if cond.Kind() != runtime.LI_Bool {
+		panic("can't eval if statement: condition should be bool")
+	}
+	if cond.ValueBool() {
+		for _, lc := range stm.ThenBody {
+			EvalLocal(state, local, lc)
+			if state.IsReturn() {
+				break
+			}
+		}
+		return
+	}
+	for _, elif := range stm.Elif {
+		cond = EvalExpression(state, env, elif.Condition)
+		if cond.Kind() != runtime.LI_Bool {
+			panic("can't eval if statement: condition should be bool")
+		}
+		if cond.ValueBool() {
+			for _, lc := range elif.Body {
+				EvalLocal(state, local, lc)
+				if state.IsReturn() {
+					break
+				}
+			}
+			return
+		}
+	}
+	for _, lc := range stm.ElseBody {
+		EvalLocal(state, local, lc)
+		if state.IsReturn() {
+			break
+		}
+	}
+	return
 }
 
 func EvalNew(state EvalState, env runtime.Enviroment, nw *ast.NewExpr) runtime.Litteral {
@@ -163,6 +233,9 @@ func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall)
 		args = append(args, EvalExpression(state, env, arg))
 	}
 	fn := EvalSymbol(state, env, sc.Call)
+	if state.IsSwitchEnv() {
+		env = state.GetSwitchEnv()
+	}
 	switch fn.Kind() {
 	case runtime.SY_Builtin:
 		state.SetReturn(fn.Builtin()(args...))
@@ -178,9 +251,10 @@ func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) run
 		switch s.Kind() {
 		case runtime.SY_Import:
 			env := state.SearchGlobalEnv(s.Path())
+			state.SetSwitchEnv(env)
 			return EvalSymbol(state, env, sm.Next)
-		case runtime.SY_Variable:
-			if s.Type().Kind() == runtime.TY_Record {
+		case runtime.SY_Variable, runtime.SY_Constant:
+			if s.Value().Type().Kind() == runtime.TY_Record {
 				env := runtime.NewEnviromentFromRecord(s.Value())
 				return EvalSymbol(state, env, sm.Next)
 			}

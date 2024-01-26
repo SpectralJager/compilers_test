@@ -1,14 +1,27 @@
 (@module :main
-    (@import "examples/test_v2.grim" :as t)
-
-    (@const n 20)
-
+    (@import "examples/vector.grim" :as vec)
     (@fn main :do
-        (@var a :of t/test (@new t/test {n}))
-        (@set a (t/addTest
-            a
-            (@new t/test {10}) 
-        ))
+        (@var vectors :of list<vec/vector> (@new list<vec/vector> {
+            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {2. 2.}) })
+            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {3. 5.}) })
+            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {-7. 2.}) })
+            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {1. 1.}) })
+        }))
+        (@var resVec :of vec/vector (@new vec/vector {(@new vec/point {0. 0.}) (@new vec/point {0. 0.})}))
+        (io/println "vectors:")
+        (@var counter :of int 0)
+        (@while (int/lt counter (list/len vectors)) :do 
+            (io/println (string/format "#$$ $$" 
+                (int/toString counter)
+                (vec/vectorToString (list/get vectors counter)))
+            )
+            (@set resVec (vec/vectorAdd resVec (list/get vectors counter)))
+            (@set counter (int/add counter 1)) 
+        )
+        (io/println (string/format "result length of $$ = $$"
+            (vec/vectorToString resVec)
+            (float/toString (vec/vectorLength resVec))
+        )) 
+        (@return)
     )
-
 )

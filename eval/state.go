@@ -8,22 +8,30 @@ import (
 
 type EvalState interface {
 	String() string
+
 	GetBuiltinEnv() runtime.Enviroment
 	InsertGlobalEnv(runtime.Enviroment)
 	SearchGlobalEnv(string) runtime.Enviroment
+
 	IsReturn() bool
 	SetReturn(runtime.Litteral)
 	GetReturn() runtime.Litteral
 	GetReturnType() runtime.Type
+
 	GetSymbolFlag() bool
 	SetSymbolFlag()
 	ClrSymbolFlag()
+
+	IsSwitchEnv() bool
+	SetSwitchEnv(runtime.Enviroment)
+	GetSwitchEnv() runtime.Enviroment
 }
 
 type state struct {
-	builtin runtime.Enviroment
-	envs    map[string]runtime.Enviroment
-	ret     runtime.Litteral
+	builtin   runtime.Enviroment
+	envs      map[string]runtime.Enviroment
+	ret       runtime.Litteral
+	switchEnv runtime.Enviroment
 
 	symbFlag bool
 }
@@ -80,6 +88,20 @@ func (s *state) SetSymbolFlag() {
 }
 func (s *state) ClrSymbolFlag() {
 	s.symbFlag = false
+}
+
+func (s *state) IsSwitchEnv() bool {
+	return s.switchEnv != nil
+}
+
+func (s *state) SetSwitchEnv(env runtime.Enviroment) {
+	s.switchEnv = env
+}
+
+func (s *state) GetSwitchEnv() runtime.Enviroment {
+	tmp := s.switchEnv
+	s.switchEnv = nil
+	return tmp
 }
 
 func NewEvalState(builtin runtime.Enviroment) *state {

@@ -29,15 +29,15 @@ type litteral struct {
 	fields []Symbol
 }
 
-func (lit *litteral) Kind() Kind {
+func (lit litteral) Kind() Kind {
 	return lit.kind
 }
 
-func (lit *litteral) Type() Type {
+func (lit litteral) Type() Type {
 	return lit.typ
 }
 
-func (lit *litteral) String() string {
+func (lit litteral) String() string {
 	switch lit.kind {
 	case LI_Int:
 		return fmt.Sprintf("%d", lit.i)
@@ -68,42 +68,42 @@ func (lit *litteral) String() string {
 	}
 }
 
-func (lit *litteral) ValueInt() int64 {
+func (lit litteral) ValueInt() int64 {
 	if lit.kind != LI_Int {
 		panic("can't get int value: litteral should be int")
 	}
 	return lit.i
 }
 
-func (lit *litteral) ValueFloat() float64 {
+func (lit litteral) ValueFloat() float64 {
 	if lit.kind != LI_Float {
 		panic("can't get float value: litteral should be float")
 	}
 	return lit.f
 }
 
-func (lit *litteral) ValueBool() bool {
+func (lit litteral) ValueBool() bool {
 	if lit.kind != LI_Bool {
 		panic("can't get bool value: litteral should be bool")
 	}
 	return lit.b
 }
 
-func (lit *litteral) ValueString() string {
+func (lit litteral) ValueString() string {
 	if lit.kind != LI_String {
 		panic("can't get string value: litteral should be string")
 	}
 	return lit.s
 }
 
-func (lit *litteral) Len() int {
+func (lit litteral) Len() int {
 	if lit.kind != LI_List {
 		panic("can't get item: litteral should be list")
 	}
 	return len(lit.items)
 }
 
-func (lit *litteral) Item(index int) Litteral {
+func (lit litteral) Item(index int) Litteral {
 	if lit.kind != LI_List {
 		panic("can't get item: litteral should be list")
 	}
@@ -113,7 +113,7 @@ func (lit *litteral) Item(index int) Litteral {
 	return lit.items[index]
 }
 
-func (lit *litteral) Field(name string) Symbol {
+func (lit litteral) Field(name string) Symbol {
 	if lit.kind != LI_Record {
 		panic("can't get field: litteral should be record")
 	}
@@ -127,52 +127,52 @@ func (lit *litteral) Field(name string) Symbol {
 	return lit.fields[i]
 }
 
-func NewIntLit(value int64) *litteral {
-	return &litteral{
+func NewIntLit(value int64) litteral {
+	return litteral{
 		kind: LI_Int,
 		i:    value,
 		typ:  NewIntType(),
 	}
 }
 
-func NewFloatLit(value float64) *litteral {
-	return &litteral{
+func NewFloatLit(value float64) litteral {
+	return litteral{
 		kind: LI_Float,
 		f:    value,
 		typ:  NewFloatType(),
 	}
 }
 
-func NewBoolLit(value bool) *litteral {
-	return &litteral{
+func NewBoolLit(value bool) litteral {
+	return litteral{
 		kind: LI_Bool,
 		b:    value,
 		typ:  NewBoolType(),
 	}
 }
 
-func NewStringLit(value string) *litteral {
-	return &litteral{
+func NewStringLit(value string) litteral {
+	return litteral{
 		kind: LI_String,
 		s:    value,
 		typ:  NewStringType(),
 	}
 }
 
-func NewListLit(itemType Type, items ...Litteral) *litteral {
+func NewListLit(itemType Type, items ...Litteral) litteral {
 	for _, item := range items {
 		if !itemType.Compare(item.Type()) {
 			panic("can't create list: item types mismatched")
 		}
 	}
-	return &litteral{
+	return litteral{
 		kind:  LI_List,
 		items: items,
 		typ:   NewListType(itemType),
 	}
 }
 
-func NewRecordLit(typ Type, fields ...Symbol) *litteral {
+func NewRecordLit(typ Type, fields ...Symbol) litteral {
 	if typ.Kind() != TY_Record {
 		panic("can't create record: type should be record")
 	}
@@ -187,7 +187,7 @@ func NewRecordLit(typ Type, fields ...Symbol) *litteral {
 			panic("can't create record: field type mismatched")
 		}
 	}
-	return &litteral{
+	return litteral{
 		kind:   LI_Record,
 		typ:    typ,
 		fields: fields,
