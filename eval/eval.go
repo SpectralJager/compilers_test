@@ -98,9 +98,19 @@ func EvalLocal(state EvalState, env runtime.Enviroment, lc ast.Local) {
 	switch lc := lc.(type) {
 	case *ast.ConstantDecl:
 		CreateConstant(state, env, lc)
+	case *ast.VariableDecl:
+		CreateVariable(state, env, lc)
 	case *ast.SymbolCall:
 		EvalSymbolCall(state, env, lc)
+	case *ast.SetStmt:
+		EvalSet(state, env, lc)
 	}
+}
+
+func EvalSet(state EvalState, env runtime.Enviroment, st *ast.SetStmt) {
+	sm := EvalSymbol(state, env, st.Symbol)
+	val := EvalExpression(state, env, st.Value)
+	sm.Set(val)
 }
 
 func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall) {
@@ -196,6 +206,18 @@ func EvalFunction(state EvalState, env runtime.Enviroment, fn runtime.Symbol, ar
 func CreateConstant(state EvalState, env runtime.Enviroment, cnst *ast.ConstantDecl) {
 	val := EvalAtom(state, env, cnst.Value)
 	env.Insert(runtime.NewConstant(cnst.Identifier, val))
+}
+
+func CreateVariable(state EvalState, env runtime.Enviroment, vr *ast.VariableDecl) {
+	typ := EvalType(state, env, vr.Type)
+	val := EvalExpression(state, env, vr.Value)
+	env.Insert(
+		runtime.NewVariable(
+			vr.Identifier,
+			typ,
+			val,
+		),
+	)
 }
 
 func CreateFunction(state EvalState, env runtime.Enviroment, fn *ast.FunctionDecl) {

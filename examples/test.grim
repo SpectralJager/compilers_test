@@ -2,6 +2,7 @@
     (@import "examples/test_v2.grim" :as t)
     (@const n 20)
     (@fn main :do
-        (exit (int/add t/n n))
+        (@var a :of int 00)
+        (@set a t/n)
     )
 )
