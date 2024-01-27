@@ -1,22 +1,34 @@
-package builtinIo
+package builtin_io
 
 import (
 	"fmt"
-	"grimlang/object"
+	"grimlang/runtime"
 	"strings"
 )
 
-func Println(args ...object.Litteral) (object.Litteral, error) {
-	if len(args) < 1 {
-		return nil, fmt.Errorf("println: expect atleast 1 argument, got %d", len(args))
+func NewBuiltinIOEnv() runtime.Enviroment {
+	env := runtime.NewEnviroment("io", nil)
+	env.Insert(
+		runtime.NewBuiltin(
+			"println",
+			runtime.NewFunctionType(
+				runtime.NewVoidType(),
+				runtime.NewVariaticType(runtime.NewStringType()),
+			),
+			Println,
+		),
+	)
+	return env
+}
+
+func Println(inputs ...runtime.Litteral) runtime.Litteral {
+	if len(inputs) == 0 {
+		panic("io/println: expect atleast 1 input")
 	}
-	vals := []string{}
-	for i, arg := range args {
-		if !object.Is(arg.Kind(), object.StringLitteral) {
-			return nil, fmt.Errorf("println: argument #%d should be string, got %s", i, arg.Type().Inspect())
-		}
-		vals = append(vals, arg.(*object.LitteralString).Value)
+	msgs := []string{}
+	for _, in := range inputs {
+		msgs = append(msgs, in.ValueString())
 	}
-	fmt.Printf("%s\n", strings.Join(vals, " "))
-	return nil, nil
+	fmt.Println(strings.Join(msgs, ""))
+	return runtime.NewIntLit(0)
 }

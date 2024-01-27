@@ -59,7 +59,7 @@ func (*_type) typ() {}
 
 type Module struct {
 	_ast
-	Kind string   `parser:"'(' '@module' @(':main') "`
+	Kind string   `parser:"'(' '@module' @(':main'|':code') "`
 	Body []Global `parser:" @@+ ')'"`
 }
 
@@ -68,6 +68,12 @@ type ConstantDecl struct {
 	_local
 	Identifier string `parser:"'(' '@const' @Symbol "`
 	Value      Atom   `parser:" @@ ')'"`
+}
+
+type ImportDecl struct {
+	_global
+	Path  *StringAtom `parser:"'(' '@import' @@"`
+	Ident string      `parser:"':as' @Symbol ')'"`
 }
 
 type VariableDecl struct {
@@ -139,7 +145,7 @@ type SymbolExpr struct {
 type NewExpr struct {
 	_expression
 	Type  Type         `parser:"'(' '@new' @@"`
-	Items []Expression `parser:"'{' @@+ '}'')'"`
+	Items []Expression `parser:"'{' @@* '}'')'"`
 }
 
 type IntAtom struct {

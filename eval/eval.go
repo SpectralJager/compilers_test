@@ -1,568 +1,381 @@
 package eval
 
 import (
-	"fmt"
 	"grimlang/ast"
-	"grimlang/context"
-	"grimlang/object"
+	"grimlang/runtime"
 )
 
-type EvalState struct {
-	GlobalContext context.Context
-	Return        object.Litteral
-	IsReturn      bool
-}
-
-func (state *EvalState) SetReturn(obj object.Litteral) {
-	state.IsReturn = true
-	state.Return = obj
-}
-
-func (state *EvalState) GetReturn() object.Litteral {
-	state.IsReturn = false
-	ret := state.Return
-	state.Return = nil
-	return ret
-}
-
-func (state *EvalState) EvalModule(ctx context.Context, md *ast.Module) error {
+func EvalModule(state EvalState, md *ast.Module, hash string) {
 	switch md.Kind {
 	case ":main":
-		globalContext := context.NewContext("global", ctx)
-		state.GlobalContext = globalContext
+		main := runtime.NewEnviroment("main", state.GetBuiltinEnv())
+		state.InsertGlobalEnv(main)
 		for _, gl := range md.Body {
-			err := state.EvalGlobal(globalContext, gl)
-			if err != nil {
-				return err
-			}
+			EvalGlobal(state, main, gl)
 		}
-		mainSymbol := globalContext.Search("main")
-		if mainSymbol == nil {
-			return fmt.Errorf("function main not found")
+		mainFn := main.SearchLocal("main")
+		if mainFn == nil {
+			panic("can't eval main module: should contains main function")
 		}
-		if !object.Is(mainSymbol.Kind(), object.FunctionSymbol) {
-			return fmt.Errorf("main should be function")
+		if mainFn.Kind() != runtime.SY_Function {
+			panic("can't eval main module: main should be function")
 		}
-		mainFunc := mainSymbol.(*object.SymbolFunction)
-		_, err := state.EvalFunction(globalContext, mainFunc.Fn, nil)
-		return err
+		EvalFunction(state, main, mainFn)
+	case ":code":
+		global := runtime.NewEnviroment(hash, state.GetBuiltinEnv())
+		state.InsertGlobalEnv(global)
+		for _, gl := range md.Body {
+			EvalGlobal(state, global, gl)
+		}
 	default:
-		return fmt.Errorf("eval: unexpected module kind %s", md.Kind)
+		panic("can't eval module: unexpected module kind")
 	}
 }
 
-// ================================================================
-
-func (state *EvalState) EvalGlobal(ctx context.Context, gl ast.Global) error {
+func EvalGlobal(state EvalState, env runtime.Enviroment, gl ast.Global) {
 	switch gl := gl.(type) {
 	case *ast.ConstantDecl:
-		return state.NewConstantSymbol(ctx, gl)
+		CreateConstant(state, env, gl)
 	case *ast.FunctionDecl:
-		return state.NewFunctionSymbol(ctx, gl)
+		CreateFunction(state, env, gl)
+	case *ast.ImportDecl:
+		EvalImport(state, env, gl)
 	case *ast.RecordDefn:
-		return state.NewRecordSymbol(ctx, gl)
+		CreateRecord(state, env, gl)
 	default:
-		return fmt.Errorf("eval: unexpected global statement %T", gl)
+		panic("can't eval global: unexpected global node")
 	}
 }
 
-func (state *EvalState) EvalLocal(ctx context.Context, lc ast.Local) error {
-	switch lc := lc.(type) {
-	case *ast.SymbolCall:
-		_, err := state.EvalSymbolCall(ctx, lc)
-		return err
-	case *ast.ReturnStmt:
-		return state.EvalReturn(ctx, lc)
-	case *ast.SetStmt:
-		return state.EvalSet(ctx, lc)
-	case *ast.IfStmt:
-		return state.EvalIf(ctx, lc)
-	case *ast.WhileStmt:
-		return state.EvalWhile(ctx, lc)
-	case *ast.ConstantDecl:
-		return state.NewConstantSymbol(ctx, lc)
-	case *ast.VariableDecl:
-		return state.NewVariableSymbol(ctx, lc)
-	default:
-		return fmt.Errorf("eval: unexpected local %T", lc)
-	}
-}
-
-func (state *EvalState) EvalExpression(ctx context.Context, ex ast.Expression) (object.Litteral, error) {
-	switch ex := ex.(type) {
+func EvalAtom(state EvalState, env runtime.Enviroment, atm ast.Atom) runtime.Litteral {
+	switch atm := atm.(type) {
 	case *ast.IntAtom:
-		return state.EvalAtom(ctx, ex)
+		return runtime.NewIntLit(int64(atm.Value))
 	case *ast.FloatAtom:
-		return state.EvalAtom(ctx, ex)
-	case *ast.StringAtom:
-		return state.EvalAtom(ctx, ex)
+		return runtime.NewFloatLit(atm.Value)
 	case *ast.BoolAtom:
-		return state.EvalAtom(ctx, ex)
-	case *ast.NewExpr:
-		return state.EvalNew(ctx, ex)
-	case *ast.SymbolCall:
-		return state.EvalSymbolCall(ctx, ex)
-	case *ast.SymbolExpr:
-		return state.EvalSymbolExpression(ctx, ex)
+		return runtime.NewBoolLit(atm.Value)
+	case *ast.StringAtom:
+		return runtime.NewStringLit(atm.Value[1 : len(atm.Value)-1])
 	default:
-		return nil, fmt.Errorf("eval: unexpected expression %T", ex)
+		panic("can't eval atom: unexpected atom node")
 	}
 }
 
-func (state *EvalState) EvalAtom(ctx context.Context, at ast.Atom) (object.Litteral, error) {
-	switch at := at.(type) {
-	case *ast.IntAtom:
-		return &object.LitteralInt{Value: at.Value}, nil
-	case *ast.BoolAtom:
-		return &object.LitteralBool{Value: at.Value}, nil
-	case *ast.StringAtom:
-		return &object.LitteralString{Value: at.Value[1 : len(at.Value)-1]}, nil
-	case *ast.FloatAtom:
-		return &object.LitteralFloat{Value: at.Value}, nil
-	default:
-		return nil, fmt.Errorf("eval: unexpected atom %T", at)
-	}
-}
-
-func (state *EvalState) EvalType(ctx context.Context, tp ast.Type) (object.DType, error) {
-	switch tp := tp.(type) {
+func EvalType(state EvalState, env runtime.Enviroment, typ ast.Type) runtime.Type {
+	switch tp := typ.(type) {
 	case *ast.IntType:
-		return &object.DTypeInt{}, nil
+		return runtime.NewIntType()
 	case *ast.BoolType:
-		return &object.DTypeBool{}, nil
-	case *ast.StringType:
-		return &object.DTypeString{}, nil
+		return runtime.NewBoolType()
 	case *ast.FloatType:
-		return &object.DTypeFloat{}, nil
+		return runtime.NewFloatType()
+	case *ast.StringType:
+		return runtime.NewStringType()
 	case *ast.ListType:
-		itemType, err := state.EvalType(ctx, tp.Child)
-		if err != nil {
-			return nil, err
-		}
-		return &object.DTypeList{ChildType: itemType}, nil
+		return runtime.NewListType(EvalType(state, env, tp.Child))
 	case *ast.RecordType:
-		symbol, err := state.EvalSymbol(ctx, tp.Symbol)
-		if err != nil {
-			return nil, err
-		}
-		if !object.Is(symbol.Kind(), object.RecordSymbol) {
-			return nil, fmt.Errorf("eval: expecte record symbol, got %T", symbol)
-		}
-		recordSymbol := symbol.(*object.SymbolRecord)
-		return &recordSymbol.RecordType, nil
+		recSymb := EvalSymbol(state, env, tp.Symbol)
+		return recSymb.Type()
+	case nil:
+		return runtime.NewVoidType()
 	default:
-		return nil, fmt.Errorf("eval: unexpected type %T", tp)
+		panic("can't eval type: unexpected type node")
 	}
 }
 
-func (state *EvalState) EvalNew(ctx context.Context, ex *ast.NewExpr) (object.Litteral, error) {
-	switch typ := ex.Type.(type) {
-	case *ast.ListType:
-		return state.EvalList(ctx, ex)
-	case *ast.RecordType:
-		return state.EvalRecord(ctx, ex)
+func EvalExpression(state EvalState, env runtime.Enviroment, exp ast.Expression) runtime.Litteral {
+	switch exp := exp.(type) {
+	case ast.Atom:
+		return EvalAtom(state, env, exp)
+	case *ast.SymbolExpr:
+		return EvalSymbol(state, env, exp).Value()
+	case *ast.SymbolCall:
+		EvalSymbolCall(state, env, exp)
+		return state.GetReturn()
+	case *ast.NewExpr:
+		return EvalNew(state, env, exp)
 	default:
-		return nil, fmt.Errorf("eval: can't use such type in new expression: %T", typ)
+		panic("can't eval expression: unexpected expression node")
 	}
 }
 
-// ================================================================
+func EvalLocal(state EvalState, env runtime.Enviroment, lc ast.Local) {
+	switch lc := lc.(type) {
+	case *ast.ConstantDecl:
+		CreateConstant(state, env, lc)
+	case *ast.VariableDecl:
+		CreateVariable(state, env, lc)
+	case *ast.SymbolCall:
+		EvalSymbolCall(state, env, lc)
+	case *ast.SetStmt:
+		EvalSet(state, env, lc)
+	case *ast.IfStmt:
+		EvalIf(state, env, lc)
+	case *ast.WhileStmt:
+		EvalWhile(state, env, lc)
+	case *ast.ReturnStmt:
+		EvalReturn(state, env, lc)
+	}
+}
 
-func (state *EvalState) EvalLocals(ctx context.Context, lcs []ast.Local) error {
-	for _, lc := range lcs {
-		err := state.EvalLocal(ctx, lc)
-		if err != nil {
-			return err
+func EvalWhile(state EvalState, env runtime.Enviroment, stm *ast.WhileStmt) {
+	cond := EvalExpression(state, env, stm.Condition)
+	if cond.Kind() != runtime.LI_Bool {
+		panic("can't eval if statement: condition should be bool")
+	}
+	for cond.ValueBool() {
+		local := runtime.NewEnviroment(env.Name()+"_while", env)
+		for _, lc := range stm.ThenBody {
+			EvalLocal(state, local, lc)
+			if state.IsReturn() {
+				return
+			}
 		}
-		if state.IsReturn {
+		cond = EvalExpression(state, env, stm.Condition)
+		if cond.Kind() != runtime.LI_Bool {
+			panic("can't eval if statement: condition should be bool")
+		}
+	}
+	local := runtime.NewEnviroment(env.Name()+"_while", env)
+	for _, lc := range stm.ElseBody {
+		EvalLocal(state, local, lc)
+		if state.IsReturn() {
+			return
+		}
+	}
+}
+
+func EvalIf(state EvalState, env runtime.Enviroment, stm *ast.IfStmt) {
+	local := runtime.NewEnviroment(env.Name()+"_if", env)
+	cond := EvalExpression(state, local, stm.Condition)
+	if cond.Kind() != runtime.LI_Bool {
+		panic("can't eval if statement: condition should be bool")
+	}
+	if cond.ValueBool() {
+		for _, lc := range stm.ThenBody {
+			EvalLocal(state, local, lc)
+			if state.IsReturn() {
+				break
+			}
+		}
+		return
+	}
+	for _, elif := range stm.Elif {
+		cond = EvalExpression(state, env, elif.Condition)
+		if cond.Kind() != runtime.LI_Bool {
+			panic("can't eval if statement: condition should be bool")
+		}
+		if cond.ValueBool() {
+			for _, lc := range elif.Body {
+				EvalLocal(state, local, lc)
+				if state.IsReturn() {
+					break
+				}
+			}
+			return
+		}
+	}
+	for _, lc := range stm.ElseBody {
+		EvalLocal(state, local, lc)
+		if state.IsReturn() {
 			break
 		}
 	}
-	return nil
 }
 
-func (state *EvalState) EvalSymbol(ctx context.Context, sm *ast.SymbolExpr) (object.Symbol, error) {
-	symb := ctx.Search(sm.Identifier)
-	if symb == nil {
-		return nil, fmt.Errorf("eval: symbol %s not found", sm.Identifier)
+func EvalNew(state EvalState, env runtime.Enviroment, nw *ast.NewExpr) runtime.Litteral {
+	tp := EvalType(state, env, nw.Type)
+	items := []runtime.Litteral{}
+	for _, item := range nw.Items {
+		items = append(items, EvalExpression(state, env, item))
 	}
-	if sm.Next == nil {
-		return symb, nil
-	}
-	switch symb := symb.(type) {
-	case *object.SymbolModule:
-		return state.EvalSymbol(symb, sm.Next)
-	case *object.SymbolVariable:
-		if !object.Is(symb.Value.Kind(), object.RecordLitteral) {
-			break
+	switch tp.Kind() {
+	case runtime.TY_Record:
+		fields := []runtime.Symbol{}
+		for i, item := range items {
+			fld := tp.FieldByIndex(i)
+			fields = append(fields,
+				runtime.NewVariable(
+					fld.Name(),
+					fld.Type(),
+					item,
+				),
+			)
 		}
-		recordLit := symb.Value.(*object.LitteralRecord)
-		return state.EvalSymbol(recordLit, sm.Next)
-	}
-	return nil, fmt.Errorf("eval: symbol %s not found", sm.Next.Identifier)
-}
-
-func (state *EvalState) EvalSymbolExpression(ctx context.Context, sm *ast.SymbolExpr) (object.Litteral, error) {
-	symb, err := state.EvalSymbol(ctx, sm)
-	if err != nil {
-		return nil, err
-	}
-	switch symb := symb.(type) {
-	case *object.SymbolConstant:
-		return symb.Value, nil
-	case *object.SymbolVariable:
-		return symb.Value, nil
+		return runtime.NewRecordLit(tp, fields...)
+	case runtime.TY_List:
+		return runtime.NewListLit(tp.Item(), items...)
 	default:
-		return nil, fmt.Errorf("eval: can't get object from symbol %s of %T", symb.Name(), symb)
+		panic("can't eval new expression: unexpected type kind")
 	}
 }
 
-func (state *EvalState) EvalFunction(ctx context.Context, fn *ast.FunctionDecl, args []object.Litteral) (object.Litteral, error) {
-	localContext := context.NewContext(fn.Identifier, state.GlobalContext)
-	if len(args) != len(fn.Arguments) {
-		return nil, fmt.Errorf("eval: %s expect %d arguments, got %d", fn.Identifier, len(fn.Arguments), len(args))
-	}
-	for i, arg := range fn.Arguments {
-		argType, err := state.EvalType(localContext, arg.Type)
-		if err != nil {
-			return nil, err
-		}
-		if !args[i].Type().Compare(argType) {
-			return nil, fmt.Errorf("eval: %s expect %dth argument be %s, got %s", fn.Identifier, i, argType.Inspect(), args[i].Type().Inspect())
-		}
-		err = localContext.Insert(
-			&object.SymbolVariable{
-				Identifier: arg.Identifier,
-				ValueType:  argType,
-				Value:      args[i],
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-	err := state.EvalLocals(localContext, fn.Body)
-	if err != nil {
-		return nil, err
-	}
-	switch {
-	case fn.Return != nil && state.IsReturn:
-		retType, err := state.EvalType(ctx, fn.Return)
-		if err != nil {
-			return nil, err
-		}
-		ret := state.GetReturn()
-		if ret == nil {
-			return nil, fmt.Errorf("eval: function expect return %s, got nothing", retType.Inspect())
-		}
-		state.Return = nil
-		if !retType.Compare(ret.Type()) {
-			return nil, fmt.Errorf("eval: function expect return %s, got %s", retType.Inspect(), ret.Type().Inspect())
-		}
-		return ret, nil
-	case fn.Return != nil && !state.IsReturn:
-		retType, err := state.EvalType(ctx, fn.Return)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("eval: function expect return %s, got nothing", retType.Inspect())
-	case state.IsReturn:
-		state.Return = nil
-	}
-	return nil, nil
-}
-
-func (state *EvalState) EvalSymbolCall(ctx context.Context, sc *ast.SymbolCall) (object.Litteral, error) {
-	tempSymb, err := state.EvalSymbol(ctx, sc.Call)
-	if err != nil {
-		return nil, err
-	}
-	params := []object.Litteral{}
-	for _, param := range sc.Arguments {
-		obj, err := state.EvalExpression(ctx, param)
-		if err != nil {
-			return nil, err
-		}
-		params = append(params, obj)
-	}
-	switch tempSymb := tempSymb.(type) {
-	case *object.SymbolFunction:
-		return state.EvalFunction(ctx, tempSymb.Fn, params)
-	case *object.SymbolBuiltin:
-		return tempSymb.Fn(params...)
-	default:
-		return nil, fmt.Errorf("eval: unexpected %s symbol %T", tempSymb.Name(), tempSymb)
-	}
-}
-
-func (state *EvalState) EvalReturn(ctx context.Context, rt *ast.ReturnStmt) error {
-	if rt.Value == nil {
-		state.SetReturn(nil)
-		return nil
-	}
-	ret, err := state.EvalExpression(ctx, rt.Value)
-	if err != nil {
-		return err
-	}
-	state.SetReturn(ret)
-	return nil
-}
-
-func (state *EvalState) EvalSet(ctx context.Context, st *ast.SetStmt) error {
-	val, err := state.EvalExpression(ctx, st.Value)
-	if err != nil {
-		return err
-	}
-	symb, err := state.EvalSymbol(ctx, st.Symbol)
-	if err != nil {
-		return err
-	}
-	if !object.Is(symb.Kind(), object.VariableSymbol) {
-		return fmt.Errorf("eval: can't assign new value to non variable symbol %s", symb.Name())
-	}
-	symbVar := symb.(*object.SymbolVariable)
-	if !symbVar.ValueType.Compare(val.Type()) {
-		return fmt.Errorf("eval: mismatch types of variable %s of %s and value of %s", symbVar.Identifier, symbVar.Value.Inspect(), val.Type().Inspect())
-	}
-	symbVar.Value = val
-	return nil
-}
-
-func (state *EvalState) EvalIf(ctx context.Context, st *ast.IfStmt) error {
-	type condStruct struct {
-		obj  object.Litteral
-		body []ast.Local
-	}
-	conditions := []condStruct{}
-
-	cond, err := state.EvalExpression(ctx, st.Condition)
-	if err != nil {
-		return err
-	}
-	conditions = append(conditions, condStruct{
-		obj:  cond,
-		body: st.ThenBody,
-	})
-
-	for _, elif := range st.Elif {
-		cond, err = state.EvalExpression(ctx, elif.Condition)
-		if err != nil {
-			return err
-		}
-		conditions = append(conditions, condStruct{
-			obj:  cond,
-			body: elif.Body,
-		})
-	}
-	localContext := context.NewContext(ctx.Scope()+"_if", ctx)
-	for _, cond := range conditions {
-		if !object.Is(cond.obj.Kind(), object.BoolLitteral) {
-			return fmt.Errorf("eval: condition should be bool value, got %s", cond.obj.Type().Inspect())
-		}
-		condBool := cond.obj.(*object.LitteralBool)
-		if !condBool.Value {
-			continue
-		}
-		err := state.EvalLocals(localContext, cond.body)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-	if len(st.ElseBody) != 0 {
-		err := state.EvalLocals(localContext, st.ElseBody)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (state *EvalState) EvalWhile(ctx context.Context, st *ast.WhileStmt) error {
-	cond, err := state.EvalExpression(ctx, st.Condition)
-	if err != nil {
-		return err
-	}
-	if !object.Is(cond.Kind(), object.BoolLitteral) {
-		return fmt.Errorf("eval: condition should be bool value, got %s", cond.Type().Inspect())
-	}
-	if cond.(*object.LitteralBool).Value {
-		for cond.(*object.LitteralBool).Value {
-			localContext := context.NewContext(ctx.Scope()+"_while", ctx)
-			err = state.EvalLocals(localContext, st.ThenBody)
-			if err != nil {
-				return err
-			}
-			cond, err = state.EvalExpression(ctx, st.Condition)
-			if err != nil {
-				return err
-			}
-
-		}
+func EvalReturn(state EvalState, env runtime.Enviroment, ret *ast.ReturnStmt) {
+	if ret.Value == nil {
+		state.SetReturn(runtime.NewIntLit(0))
 	} else {
-		localContext := context.NewContext(ctx.Scope()+"_while", ctx)
-		err = state.EvalLocals(localContext, st.ElseBody)
-		if err != nil {
-			return err
-		}
+		state.SetReturn(EvalExpression(state, env, ret.Value))
 	}
-	return nil
 }
 
-func (state *EvalState) EvalList(ctx context.Context, lst *ast.NewExpr) (object.Litteral, error) {
-	typ, err := state.EvalType(ctx, lst.Type)
-	if err != nil {
-		return nil, err
-	}
-	if !object.Is(typ.Kind(), object.ListType) {
-		return nil, fmt.Errorf("eval: expect list, got %s", typ.Inspect())
-	}
-	itemType := typ.(*object.DTypeList).ChildType
-	items := []object.Litteral{}
-	for i, item := range lst.Items {
-		obj, err := state.EvalExpression(ctx, item)
-		if err != nil {
-			return nil, err
-		}
-		if !itemType.Compare(obj.Type()) {
-			return nil, fmt.Errorf("eval: wrong %dth list<%s> item type -> %s", i, itemType.Inspect(), obj.Type().Inspect())
-		}
-		items = append(items, obj)
-	}
-	return &object.LitteralList{ItemType: itemType, Items: items}, nil
+func EvalSet(state EvalState, env runtime.Enviroment, st *ast.SetStmt) {
+	sm := EvalSymbol(state, env, st.Symbol)
+	val := EvalExpression(state, env, st.Value)
+	sm.Set(val)
 }
 
-func (state *EvalState) EvalRecord(ctx context.Context, rec *ast.NewExpr) (object.Litteral, error) {
-	typ, err := state.EvalType(ctx, rec.Type)
-	if err != nil {
-		return nil, err
+func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall) {
+	args := []runtime.Litteral{}
+	for _, arg := range sc.Arguments {
+		args = append(args, EvalExpression(state, env, arg))
 	}
-	if !object.Is(typ.Kind(), object.RecordType) {
-		return nil, fmt.Errorf("eval: expect list, got %s", typ.Inspect())
+	fn := EvalSymbol(state, env, sc.Call)
+	if state.IsSwitchEnv() {
+		env = state.GetSwitchEnv()
+	} else {
+		env = state.SearchGlobalEnv("main")
 	}
-	recType := typ.(*object.DTypeRecord)
-	symb := ctx.Search(recType.Identifier)
-	if symb == nil {
-		return nil, fmt.Errorf("eval: symbol %s not found", recType.Identifier)
+	switch fn.Kind() {
+	case runtime.SY_Builtin:
+		state.SetReturn(fn.Builtin()(args...))
+	case runtime.SY_Function:
+		EvalFunction(state, env, fn, args...)
 	}
-	if !object.Is(symb.Kind(), object.RecordSymbol) {
-		return nil, fmt.Errorf("eval: expect record symbol,  got %T", symb)
+	if fn.Type().Out().Compare(runtime.NewVoidType()) {
+		state.GetReturn()
+		return
 	}
-	recSymb := symb.(*object.SymbolRecord)
-	if len(rec.Items) != len(recType.FieldsType) {
-		return nil, fmt.Errorf("eval: record have %d fields, get %d", len(recType.FieldsType), len(rec.Items))
+	if !state.IsReturn() {
+		panic("can't eval function: expected output")
 	}
-	fields := []object.Symbol{}
-	for i, field := range rec.Items {
-		obj, err := state.EvalExpression(ctx, field)
-		if err != nil {
-			return nil, err
-		}
-		if !recType.FieldsType[i].Compare(obj.Type()) {
-			return nil, fmt.Errorf("eval: record field #%d should be %s, got %s", i, recType.FieldsType[i].Inspect(), obj.Type().Inspect())
-		}
-		fields = append(fields,
-			&object.SymbolVariable{
-				Identifier: recSymb.Fields[i].Name(),
-				ValueType:  recSymb.RecordType.FieldsType[i],
-				Value:      obj,
-			},
-		)
+	if !fn.Type().Out().Compare(state.GetReturnType()) {
+		panic("can't eval function: output type mismatched")
 	}
-	return &object.LitteralRecord{
-		RecordType: *recType,
-		Fields:     fields,
-	}, nil
 }
 
-// ================================================================
-
-func (state *EvalState) NewConstantSymbol(ctx context.Context, cnst *ast.ConstantDecl) error {
-	value, err := state.EvalAtom(ctx, cnst.Value)
-	if err != nil {
-		return err
+func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) runtime.Symbol {
+	if sm.Next != nil {
+		state.SetSymbolFlag()
+		s := env.Search(sm.Identifier)
+		if s == nil {
+			panic("can't eval symbol: symbol not found")
+		}
+		switch s.Kind() {
+		case runtime.SY_Import:
+			env := state.SearchGlobalEnv(s.Path())
+			state.SetSwitchEnv(env)
+			return EvalSymbol(state, env, sm.Next)
+		case runtime.SY_Variable, runtime.SY_Constant:
+			if s.Value().Type().Kind() == runtime.TY_Record {
+				env := runtime.NewEnviromentFromRecord(s.Value())
+				return EvalSymbol(state, env, sm.Next)
+			}
+			fallthrough
+		default:
+			panic("can't eval symbol: unexpected symbol kind")
+		}
 	}
-	return ctx.Insert(
-		&object.SymbolConstant{
-			Identifier: cnst.Identifier,
-			Value:      value,
-		},
+	if state.GetSymbolFlag() {
+		state.ClrSymbolFlag()
+		s := env.SearchLocal(sm.Identifier)
+		if s == nil {
+			panic("can't eval symbol: symbol not found")
+		}
+		return s
+	} else {
+		s := env.Search(sm.Identifier)
+		if s == nil {
+			panic("can't eval symbol: symbol not found")
+		}
+		return s
+	}
+}
+
+func EvalImport(state EvalState, env runtime.Enviroment, im *ast.ImportDecl) {
+	path := EvalAtom(state, env, im.Path)
+	module, hash := CreateModuleFromFile(path.ValueString())
+	if env := state.SearchGlobalEnv(hash); env == nil {
+		EvalModule(state, module, hash)
+	}
+	env.Insert(
+		runtime.NewImport(
+			im.Ident,
+			hash,
+		),
 	)
 }
 
-func (state *EvalState) NewVariableSymbol(ctx context.Context, vr *ast.VariableDecl) error {
-	value, err := state.EvalExpression(ctx, vr.Value)
-	if err != nil {
-		return err
+func EvalFunction(state EvalState, env runtime.Enviroment, fn runtime.Symbol, args ...runtime.Litteral) {
+	local := runtime.NewEnviroment(fn.Name(), env)
+	if len(args) != fn.Type().NumIns() {
+		panic("can't eval function: mismatched number of inputs")
 	}
-	typ, err := state.EvalType(ctx, vr.Type)
-	if err != nil {
-		return err
+	for i, arg := range args {
+		if !fn.Type().In(i).Compare(arg.Type()) {
+			panic("can't eval function: argument type mismatch")
+		}
+		local.Insert(runtime.NewConstant(
+			fn.Fn().Arguments[i].Identifier,
+			arg,
+		))
 	}
-	return ctx.Insert(
-		&object.SymbolVariable{
-			Identifier: vr.Identifier,
-			ValueType:  typ,
-			Value:      value,
-		},
+	for _, lc := range fn.Fn().Body {
+		EvalLocal(state, local, lc)
+		if state.IsReturn() {
+			return
+		}
+	}
+}
+
+func CreateConstant(state EvalState, env runtime.Enviroment, cnst *ast.ConstantDecl) {
+	val := EvalAtom(state, env, cnst.Value)
+	env.Insert(runtime.NewConstant(cnst.Identifier, val))
+}
+
+func CreateVariable(state EvalState, env runtime.Enviroment, vr *ast.VariableDecl) {
+	typ := EvalType(state, env, vr.Type)
+	val := EvalExpression(state, env, vr.Value)
+	env.Insert(
+		runtime.NewVariable(
+			vr.Identifier,
+			typ,
+			val,
+		),
 	)
 }
 
-func (state *EvalState) NewFunctionSymbol(ctx context.Context, fn *ast.FunctionDecl) error {
-	args := []object.DType{}
+func CreateFunction(state EvalState, env runtime.Enviroment, fn *ast.FunctionDecl) {
+	args := []runtime.Type{}
 	for _, arg := range fn.Arguments {
-		typ, err := state.EvalType(ctx, arg.Type)
-		if err != nil {
-			return err
-		}
-		args = append(args, typ)
+		args = append(args, EvalType(state, env, arg.Type))
 	}
-	var ret object.DType
-	if fn.Return != nil {
-		var err error
-		ret, err = state.EvalType(ctx, fn.Return)
-		if err != nil {
-			return err
-		}
-	}
-	return ctx.Insert(
-		&object.SymbolFunction{
-			Identifier: fn.Identifier,
-			Fn:         fn,
-			FunctionType: object.DTypeFunction{
-				ArgumentsType: args,
-				ReturnType:    ret,
-			},
-		},
+	env.Insert(
+		runtime.NewFunction(
+			fn.Identifier,
+			runtime.NewFunctionType(
+				EvalType(state, env, fn.Return),
+				args...,
+			),
+			fn,
+		),
 	)
 }
 
-func (state *EvalState) NewRecordSymbol(ctx context.Context, rec *ast.RecordDefn) error {
-	types := []object.DType{}
-	fields := []*object.SymbolVariable{}
-	for _, field := range rec.Fields {
-		typ, err := state.EvalType(ctx, field.Type)
-		if err != nil {
-			return err
-		}
-		types = append(types, typ)
-		fields = append(fields,
-			&object.SymbolVariable{
-				Identifier: field.Identifier,
-				ValueType:  typ,
-			},
-		)
+func CreateRecord(state EvalState, env runtime.Enviroment, rec *ast.RecordDefn) {
+	fields := []runtime.FieldType{}
+	for _, fld := range rec.Fields {
+		fields = append(fields, runtime.NewFieldType(
+			fld.Identifier,
+			EvalType(state, env, fld.Type),
+		))
 	}
-	return ctx.Insert(
-		&object.SymbolRecord{
-			Identifier: rec.Identifier,
-			Scope:      ctx.Scope(),
-			RecordType: object.DTypeRecord{
-				Scope:      ctx.Scope(),
-				Identifier: rec.Identifier,
-				FieldsType: types,
-			},
-			Fields: fields,
-		},
+	env.Insert(
+		runtime.NewRecord(
+			runtime.NewRecordType(
+				rec.Identifier,
+				fields...,
+			),
+		),
 	)
 }

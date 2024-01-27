@@ -1,32 +1,36 @@
-package builtinString
+package builtin_string
 
 import (
-	"fmt"
-	"grimlang/object"
+	"grimlang/runtime"
 	"strings"
 )
 
-func Format(args ...object.Litteral) (object.Litteral, error) {
-	if len(args) < 1 {
-		return nil, fmt.Errorf("format: expect atleast 1 arguments, got %d", len(args))
+func NewBuiltinStringEnv() runtime.Enviroment {
+	env := runtime.NewEnviroment("string", nil)
+	env.Insert(
+		runtime.NewBuiltin(
+			"format",
+			runtime.NewFunctionType(
+				runtime.NewStringType(),
+				runtime.NewStringType(),
+				runtime.NewVariaticType(runtime.NewStringType()),
+			),
+			Format,
+		),
+	)
+	return env
+}
+
+func Format(inputs ...runtime.Litteral) runtime.Litteral {
+	if len(inputs) <= 1 {
+		panic("string/format: expect atleast 2 inputs")
 	}
-	if !object.Is(args[0].Kind(), object.StringLitteral) {
-		return nil, fmt.Errorf("format: format argument should be string, got %s", args[0].Type().Inspect())
+	format := inputs[0].ValueString()
+	if strings.Count(format, "$$") != len(inputs[1:]) {
+		panic("string/format: mismatched number of format entries and inputs")
 	}
-	format := *args[0].(*object.LitteralString)
-	c := strings.Count(format.Value, "$$")
-	if c == 0 {
-		return &format, nil
+	for _, input := range inputs[1:] {
+		format = strings.Replace(format, "$$", input.ValueString(), 1)
 	}
-	if c != len(args)-1 {
-		return nil, fmt.Errorf("format: contains %d entries, got %d arguments", c, len(args)-1)
-	}
-	for i, arg := range args[1:] {
-		if !object.Is(args[0].Kind(), object.StringLitteral) {
-			return nil, fmt.Errorf("format: argument #%d should be string, got %s", i, arg.Type().Inspect())
-		}
-		argString := *arg.(*object.LitteralString)
-		format.Value = strings.Replace(format.Value, "$$", argString.Value, 1)
-	}
-	return &format, nil
+	return runtime.NewStringLit(format)
 }

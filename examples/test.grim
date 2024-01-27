@@ -1,6 +1,15 @@
 (@module :main
+    (@import "vector.grim" :as vec)
+    (@import "test_v2.grim" :as t)
     (@fn main :do
-        (io/println "Hello, World!")
-        (exit 0)
+        (@var vecList :of list<vec/vector> (@new list<vec/vector> {})) 
+        (@while (int/lt (list/len vecList) 2) :do 
+            (@var tmp :of vec/vector  (vec/newVector 0. 0. 0. 0.))
+            (@set vecList (list/append vecList tmp))
+        )
+        (t/printVectors vecList)
+        (@set vecList (list/insert vecList 5 (vec/newVector 1. 1. 1. 2.)))
+        (t/printVectors vecList)
+        (@return)
     )
 )

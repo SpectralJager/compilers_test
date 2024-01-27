@@ -1,20 +1,60 @@
 package builtin
 
 import (
-	"fmt"
-	"grimlang/object"
+	"grimlang/runtime"
 	"os"
 )
 
-func Exit(args ...object.Litteral) (object.Litteral, error) {
-	if len(args) != 1 {
-		return nil, fmt.Errorf("exit: expect 1 argument, got %d", len(args))
+func NewBuiltinEnv() runtime.Enviroment {
+	env := runtime.NewEnviroment("builtin", nil)
+	env.Insert(
+		runtime.NewBuiltin(
+			"exit",
+			runtime.NewFunctionType(
+				runtime.NewVoidType(),
+				runtime.NewIntType(),
+			),
+			Exit,
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"int",
+			"int",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"io",
+			"io",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"list",
+			"list",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"string",
+			"string",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"float",
+			"float",
+		),
+	)
+	return env
+}
+
+func Exit(inputs ...runtime.Litteral) runtime.Litteral {
+	if len(inputs) != 1 {
+		panic("builtin(exit): expect 1 input")
 	}
-	obj := args[0]
-	if !new(object.DTypeInt).Compare(obj.Type()) {
-		return nil, fmt.Errorf("exit: exit code should be int, got %s", obj.Type().Inspect())
-	}
-	code := args[0].(*object.LitteralInt)
-	os.Exit(code.Value)
-	return nil, nil
+	code := inputs[0].ValueInt()
+	os.Exit(int(code))
+	return runtime.NewIntLit(0)
 }
