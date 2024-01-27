@@ -1,27 +1,15 @@
 (@module :main
-    (@import "examples/vector.grim" :as vec)
+    (@import "vector.grim" :as vec)
+    (@import "test_v2.grim" :as t)
     (@fn main :do
-        (@var vectors :of list<vec/vector> (@new list<vec/vector> {
-            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {2. 2.}) })
-            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {3. 5.}) })
-            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {-7. 2.}) })
-            (@new vec/vector { (@new vec/point {0. 0.}) (@new vec/point {1. 1.}) })
-        }))
-        (@var resVec :of vec/vector (@new vec/vector {(@new vec/point {0. 0.}) (@new vec/point {0. 0.})}))
-        (io/println "vectors:")
-        (@var counter :of int 0)
-        (@while (int/lt counter (list/len vectors)) :do 
-            (io/println (string/format "#$$ $$" 
-                (int/toString counter)
-                (vec/vectorToString (list/get vectors counter)))
-            )
-            (@set resVec (vec/vectorAdd resVec (list/get vectors counter)))
-            (@set counter (int/add counter 1)) 
+        (@var vecList :of list<vec/vector> (@new list<vec/vector> {})) 
+        (@while (int/lt (list/len vecList) 2) :do 
+            (@var tmp :of vec/vector  (vec/newVector 0. 0. 0. 0.))
+            (@set vecList (list/append vecList tmp))
         )
-        (io/println (string/format "result length of $$ = $$"
-            (vec/vectorToString resVec)
-            (float/toString (vec/vectorLength resVec))
-        )) 
+        (t/printVectors vecList)
+        (@set vecList (list/insert vecList 5 (vec/newVector 1. 1. 1. 2.)))
+        (t/printVectors vecList)
         (@return)
     )
 )

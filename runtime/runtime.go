@@ -36,6 +36,7 @@ const (
 	SY_Import
 	SY_Record
 	// TYpes
+	TY_Any
 	TY_Void
 	TY_Int
 	TY_Float

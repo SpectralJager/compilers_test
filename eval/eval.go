@@ -1,7 +1,6 @@
 package eval
 
 import (
-	"fmt"
 	"grimlang/ast"
 	"grimlang/runtime"
 )
@@ -183,7 +182,6 @@ func EvalIf(state EvalState, env runtime.Enviroment, stm *ast.IfStmt) {
 			break
 		}
 	}
-	return
 }
 
 func EvalNew(state EvalState, env runtime.Enviroment, nw *ast.NewExpr) runtime.Litteral {
@@ -235,6 +233,8 @@ func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall)
 	fn := EvalSymbol(state, env, sc.Call)
 	if state.IsSwitchEnv() {
 		env = state.GetSwitchEnv()
+	} else {
+		env = state.SearchGlobalEnv("main")
 	}
 	switch fn.Kind() {
 	case runtime.SY_Builtin:
@@ -242,12 +242,25 @@ func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall)
 	case runtime.SY_Function:
 		EvalFunction(state, env, fn, args...)
 	}
+	if fn.Type().Out().Compare(runtime.NewVoidType()) {
+		state.GetReturn()
+		return
+	}
+	if !state.IsReturn() {
+		panic("can't eval function: expected output")
+	}
+	if !fn.Type().Out().Compare(state.GetReturnType()) {
+		panic("can't eval function: output type mismatched")
+	}
 }
 
 func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) runtime.Symbol {
 	if sm.Next != nil {
 		state.SetSymbolFlag()
 		s := env.Search(sm.Identifier)
+		if s == nil {
+			panic("can't eval symbol: symbol not found")
+		}
 		switch s.Kind() {
 		case runtime.SY_Import:
 			env := state.SearchGlobalEnv(s.Path())
@@ -282,7 +295,9 @@ func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) run
 func EvalImport(state EvalState, env runtime.Enviroment, im *ast.ImportDecl) {
 	path := EvalAtom(state, env, im.Path)
 	module, hash := CreateModuleFromFile(path.ValueString())
-	EvalModule(state, module, hash)
+	if env := state.SearchGlobalEnv(hash); env == nil {
+		EvalModule(state, module, hash)
+	}
 	env.Insert(
 		runtime.NewImport(
 			im.Ident,
@@ -305,20 +320,6 @@ func EvalFunction(state EvalState, env runtime.Enviroment, fn runtime.Symbol, ar
 			arg,
 		))
 	}
-	defer func() {
-		fmt.Println(local.String())
-		if fn.Type().Out().Compare(runtime.NewVoidType()) {
-			state.GetReturn()
-			return
-		}
-		if !state.IsReturn() {
-			panic("can't eval function: expected output")
-		}
-		if !fn.Type().Out().Compare(state.GetReturnType()) {
-			panic("can't eval function: output type mismatched")
-		}
-	}()
-
 	for _, lc := range fn.Fn().Body {
 		EvalLocal(state, local, lc)
 		if state.IsReturn() {

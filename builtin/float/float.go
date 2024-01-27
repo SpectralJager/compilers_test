@@ -1,18 +1,18 @@
-package builtin_int
+package builtin_float
 
 import (
 	"fmt"
 	"grimlang/runtime"
 )
 
-func NewBuiltinIntEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("int", nil)
+func NewBuiltinFloatEnv() runtime.Enviroment {
+	env := runtime.NewEnviroment("float", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"add",
 			runtime.NewFunctionType(
-				runtime.NewIntType(),
-				runtime.NewVariaticType(runtime.NewIntType()),
+				runtime.NewFloatType(),
+				runtime.NewVariaticType(runtime.NewFloatType()),
 			),
 			Add,
 		),
@@ -21,8 +21,8 @@ func NewBuiltinIntEnv() runtime.Enviroment {
 		runtime.NewBuiltin(
 			"sub",
 			runtime.NewFunctionType(
-				runtime.NewIntType(),
-				runtime.NewVariaticType(runtime.NewIntType()),
+				runtime.NewFloatType(),
+				runtime.NewVariaticType(runtime.NewFloatType()),
 			),
 			Sub,
 		),
@@ -32,7 +32,7 @@ func NewBuiltinIntEnv() runtime.Enviroment {
 			"lt",
 			runtime.NewFunctionType(
 				runtime.NewBoolType(),
-				runtime.NewVariaticType(runtime.NewIntType()),
+				runtime.NewVariaticType(runtime.NewFloatType()),
 			),
 			Lt,
 		),
@@ -42,7 +42,7 @@ func NewBuiltinIntEnv() runtime.Enviroment {
 			"toString",
 			runtime.NewFunctionType(
 				runtime.NewStringType(),
-				runtime.NewIntType(),
+				runtime.NewFloatType(),
 			),
 			ToString,
 		),
@@ -52,45 +52,45 @@ func NewBuiltinIntEnv() runtime.Enviroment {
 
 func Add(inputs ...runtime.Litteral) runtime.Litteral {
 	if len(inputs) == 0 {
-		panic("int/add: expect atleast 1 input")
+		panic("float/add: expect atleast 1 input")
 	}
-	res := int64(0)
+	res := float64(0)
 	for _, in := range inputs {
-		res += in.ValueInt()
+		res += in.ValueFloat()
 	}
-	return runtime.NewIntLit(res)
+	return runtime.NewFloatLit(res)
 }
 
 func Sub(inputs ...runtime.Litteral) runtime.Litteral {
 	if len(inputs) == 0 {
-		panic("int/sub: expect atleast 1 input")
+		panic("float/sub: expect atleast 1 input")
 	}
-	res := inputs[0].ValueInt()
+	res := inputs[0].ValueFloat()
 	for _, in := range inputs[1:] {
-		res -= in.ValueInt()
+		res -= in.ValueFloat()
 	}
-	return runtime.NewIntLit(res)
+	return runtime.NewFloatLit(res)
 }
 
 func Lt(inputs ...runtime.Litteral) runtime.Litteral {
 	if len(inputs) <= 1 {
-		panic("int/lt: expect atleast 2 input")
+		panic("float/lt: expect atleast 2 input")
 	}
-	res := inputs[0].ValueInt()
+	res := inputs[0].ValueFloat()
 	for _, in := range inputs[1:] {
-		if res >= in.ValueInt() {
+		if res >= in.ValueFloat() {
 			return runtime.NewBoolLit(false)
 		}
-		res = in.ValueInt()
+		res = in.ValueFloat()
 	}
 	return runtime.NewBoolLit(true)
 }
 
 func ToString(inputs ...runtime.Litteral) runtime.Litteral {
 	if len(inputs) != 1 {
-		panic("int/toString: expect 1 input")
+		panic("float/toString: expect 1 input")
 	}
 	return runtime.NewStringLit(
-		fmt.Sprintf("%d", inputs[0].ValueInt()),
+		fmt.Sprintf("%f", inputs[0].ValueFloat()),
 	)
 }

@@ -4,8 +4,14 @@
         y::float 
     )
     (@record vector :fields
-        p0::point
-        p1::point 
+        p0::point 
+        p1::point
+    )
+    (@fn newVector [x0::float x1::float y0::float y1::float] <vector> :do
+        (@return (@new vector {
+            (@new point {x0 y0})
+            (@new point {x1 y1})
+        })) 
     )
     (@fn pointToString [pnt::point] <string> :do
         (@return (string/format "($$;$$)" 
@@ -14,23 +20,9 @@
         )) 
     )
     (@fn vectorToString [vec::vector] <string> :do
-        (@return (string/format "vec{p0::$$,p1::$$}" 
+        (@return (string/format "{$$;$$}"
             (pointToString vec/p0) 
-            (pointToString vec/p1)
+            (pointToString vec/p1) 
         )) 
-    )
-    (@fn vectorLength [vec::vector] <float> :do
-        (@return (math/sqrt 
-            (float/add
-                (math/pow (float/sub vec/p1/x vec/p0/x) 2.)
-                (math/pow (float/sub vec/p1/y vec/p0/y) 2.)
-            )
-        ))
-    )
-    (@fn vectorAdd [vec0::vector vec1::vector] <vector> :do 
-        (@var resVec :of vector vec0)
-        (@set resVec/p1/x (float/add resVec/p1/x (float/sub vec1/p1/x vec1/p0/x)))
-        (@set resVec/p1/y (float/add resVec/p1/y (float/sub vec1/p1/y vec1/p0/y)))
-        (@return resVec)
     )
 )

@@ -23,6 +23,30 @@ func NewBuiltinEnv() runtime.Enviroment {
 			"int",
 		),
 	)
+	env.Insert(
+		runtime.NewImport(
+			"io",
+			"io",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"list",
+			"list",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"string",
+			"string",
+		),
+	)
+	env.Insert(
+		runtime.NewImport(
+			"float",
+			"float",
+		),
+	)
 	return env
 }
 

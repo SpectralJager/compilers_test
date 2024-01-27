@@ -34,6 +34,8 @@ func (typ typ) Kind() Kind {
 
 func (typ typ) Name() string {
 	switch typ.kind {
+	case TY_Any:
+		return "any"
 	case TY_Void:
 		return "void"
 	case TY_Int:
@@ -59,7 +61,7 @@ func (typ typ) Name() string {
 
 func (typ typ) String() string {
 	switch typ.kind {
-	case TY_Int, TY_Float, TY_Bool, TY_String, TY_Void, TY_Record:
+	case TY_Int, TY_Float, TY_Bool, TY_String, TY_Void, TY_Record, TY_Any:
 		return typ.Name()
 	case TY_List:
 		return fmt.Sprintf("%s<%s>", typ.Name(), typ.item.String())
@@ -71,27 +73,26 @@ func (typ typ) String() string {
 			args = append(args, arg.String())
 		}
 		return fmt.Sprintf("%s[%s]<%s>", typ.Name(), strings.Join(args, " "), typ.ret.String())
-	// case TY_Record:
-	// 	fields := []string{}
-	// 	for _, fld := range typ.fields {
-	// 		fields = append(fields, fld.String())
-	// 	}
-	// 	return fmt.Sprintf("%s<%s>", typ.name, strings.Join(fields, " "))
 	default:
 		panic("can't get string of type: unexpected kind of type")
 	}
 }
 
 func (typ typ) Compare(other Type) bool {
+	if typ.kind == TY_Any && other.Kind() != TY_Void {
+		return true
+	}
 	if typ.kind != other.Kind() {
 		return false
 	}
 	switch typ.kind {
 	case TY_Int, TY_Float, TY_Bool, TY_String, TY_Void:
-	case TY_List, TY_Variatic:
-		return other.Item().Compare(typ.item)
+	case TY_List:
+		return typ.Item().Compare(other.Item())
+	case TY_Variatic:
+		return typ.Item().Compare(other)
 	case TY_Function:
-		if typ.NumIns() != other.NumIns() || !other.Out().Compare(typ.ret) {
+		if typ.NumIns() != other.NumIns() || !typ.Out().Compare(other.Out()) {
 			return false
 		}
 		for i, in := range typ.args {
@@ -105,7 +106,7 @@ func (typ typ) Compare(other Type) bool {
 		}
 		for i, fld := range typ.fields {
 			oFld, j := other.Field(fld.Name())
-			if !oFld.Type().Compare(fld.Type()) || i != j {
+			if !fld.Type().Compare(oFld.Type()) || i != j {
 				return false
 			}
 		}
@@ -234,6 +235,12 @@ func NewRecordType(name string, fields ...FieldType) typ {
 		kind:   TY_Record,
 		name:   name,
 		fields: fields,
+	}
+}
+
+func NewAnyType() typ {
+	return typ{
+		kind: TY_Any,
 	}
 }
 

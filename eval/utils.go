@@ -6,13 +6,21 @@ import (
 	"fmt"
 	"grimlang/ast"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/alecthomas/participle/v2"
 )
 
 func CreateModuleFromFile(path string) (*ast.Module, string) {
-	data, err := os.ReadFile(path)
+	file := filepath.Base(path)
+	dir := filepath.Dir(path)
+	err := os.Chdir(dir)
+	// fmt.Println(os.Getwd())
+	if err != nil {
+		panic(err)
+	}
+	data, err := os.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
