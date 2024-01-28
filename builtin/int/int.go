@@ -5,8 +5,8 @@ import (
 	"grimlang/runtime"
 )
 
-func NewBuiltinIntEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("int", nil)
+func NewBuiltinIntEnv() runtime.Environment {
+	env := runtime.NewEnvironment("int", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"add",

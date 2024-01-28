@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-func NewBuiltinIOEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("io", nil)
+func NewBuiltinIOEnv() runtime.Environment {
+	env := runtime.NewEnvironment("io", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"println",

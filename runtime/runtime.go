@@ -1,7 +1,7 @@
 package runtime
 
 /*
------------<Enviroment
+-----------<Environment
 builtin |>
 	int -> import(int)
 	exit -> fn[int] <void>
