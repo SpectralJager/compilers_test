@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func NewBuiltinStringEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("string", nil)
+func NewBuiltinStringEnv() runtime.Environment {
+	env := runtime.NewEnvironment("string", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"format",

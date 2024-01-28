@@ -8,7 +8,7 @@ import (
 func EvalModule(state EvalState, md *ast.Module, hash string) {
 	switch md.Kind {
 	case ":main":
-		main := runtime.NewEnviroment("main", state.GetBuiltinEnv())
+		main := runtime.NewEnvironment("main", state.GetBuiltinEnv())
 		state.InsertGlobalEnv(main)
 		for _, gl := range md.Body {
 			EvalGlobal(state, main, gl)
@@ -22,7 +22,7 @@ func EvalModule(state EvalState, md *ast.Module, hash string) {
 		}
 		EvalFunction(state, main, mainFn)
 	case ":code":
-		global := runtime.NewEnviroment(hash, state.GetBuiltinEnv())
+		global := runtime.NewEnvironment(hash, state.GetBuiltinEnv())
 		state.InsertGlobalEnv(global)
 		for _, gl := range md.Body {
 			EvalGlobal(state, global, gl)
@@ -32,7 +32,7 @@ func EvalModule(state EvalState, md *ast.Module, hash string) {
 	}
 }
 
-func EvalGlobal(state EvalState, env runtime.Enviroment, gl ast.Global) {
+func EvalGlobal(state EvalState, env runtime.Environment, gl ast.Global) {
 	switch gl := gl.(type) {
 	case *ast.ConstantDecl:
 		CreateConstant(state, env, gl)
@@ -47,7 +47,7 @@ func EvalGlobal(state EvalState, env runtime.Enviroment, gl ast.Global) {
 	}
 }
 
-func EvalAtom(state EvalState, env runtime.Enviroment, atm ast.Atom) runtime.Litteral {
+func EvalAtom(state EvalState, env runtime.Environment, atm ast.Atom) runtime.Litteral {
 	switch atm := atm.(type) {
 	case *ast.IntAtom:
 		return runtime.NewIntLit(int64(atm.Value))
@@ -62,7 +62,7 @@ func EvalAtom(state EvalState, env runtime.Enviroment, atm ast.Atom) runtime.Lit
 	}
 }
 
-func EvalType(state EvalState, env runtime.Enviroment, typ ast.Type) runtime.Type {
+func EvalType(state EvalState, env runtime.Environment, typ ast.Type) runtime.Type {
 	switch tp := typ.(type) {
 	case *ast.IntType:
 		return runtime.NewIntType()
@@ -84,7 +84,7 @@ func EvalType(state EvalState, env runtime.Enviroment, typ ast.Type) runtime.Typ
 	}
 }
 
-func EvalExpression(state EvalState, env runtime.Enviroment, exp ast.Expression) runtime.Litteral {
+func EvalExpression(state EvalState, env runtime.Environment, exp ast.Expression) runtime.Litteral {
 	switch exp := exp.(type) {
 	case ast.Atom:
 		return EvalAtom(state, env, exp)
@@ -100,7 +100,7 @@ func EvalExpression(state EvalState, env runtime.Enviroment, exp ast.Expression)
 	}
 }
 
-func EvalLocal(state EvalState, env runtime.Enviroment, lc ast.Local) {
+func EvalLocal(state EvalState, env runtime.Environment, lc ast.Local) {
 	switch lc := lc.(type) {
 	case *ast.ConstantDecl:
 		CreateConstant(state, env, lc)
@@ -119,35 +119,39 @@ func EvalLocal(state EvalState, env runtime.Enviroment, lc ast.Local) {
 	}
 }
 
-func EvalWhile(state EvalState, env runtime.Enviroment, stm *ast.WhileStmt) {
+func EvalWhile(state EvalState, env runtime.Environment, stm *ast.WhileStmt) {
 	cond := EvalExpression(state, env, stm.Condition)
 	if cond.Kind() != runtime.LI_Bool {
 		panic("can't eval if statement: condition should be bool")
 	}
-	for cond.ValueBool() {
-		local := runtime.NewEnviroment(env.Name()+"_while", env)
-		for _, lc := range stm.ThenBody {
+	if cond.ValueBool() {
+		for cond.ValueBool() {
+			local := runtime.NewEnvironment(env.Name()+"_while", env)
+			for _, lc := range stm.ThenBody {
+				EvalLocal(state, local, lc)
+				if state.IsReturn() {
+					return
+				}
+			}
+			cond = EvalExpression(state, env, stm.Condition)
+			if cond.Kind() != runtime.LI_Bool {
+				panic("can't eval if statement: condition should be bool")
+			}
+		}
+
+	} else {
+		local := runtime.NewEnvironment(env.Name()+"_while", env)
+		for _, lc := range stm.ElseBody {
 			EvalLocal(state, local, lc)
 			if state.IsReturn() {
 				return
 			}
 		}
-		cond = EvalExpression(state, env, stm.Condition)
-		if cond.Kind() != runtime.LI_Bool {
-			panic("can't eval if statement: condition should be bool")
-		}
-	}
-	local := runtime.NewEnviroment(env.Name()+"_while", env)
-	for _, lc := range stm.ElseBody {
-		EvalLocal(state, local, lc)
-		if state.IsReturn() {
-			return
-		}
 	}
 }
 
-func EvalIf(state EvalState, env runtime.Enviroment, stm *ast.IfStmt) {
-	local := runtime.NewEnviroment(env.Name()+"_if", env)
+func EvalIf(state EvalState, env runtime.Environment, stm *ast.IfStmt) {
+	local := runtime.NewEnvironment(env.Name()+"_if", env)
 	cond := EvalExpression(state, local, stm.Condition)
 	if cond.Kind() != runtime.LI_Bool {
 		panic("can't eval if statement: condition should be bool")
@@ -184,7 +188,7 @@ func EvalIf(state EvalState, env runtime.Enviroment, stm *ast.IfStmt) {
 	}
 }
 
-func EvalNew(state EvalState, env runtime.Enviroment, nw *ast.NewExpr) runtime.Litteral {
+func EvalNew(state EvalState, env runtime.Environment, nw *ast.NewExpr) runtime.Litteral {
 	tp := EvalType(state, env, nw.Type)
 	items := []runtime.Litteral{}
 	for _, item := range nw.Items {
@@ -211,7 +215,7 @@ func EvalNew(state EvalState, env runtime.Enviroment, nw *ast.NewExpr) runtime.L
 	}
 }
 
-func EvalReturn(state EvalState, env runtime.Enviroment, ret *ast.ReturnStmt) {
+func EvalReturn(state EvalState, env runtime.Environment, ret *ast.ReturnStmt) {
 	if ret.Value == nil {
 		state.SetReturn(runtime.NewIntLit(0))
 	} else {
@@ -219,13 +223,13 @@ func EvalReturn(state EvalState, env runtime.Enviroment, ret *ast.ReturnStmt) {
 	}
 }
 
-func EvalSet(state EvalState, env runtime.Enviroment, st *ast.SetStmt) {
+func EvalSet(state EvalState, env runtime.Environment, st *ast.SetStmt) {
 	sm := EvalSymbol(state, env, st.Symbol)
 	val := EvalExpression(state, env, st.Value)
 	sm.Set(val)
 }
 
-func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall) {
+func EvalSymbolCall(state EvalState, env runtime.Environment, sc *ast.SymbolCall) {
 	args := []runtime.Litteral{}
 	for _, arg := range sc.Arguments {
 		args = append(args, EvalExpression(state, env, arg))
@@ -254,7 +258,7 @@ func EvalSymbolCall(state EvalState, env runtime.Enviroment, sc *ast.SymbolCall)
 	}
 }
 
-func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) runtime.Symbol {
+func EvalSymbol(state EvalState, env runtime.Environment, sm *ast.SymbolExpr) runtime.Symbol {
 	if sm.Next != nil {
 		state.SetSymbolFlag()
 		s := env.Search(sm.Identifier)
@@ -268,7 +272,7 @@ func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) run
 			return EvalSymbol(state, env, sm.Next)
 		case runtime.SY_Variable, runtime.SY_Constant:
 			if s.Value().Type().Kind() == runtime.TY_Record {
-				env := runtime.NewEnviromentFromRecord(s.Value())
+				env := runtime.NewEnvironmentFromRecord(s.Value())
 				return EvalSymbol(state, env, sm.Next)
 			}
 			fallthrough
@@ -292,7 +296,7 @@ func EvalSymbol(state EvalState, env runtime.Enviroment, sm *ast.SymbolExpr) run
 	}
 }
 
-func EvalImport(state EvalState, env runtime.Enviroment, im *ast.ImportDecl) {
+func EvalImport(state EvalState, env runtime.Environment, im *ast.ImportDecl) {
 	path := EvalAtom(state, env, im.Path)
 	module, hash := CreateModuleFromFile(path.ValueString())
 	if env := state.SearchGlobalEnv(hash); env == nil {
@@ -306,8 +310,8 @@ func EvalImport(state EvalState, env runtime.Enviroment, im *ast.ImportDecl) {
 	)
 }
 
-func EvalFunction(state EvalState, env runtime.Enviroment, fn runtime.Symbol, args ...runtime.Litteral) {
-	local := runtime.NewEnviroment(fn.Name(), env)
+func EvalFunction(state EvalState, env runtime.Environment, fn runtime.Symbol, args ...runtime.Litteral) {
+	local := runtime.NewEnvironment(fn.Name(), env)
 	if len(args) != fn.Type().NumIns() {
 		panic("can't eval function: mismatched number of inputs")
 	}
@@ -328,12 +332,12 @@ func EvalFunction(state EvalState, env runtime.Enviroment, fn runtime.Symbol, ar
 	}
 }
 
-func CreateConstant(state EvalState, env runtime.Enviroment, cnst *ast.ConstantDecl) {
+func CreateConstant(state EvalState, env runtime.Environment, cnst *ast.ConstantDecl) {
 	val := EvalAtom(state, env, cnst.Value)
 	env.Insert(runtime.NewConstant(cnst.Identifier, val))
 }
 
-func CreateVariable(state EvalState, env runtime.Enviroment, vr *ast.VariableDecl) {
+func CreateVariable(state EvalState, env runtime.Environment, vr *ast.VariableDecl) {
 	typ := EvalType(state, env, vr.Type)
 	val := EvalExpression(state, env, vr.Value)
 	env.Insert(
@@ -345,7 +349,7 @@ func CreateVariable(state EvalState, env runtime.Enviroment, vr *ast.VariableDec
 	)
 }
 
-func CreateFunction(state EvalState, env runtime.Enviroment, fn *ast.FunctionDecl) {
+func CreateFunction(state EvalState, env runtime.Environment, fn *ast.FunctionDecl) {
 	args := []runtime.Type{}
 	for _, arg := range fn.Arguments {
 		args = append(args, EvalType(state, env, arg.Type))
@@ -362,7 +366,7 @@ func CreateFunction(state EvalState, env runtime.Enviroment, fn *ast.FunctionDec
 	)
 }
 
-func CreateRecord(state EvalState, env runtime.Enviroment, rec *ast.RecordDefn) {
+func CreateRecord(state EvalState, env runtime.Environment, rec *ast.RecordDefn) {
 	fields := []runtime.FieldType{}
 	for _, fld := range rec.Fields {
 		fields = append(fields, runtime.NewFieldType(

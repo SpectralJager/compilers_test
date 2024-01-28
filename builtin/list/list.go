@@ -2,8 +2,8 @@ package builtin_list
 
 import "grimlang/runtime"
 
-func NewBuiltinListEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("list", nil)
+func NewBuiltinListEnv() runtime.Environment {
+	env := runtime.NewEnvironment("list", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"len",

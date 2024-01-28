@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-func NewBuiltinEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("builtin", nil)
+func NewBuiltinEnv() runtime.Environment {
+	env := runtime.NewEnvironment("builtin", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"exit",

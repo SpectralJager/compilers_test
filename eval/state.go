@@ -9,9 +9,9 @@ import (
 type EvalState interface {
 	String() string
 
-	GetBuiltinEnv() runtime.Enviroment
-	InsertGlobalEnv(runtime.Enviroment)
-	SearchGlobalEnv(string) runtime.Enviroment
+	GetBuiltinEnv() runtime.Environment
+	InsertGlobalEnv(runtime.Environment)
+	SearchGlobalEnv(string) runtime.Environment
 
 	IsReturn() bool
 	SetReturn(runtime.Litteral)
@@ -23,31 +23,31 @@ type EvalState interface {
 	ClrSymbolFlag()
 
 	IsSwitchEnv() bool
-	SetSwitchEnv(runtime.Enviroment)
-	GetSwitchEnv() runtime.Enviroment
+	SetSwitchEnv(runtime.Environment)
+	GetSwitchEnv() runtime.Environment
 }
 
 type state struct {
-	builtin   runtime.Enviroment
-	envs      map[string]runtime.Enviroment
+	builtin   runtime.Environment
+	envs      map[string]runtime.Environment
 	ret       runtime.Litteral
-	switchEnv runtime.Enviroment
+	switchEnv runtime.Environment
 
 	symbFlag bool
 }
 
-func (s *state) GetBuiltinEnv() runtime.Enviroment {
+func (s *state) GetBuiltinEnv() runtime.Environment {
 	return s.builtin
 }
 
-func (s *state) InsertGlobalEnv(env runtime.Enviroment) {
+func (s *state) InsertGlobalEnv(env runtime.Environment) {
 	if _, ok := s.envs[env.Name()]; ok {
-		panic("can't insert enviroment: enviroment with such name already exists")
+		panic("can't insert Environment: Environment with such name already exists")
 	}
 	s.envs[env.Name()] = env
 }
 
-func (s *state) SearchGlobalEnv(name string) runtime.Enviroment {
+func (s *state) SearchGlobalEnv(name string) runtime.Environment {
 	return s.envs[name]
 }
 
@@ -77,7 +77,7 @@ func (s *state) String() string {
 	for _, env := range s.envs {
 		envs = append(envs, env.String())
 	}
-	return fmt.Sprintf("-----< Enviroments\n%s%s", s.builtin.String(), strings.Join(envs, ""))
+	return fmt.Sprintf("-----< Environments\n%s%s", s.builtin.String(), strings.Join(envs, ""))
 }
 
 func (s *state) GetSymbolFlag() bool {
@@ -94,19 +94,19 @@ func (s *state) IsSwitchEnv() bool {
 	return s.switchEnv != nil
 }
 
-func (s *state) SetSwitchEnv(env runtime.Enviroment) {
+func (s *state) SetSwitchEnv(env runtime.Environment) {
 	s.switchEnv = env
 }
 
-func (s *state) GetSwitchEnv() runtime.Enviroment {
+func (s *state) GetSwitchEnv() runtime.Environment {
 	tmp := s.switchEnv
 	s.switchEnv = nil
 	return tmp
 }
 
-func NewEvalState(builtin runtime.Enviroment) *state {
+func NewEvalState(builtin runtime.Environment) *state {
 	return &state{
-		envs:    map[string]runtime.Enviroment{},
+		envs:    map[string]runtime.Environment{},
 		builtin: builtin,
 	}
 }

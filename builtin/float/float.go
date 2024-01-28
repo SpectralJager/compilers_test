@@ -5,8 +5,8 @@ import (
 	"grimlang/runtime"
 )
 
-func NewBuiltinFloatEnv() runtime.Enviroment {
-	env := runtime.NewEnviroment("float", nil)
+func NewBuiltinFloatEnv() runtime.Environment {
+	env := runtime.NewEnvironment("float", nil)
 	env.Insert(
 		runtime.NewBuiltin(
 			"add",
