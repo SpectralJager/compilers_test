@@ -1,0 +1,7 @@
+Target: Create programming language.
+Domain: Web development.
+Implementation: interpreter, compiler?
+Syntax: Lisp-like.
+Datatypes: [null, int, float, bool, string, list, variatic, record, function]
+Constructions: [module, function, template, record, constant, variable, if-elif-else, while-else, foreach-else, range, assign, multiple-assign, import]
+Standart Library: [int, float, bool, string, list, null, math, http, tpc, udp, json, io, log, hash, encrypt]
