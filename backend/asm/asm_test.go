@@ -16,7 +16,7 @@ func TestBlock(t *testing.T) {
 }
 
 func TestFunction(t *testing.T) {
-	fn := NewFunction("main_main")
+	fn := NewFunction("main_main", nil)
 	fn.Blocks = append(fn.Blocks, NewBlock(
 		InstructionI64Load(12),
 		InstructionI64Load(18),
@@ -28,7 +28,7 @@ func TestFunction(t *testing.T) {
 
 func TestProgram(t *testing.T) {
 	prog, err := NewProgram(
-		NewFunction("main",
+		NewFunction("main", nil,
 			NewBlock(
 				InstructionI64Load(12),
 				InstructionI64Load(18),
@@ -36,7 +36,7 @@ func TestProgram(t *testing.T) {
 				InstructionHalt(),
 			),
 		),
-		NewFunction("fib",
+		NewFunction("fib", nil,
 			NewBlock(
 				InstructionI64Load(12),
 				InstructionI64Load(18),
