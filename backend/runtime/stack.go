@@ -27,21 +27,20 @@ func NewStack() *Stack {
 	}
 }
 
-func (st *Stack) Push(val asm.Value) error {
+func (st *Stack) Push(val asm.Value) {
 	if st.Sp >= StackSize {
-		return ErrStackOverflow
+		panic(ErrStackOverflow)
 	}
 	st.Memory[st.Sp] = val
 	st.Sp++
-	return nil
 }
 
-func (st *Stack) Pop() (asm.Value, error) {
+func (st *Stack) Pop() asm.Value {
 	if st.Sp <= 0 {
-		return asm.Value{}, ErrStackUnderflow
+		panic(ErrStackUnderflow)
 	}
 	st.Sp--
-	return st.Memory[st.Sp], nil
+	return st.Memory[st.Sp]
 }
 
 func (st *Stack) TraceMemory() string {

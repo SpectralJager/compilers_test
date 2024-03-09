@@ -23,25 +23,24 @@ func NewFrame(fn asm.Function, ip, bp, sp int) Frame {
 	}
 }
 
-func (fr *Frame) NextInstruction() (*asm.Instruction, error) {
+func (fr *Frame) NextInstruction() *asm.Instruction {
 	block, err := fr.Function.Block(fr.Bp)
 	if err != nil {
-		return &asm.Instruction{}, err
+		panic(err)
 	}
 	instr, err := block.Instruction(fr.Ip)
 	if err != nil {
-		return &asm.Instruction{}, err
+		panic(err)
 	}
 	fr.Ip++
-	return instr, nil
+	return instr
 }
 
-func (fr *Frame) SetBlock(index int) error {
+func (fr *Frame) SetBlock(index int) {
 	_, err := fr.Function.Block(index)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	fr.Bp = index
 	fr.Ip = 0
-	return nil
 }

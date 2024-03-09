@@ -20,21 +20,19 @@ func NewCallStack() *CallStack {
 	}
 }
 
-func (st *CallStack) Push(fr Frame) error {
+func (st *CallStack) Push(fr Frame) {
 	if st.Sp >= CallStackSize {
-		return ErrStackOverflow
+		panic(ErrStackOverflow)
 	}
 	st.Calls[st.Sp] = fr
 	st.Sp++
-	return nil
 }
 
-func (st *CallStack) Pop() error {
+func (st *CallStack) Pop() {
 	if st.Sp <= 0 {
-		return ErrStackUnderflow
+		panic(ErrStackUnderflow)
 	}
 	st.Sp--
-	return nil
 }
 
 func (st *CallStack) Top() *Frame {

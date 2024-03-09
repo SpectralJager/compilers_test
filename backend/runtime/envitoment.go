@@ -13,14 +13,15 @@ type Register struct {
 type Enviroment []*Register
 
 func NewEnviroment(vars asm.Vars) Enviroment {
-	env := make(Enviroment, 0, len(vars))
-	for _, val := range vars {
+	env := make(Enviroment, len(vars))
+	for i := 0; i < len(vars); i++ {
+		val := vars[i]
 		ident := val.Ident
 		val.Ident = ""
-		env = append(env, &Register{
+		env[i] = &Register{
 			Ident: ident,
 			Value: val,
-		})
+		}
 	}
 	return env
 }
@@ -34,21 +35,21 @@ func (env Enviroment) Set(ident string, value asm.Value) error {
 		}
 	}
 	if reg == nil {
-		return fmt.Errorf("symbol '%s' not exists", ident)
+		panic(fmt.Errorf("symbol '%s' not exists", ident))
 	}
 	err := reg.Value.Compare(value)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	reg.Value = value
 	return nil
 }
 
-func (env Enviroment) Get(ident string) (asm.Value, error) {
+func (env Enviroment) Get(ident string) asm.Value {
 	for _, r := range env {
 		if r.Ident == ident {
-			return r.Value, nil
+			return r.Value
 		}
 	}
-	return asm.Value{}, fmt.Errorf("symbol '%s' not exists", ident)
+	panic(fmt.Errorf("symbol '%s' not exists", ident))
 }
