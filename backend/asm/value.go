@@ -18,7 +18,7 @@ const (
 func (vt ValueType) Inspect() string {
 	switch vt {
 	case VT_Symbol:
-		return ""
+		return "symbol"
 	case VT_I64:
 		return "i64"
 	case VT_Bool:
@@ -29,8 +29,10 @@ func (vt ValueType) Inspect() string {
 }
 
 type Value struct {
-	Type      ValueType
-	Ident     string
+	Type ValueType
+
+	Ident string
+
 	Integer64 int64
 	Boolean   bool
 }

@@ -11,6 +11,12 @@ const (
 	OP_LocalSave
 	OP_LocalLoad
 
+	OP_Br
+	OP_BrTrue
+
+	OP_Call
+	OP_Return
+
 	OP_I64Load
 	OP_I64Add
 	OP_I64Sub
@@ -21,9 +27,6 @@ const (
 	OP_I64Lt
 
 	OP_BoolAnd
-
-	OP_Br
-	OP_BrTrue
 )
 
 type Instruction struct {
@@ -41,6 +44,14 @@ func (instr *Instruction) Inspect() string {
 		return fmt.Sprintf("(local.load %s)", instr.Args[0].Inspect())
 	case OP_LocalSave:
 		return fmt.Sprintf("(local.save %s)", instr.Args[0].Inspect())
+	case OP_Br:
+		return fmt.Sprintf("(br %s)", instr.Args[0].Inspect())
+	case OP_BrTrue:
+		return fmt.Sprintf("(br.true %s %s)", instr.Args[0].Inspect(), instr.Args[1].Inspect())
+	case OP_Call:
+		return fmt.Sprintf("(call %s %s)", instr.Args[0].Inspect(), instr.Args[1].Inspect())
+	case OP_Return:
+		return fmt.Sprintf("(return %s)", instr.Args[0].Inspect())
 	case OP_I64Load:
 		return fmt.Sprintf("(i64.load %s)", instr.Args[0].Inspect())
 	case OP_I64Add:
@@ -59,10 +70,6 @@ func (instr *Instruction) Inspect() string {
 		return "(i64.lt)"
 	case OP_BoolAnd:
 		return "(bool.and)"
-	case OP_Br:
-		return fmt.Sprintf("(br %s)", instr.Args[0].Inspect())
-	case OP_BrTrue:
-		return fmt.Sprintf("(br.true %s %s)", instr.Args[0].Inspect(), instr.Args[1].Inspect())
 	default:
 		return "(unenxpected or illigal instruction)"
 	}
@@ -94,6 +101,44 @@ func InstructionLocalSave(ident string) Instruction {
 		Opcode: OP_LocalSave,
 		Args: [4]Value{
 			ValueSymbol(ident),
+		},
+	}
+}
+
+func InstructionBr(trgt int64) Instruction {
+	return Instruction{
+		Opcode: OP_Br,
+		Args: [4]Value{
+			ValueI64(trgt),
+		},
+	}
+}
+
+func InstructionBrTrue(thn, els int64) Instruction {
+	return Instruction{
+		Opcode: OP_BrTrue,
+		Args: [4]Value{
+			ValueI64(thn),
+			ValueI64(els),
+		},
+	}
+}
+
+func InstructionReturn(argc int64) Instruction {
+	return Instruction{
+		Opcode: OP_Return,
+		Args: [4]Value{
+			ValueI64(argc),
+		},
+	}
+}
+
+func InstructionCall(fnIdent string, argc int64) Instruction {
+	return Instruction{
+		Opcode: OP_Call,
+		Args: [4]Value{
+			ValueSymbol(fnIdent),
+			ValueI64(argc),
 		},
 	}
 }
@@ -152,24 +197,5 @@ func InstructionI64Lt() Instruction {
 func InstructionBoolAnd() Instruction {
 	return Instruction{
 		Opcode: OP_BoolAnd,
-	}
-}
-
-func InstructionBr(trgt int64) Instruction {
-	return Instruction{
-		Opcode: OP_Br,
-		Args: [4]Value{
-			ValueI64(trgt),
-		},
-	}
-}
-
-func InstructionBrTrue(thn, els int64) Instruction {
-	return Instruction{
-		Opcode: OP_BrTrue,
-		Args: [4]Value{
-			ValueI64(thn),
-			ValueI64(els),
-		},
 	}
 }

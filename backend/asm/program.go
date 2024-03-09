@@ -6,12 +6,12 @@ import (
 )
 
 type Program struct {
-	Functions map[string]*Function
+	Functions map[string]Function
 }
 
-func NewProgram(fns ...*Function) (*Program, error) {
+func NewProgram(fns ...Function) (*Program, error) {
 	prog := &Program{
-		Functions: map[string]*Function{},
+		Functions: map[string]Function{},
 	}
 	for _, fn := range fns {
 		_, ok := prog.Functions[fn.Ident]

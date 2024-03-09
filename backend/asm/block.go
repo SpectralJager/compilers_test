@@ -12,23 +12,20 @@ var (
 )
 
 type Block struct {
-	Ip           int
 	Instructions []Instruction
 }
 
-func NewBlock(instrs ...Instruction) *Block {
-	return &Block{
+func NewBlock(instrs ...Instruction) Block {
+	return Block{
 		Instructions: instrs,
 	}
 }
 
-func (bl *Block) Next() (Instruction, error) {
-	if bl.Ip >= len(bl.Instructions) {
-		return Instruction{}, ErrReachEndOfBlock
+func (bl *Block) Instruction(ip int) (*Instruction, error) {
+	if ip >= len(bl.Instructions) {
+		return &Instruction{}, ErrReachEndOfBlock
 	}
-	instr := bl.Instructions[bl.Ip]
-	bl.Ip++
-	return instr, nil
+	return &bl.Instructions[ip], nil
 }
 
 func (bl *Block) InspectIndent(index, indent int) string {

@@ -15,13 +15,11 @@ var (
 type Function struct {
 	Ident  string
 	Vars   Vars
-	Blocks []*Block
-
-	Bp int
+	Blocks []Block
 }
 
-func NewFunction(ident string, vars Vars, blocks ...*Block) *Function {
-	return &Function{
+func NewFunction(ident string, vars Vars, blocks ...Block) Function {
+	return Function{
 		Ident:  ident,
 		Vars:   vars,
 		Blocks: blocks,
@@ -44,15 +42,9 @@ func (fn *Function) Inspect() string {
 	return fn.InspectIndent(2)
 }
 
-func (fn *Function) SetBlock(index int) error {
-	if index >= len(fn.Blocks) {
-		return ErrBlockIndexOutOfBounds
+func (fn *Function) Block(bp int) (*Block, error) {
+	if bp >= len(fn.Blocks) {
+		return &Block{}, ErrBlockIndexOutOfBounds
 	}
-	fn.Bp = index
-	fn.Blocks[fn.Bp].Ip = 0
-	return nil
-}
-
-func (fn *Function) Block() *Block {
-	return fn.Blocks[fn.Bp]
+	return &fn.Blocks[bp], nil
 }

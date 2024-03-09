@@ -63,7 +63,7 @@ var gcd = Must(asm.NewProgram(
 var fib = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
 		asm.Vars{
-			"n":       asm.ValueI64(50),
+			"n":       asm.ValueI64(35),
 			"i":       asm.ValueI64(0),
 			"fib1":    asm.ValueI64(1),
 			"fib2":    asm.ValueI64(1),
@@ -103,7 +103,7 @@ var fib_rec = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
 		nil,
 		asm.NewBlock(
-			asm.InstructionI64Load(2),
+			asm.InstructionI64Load(35),
 			asm.InstructionCall("main_fib", 1),
 			asm.InstructionHalt(),
 		),
