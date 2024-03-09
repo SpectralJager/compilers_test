@@ -31,6 +31,7 @@ const (
 
 type Instruction struct {
 	Opcode Opcode
+	Symbol string
 	Args   [4]Value
 }
 
@@ -41,15 +42,15 @@ func (instr *Instruction) Inspect() string {
 	case OP_Halt:
 		return "(halt)"
 	case OP_LocalLoad:
-		return fmt.Sprintf("(local.load %s)", instr.Args[0].Inspect())
+		return fmt.Sprintf("(local.load r%s)", instr.Args[0].Inspect())
 	case OP_LocalSave:
-		return fmt.Sprintf("(local.save %s)", instr.Args[0].Inspect())
+		return fmt.Sprintf("(local.save r%s)", instr.Args[0].Inspect())
 	case OP_Br:
 		return fmt.Sprintf("(br %s)", instr.Args[0].Inspect())
 	case OP_BrTrue:
 		return fmt.Sprintf("(br.true %s %s)", instr.Args[0].Inspect(), instr.Args[1].Inspect())
 	case OP_Call:
-		return fmt.Sprintf("(call %s %s)", instr.Args[0].Inspect(), instr.Args[1].Inspect())
+		return fmt.Sprintf("(call %s %s)", instr.Symbol, instr.Args[0].Inspect())
 	case OP_Return:
 		return fmt.Sprintf("(return %s)", instr.Args[0].Inspect())
 	case OP_I64Load:
@@ -87,20 +88,20 @@ func InstructionHalt() Instruction {
 	}
 }
 
-func InstructionLocalLoad(ident string) Instruction {
+func InstructionLocalLoad(regIndex int64) Instruction {
 	return Instruction{
 		Opcode: OP_LocalLoad,
 		Args: [4]Value{
-			ValueSymbol(ident),
+			ValueI64(regIndex),
 		},
 	}
 }
 
-func InstructionLocalSave(ident string) Instruction {
+func InstructionLocalSave(regIndex int64) Instruction {
 	return Instruction{
 		Opcode: OP_LocalSave,
 		Args: [4]Value{
-			ValueSymbol(ident),
+			ValueI64(regIndex),
 		},
 	}
 }
@@ -136,8 +137,8 @@ func InstructionReturn(argc int64) Instruction {
 func InstructionCall(fnIdent string, argc int64) Instruction {
 	return Instruction{
 		Opcode: OP_Call,
+		Symbol: fnIdent,
 		Args: [4]Value{
-			ValueSymbol(fnIdent),
 			ValueI64(argc),
 		},
 	}

@@ -62,14 +62,14 @@ func (vm *VM) RunBlock() error {
 			val := instr.Args[0]
 			vm.Stack.Push(
 				vm.Calls.Top().Enviroment.Get(
-					SymbolValue(val),
+					I64Value(val),
 				),
 			)
 		case asm.OP_LocalSave:
 			symb := instr.Args[0]
 			val := vm.Stack.Pop()
 			vm.Calls.Top().Enviroment.Set(
-				SymbolValue(symb),
+				I64Value(symb),
 				val,
 			)
 		case asm.OP_Br:
@@ -85,12 +85,12 @@ func (vm *VM) RunBlock() error {
 				vm.Calls.Top().SetBlock(int(els))
 			}
 		case asm.OP_Call:
-			ident := SymbolValue(instr.Args[0])
+			ident := instr.Symbol
 			fn, err := vm.Program.Function(ident)
 			if err != nil {
 				return err
 			}
-			argc := I64Value(instr.Args[1])
+			argc := I64Value(instr.Args[0])
 			vm.PushFunc(fn, int(argc))
 		case asm.OP_Return:
 			argc := I64Value(instr.Args[0])

@@ -15,7 +15,7 @@ type Frame struct {
 func NewFrame(fn asm.Function, ip, bp, sp int) Frame {
 	return Frame{
 		Function:   fn,
-		Enviroment: NewEnviroment(fn.Vars),
+		Enviroment: Enviroment{},
 
 		Ip: ip,
 		Bp: bp,
