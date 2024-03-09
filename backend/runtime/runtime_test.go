@@ -10,10 +10,11 @@ var prog = fib_rec
 
 var gcd = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
-		map[string]asm.Value{
-			"a": asm.ValueI64(0),
-			"b": asm.ValueI64(0),
-		},
+		asm.NewVars(
+			asm.Var("a", asm.ValueI64(0)),
+			asm.Var("b", asm.ValueI64(0)),
+		),
+
 		asm.NewBlock(
 			asm.InstructionI64Load(126),
 			asm.InstructionLocalSave("a"),
@@ -62,13 +63,13 @@ var gcd = Must(asm.NewProgram(
 
 var fib = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
-		asm.Vars{
-			"n":       asm.ValueI64(35),
-			"i":       asm.ValueI64(0),
-			"fib1":    asm.ValueI64(1),
-			"fib2":    asm.ValueI64(1),
-			"fib_sum": asm.ValueI64(0),
-		},
+		asm.NewVars(
+			asm.Var("n", asm.ValueI64(35)),
+			asm.Var("i", asm.ValueI64(0)),
+			asm.Var("fib1", asm.ValueI64(1)),
+			asm.Var("fib2", asm.ValueI64(1)),
+			asm.Var("fib_sum", asm.ValueI64(0)),
+		),
 		asm.NewBlock(
 			asm.InstructionLocalLoad("i"),
 			asm.InstructionLocalLoad("n"),
@@ -109,9 +110,9 @@ var fib_rec = Must(asm.NewProgram(
 		),
 	),
 	asm.NewFunction("main_fib",
-		asm.Vars{
-			"n": asm.ValueI64(0),
-		},
+		asm.NewVars(
+			asm.Var("n", asm.ValueI64(0)),
+		),
 		asm.NewBlock(
 			asm.InstructionLocalSave("n"),
 			asm.InstructionLocalLoad("n"),

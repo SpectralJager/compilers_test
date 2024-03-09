@@ -3,36 +3,52 @@ package runtime
 import (
 	"fmt"
 	"grimlang/backend/asm"
-	"maps"
 )
 
-type Enviroment map[string]asm.Value
+type Register struct {
+	Ident string
+	Value asm.Value
+}
+
+type Enviroment []*Register
 
 func NewEnviroment(vars asm.Vars) Enviroment {
-	// env := Enviroment{}
-	// for k, v := range vars {
-	// 	env[k] = v
-	// }
-	return Enviroment(maps.Clone(vars))
+	env := make(Enviroment, 0, len(vars))
+	for _, val := range vars {
+		ident := val.Ident
+		val.Ident = ""
+		env = append(env, &Register{
+			Ident: ident,
+			Value: val,
+		})
+	}
+	return env
 }
 
 func (env Enviroment) Set(ident string, value asm.Value) error {
-	vl, ok := env[ident]
-	if !ok {
+	var reg *Register = nil
+	for _, r := range env {
+		if r.Ident == ident {
+			reg = r
+			break
+		}
+	}
+	if reg == nil {
 		return fmt.Errorf("symbol '%s' not exists", ident)
 	}
-	err := vl.Compare(value)
+	err := reg.Value.Compare(value)
 	if err != nil {
 		return err
 	}
-	env[ident] = value
+	reg.Value = value
 	return nil
 }
 
 func (env Enviroment) Get(ident string) (asm.Value, error) {
-	vl, ok := env[ident]
-	if !ok {
-		return asm.Value{}, fmt.Errorf("symbol '%s' not exists", ident)
+	for _, r := range env {
+		if r.Ident == ident {
+			return r.Value, nil
+		}
 	}
-	return vl, nil
+	return asm.Value{}, fmt.Errorf("symbol '%s' not exists", ident)
 }

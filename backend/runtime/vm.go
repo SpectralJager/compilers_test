@@ -24,8 +24,8 @@ func NewVM() VM {
 }
 
 func (vm *VM) LoadProgram(prog *asm.Program) error {
-	main, ok := prog.Functions["main_main"]
-	if !ok {
+	main, err := prog.Function("main_main")
+	if err != nil {
 		return ErrNoEntryPoint
 	}
 	vm.Program = prog
@@ -96,9 +96,9 @@ func (vm *VM) RunBlock() error {
 			}
 		case asm.OP_Call:
 			ident := Must(SymbolValue(instr.Args[0]))
-			fn, ok := vm.Program.Functions[ident]
-			if !ok {
-				return fmt.Errorf("function '%s' not found", ident)
+			fn, err := vm.Program.Function(ident)
+			if err != nil {
+				return err
 			}
 			argc := Must(I64Value(instr.Args[1]))
 			Must(0, vm.PushFunc(fn, int(argc)))
