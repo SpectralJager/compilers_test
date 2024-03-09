@@ -10,10 +10,13 @@ type Frame struct {
 	Function asm.Function
 
 	Enviroment Enviroment
+
+	Hash string
 }
 
-func NewFrame(fn asm.Function, ip, bp, sp int) Frame {
+func NewFrame(hash string, fn asm.Function, ip, bp, sp int) Frame {
 	return Frame{
+		Hash:       hash,
 		Function:   fn,
 		Enviroment: Enviroment{},
 

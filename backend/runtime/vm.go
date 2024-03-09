@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"grimlang/backend/asm"
+	"strings"
 )
 
 var (
@@ -14,12 +15,14 @@ type VM struct {
 	Program *asm.Program
 	Calls   *CallStack
 	Stack   *Stack
+	Cache   *Cache
 }
 
 func NewVM() VM {
 	return VM{
 		Stack: NewStack(),
 		Calls: NewCallStack(),
+		Cache: NewCache(),
 	}
 }
 
@@ -34,7 +37,26 @@ func (vm *VM) LoadProgram(prog *asm.Program) error {
 }
 
 func (vm *VM) PushFunc(fn asm.Function, argc int) {
-	fr := NewFrame(fn, 0, 0, vm.Stack.Sp-argc)
+	args := make([]string, argc)
+	argv := make([]asm.Value, argc)
+	for i := 0; i < argc; i++ {
+		val := vm.Stack.Pop()
+		args[i] = fmt.Sprintf("(%s)%s", val.Type.Inspect(), val.Inspect())
+		argv[i] = val
+	}
+	hash := fmt.Sprintf("%s[%s]", fn.Ident, strings.Join(args, " "))
+	if fn.Cacheble {
+		if cacheItem, err := vm.Cache.Get(hash); err == nil {
+			for i := 0; i < len(cacheItem.Return); i++ {
+				vm.Stack.Push(cacheItem.Return[i])
+			}
+			return
+		}
+		for i := 0; i < argc; i++ {
+			vm.Stack.Push(argv[i])
+		}
+	}
+	fr := NewFrame(hash, fn, 0, 0, vm.Stack.Sp-argc)
 	vm.Calls.Push(fr)
 }
 
@@ -48,7 +70,12 @@ func (vm *VM) PopFunc(argc int) {
 	for i := 0; i < argc; i++ {
 		vm.Stack.Push(argv[i])
 	}
-	vm.Calls.Pop()
+	fr := vm.Calls.Pop()
+	if fr.Function.Cacheble {
+		vm.Cache.Set(fr.Hash, CacheItem{
+			Return: argv,
+		})
+	}
 }
 
 func (vm *VM) RunBlock() error {

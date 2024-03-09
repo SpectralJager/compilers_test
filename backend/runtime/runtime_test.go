@@ -10,6 +10,7 @@ var prog = fib_rec
 
 var gcd = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
+		false,
 		asm.NewBlock(
 			asm.InstructionI64Load(126),
 			asm.InstructionLocalSave(0),
@@ -58,13 +59,15 @@ var gcd = Must(asm.NewProgram(
 
 var fib_rec = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
+		false,
 		asm.NewBlock(
-			asm.InstructionI64Load(35),
+			asm.InstructionI64Load(70),
 			asm.InstructionCall("main_fib", 1),
 			asm.InstructionHalt(),
 		),
 	),
 	asm.NewFunction("main_fib",
+		true,
 		asm.NewBlock(
 			asm.InstructionLocalSave(0),
 			asm.InstructionLocalLoad(0),

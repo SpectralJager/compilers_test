@@ -28,11 +28,12 @@ func (st *CallStack) Push(fr Frame) {
 	st.Sp++
 }
 
-func (st *CallStack) Pop() {
+func (st *CallStack) Pop() Frame {
 	if st.Sp <= 0 {
 		panic(ErrStackUnderflow)
 	}
 	st.Sp--
+	return st.Calls[st.Sp]
 }
 
 func (st *CallStack) Top() *Frame {

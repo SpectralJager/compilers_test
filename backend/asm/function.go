@@ -13,14 +13,16 @@ var (
 )
 
 type Function struct {
-	Ident  string
-	Blocks []Block
+	Ident    string
+	Blocks   []Block
+	Cacheble bool
 }
 
-func NewFunction(ident string, blocks ...Block) Function {
+func NewFunction(ident string, cacheble bool, blocks ...Block) Function {
 	return Function{
-		Ident:  ident,
-		Blocks: blocks,
+		Ident:    ident,
+		Cacheble: cacheble,
+		Blocks:   blocks,
 	}
 }
 
