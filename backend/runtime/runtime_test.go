@@ -61,7 +61,7 @@ var fib_rec = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
 		false,
 		asm.NewBlock(
-			asm.InstructionI64Load(70),
+			asm.InstructionI64Load(35),
 			asm.InstructionCall("main_fib", 1),
 			asm.InstructionHalt(),
 		),

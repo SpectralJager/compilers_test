@@ -41,13 +41,6 @@ func (vl *Value) Inspect() string {
 	}
 }
 
-func (vl *Value) Compare(other Value) error {
-	if vl.Type != other.Type {
-		return fmt.Errorf("%s <> %s", vl.Type.Inspect(), other.Type.Inspect())
-	}
-	return nil
-}
-
 func ValueI64(val int64) Value {
 	return Value{
 		Type:      VT_I64,

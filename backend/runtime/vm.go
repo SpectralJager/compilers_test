@@ -38,22 +38,18 @@ func (vm *VM) LoadProgram(prog *asm.Program) error {
 
 func (vm *VM) PushFunc(fn asm.Function, argc int) {
 	args := make([]string, argc)
-	argv := make([]asm.Value, argc)
 	for i := 0; i < argc; i++ {
-		val := vm.Stack.Pop()
+		val := vm.Stack.Memory[vm.Stack.Sp-argc+i]
 		args[i] = fmt.Sprintf("(%s)%s", val.Type.Inspect(), val.Inspect())
-		argv[i] = val
 	}
 	hash := fmt.Sprintf("%s[%s]", fn.Ident, strings.Join(args, " "))
 	if fn.Cacheble {
 		if cacheItem, err := vm.Cache.Get(hash); err == nil {
+			vm.Stack.Sp -= argc
 			for i := 0; i < len(cacheItem.Return); i++ {
 				vm.Stack.Push(cacheItem.Return[i])
 			}
 			return
-		}
-		for i := 0; i < argc; i++ {
-			vm.Stack.Push(argv[i])
 		}
 	}
 	fr := NewFrame(hash, fn, 0, 0, vm.Stack.Sp-argc)
