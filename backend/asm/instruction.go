@@ -53,6 +53,17 @@ const (
 	OP_BoolAnd
 	OP_BoolOr
 	OP_BoolNot
+
+	OP_StringLoad
+	OP_StringConcat
+	OP_StringEq
+	OP_StringNeq
+
+	OP_ListLoad
+	OP_ListConstruct
+	OP_ListGet
+	OP_ListSet
+	OP_ListInsert
 )
 
 type Instruction struct {
@@ -145,6 +156,24 @@ func (instr *Instruction) Inspect() string {
 		return "(bool.or)"
 	case OP_BoolNot:
 		return "(bool.not)"
+	case OP_StringLoad:
+		return fmt.Sprintf("(str.load %s)", instr.Args[0].Inspect())
+	case OP_StringConcat:
+		return "(str.concat)"
+	case OP_StringEq:
+		return "(str.eq)"
+	case OP_StringNeq:
+		return "(str.neq)"
+	case OP_ListLoad:
+		return fmt.Sprintf("(list.load %s)", instr.Args[0].Inspect())
+	case OP_ListConstruct:
+		return fmt.Sprintf("(list.construct %s)", instr.Args[0].Inspect())
+	case OP_ListGet:
+		return "(list.get)"
+	case OP_ListSet:
+		return "(list.set)"
+	case OP_ListInsert:
+		return "(list.insert)"
 	default:
 		return "(unenxpected or illigal instruction)"
 	}
@@ -422,5 +451,65 @@ func InstructionBoolOr() Instruction {
 func InstructionBoolNot() Instruction {
 	return Instruction{
 		Opcode: OP_BoolNot,
+	}
+}
+
+func InstructionStringLoad(val string) Instruction {
+	return Instruction{
+		Opcode: OP_StringLoad,
+		Args: [4]Value{
+			ValueString(val),
+		},
+	}
+}
+
+func InstructionStringConcat() Instruction {
+	return Instruction{
+		Opcode: OP_StringConcat,
+	}
+}
+
+func InstructionStringEq() Instruction {
+	return Instruction{
+		Opcode: OP_StringEq,
+	}
+}
+
+func InstructionStringNeq() Instruction {
+	return Instruction{
+		Opcode: OP_StringNeq,
+	}
+}
+
+func InstructionListLoad(values ...Value) Instruction {
+	return Instruction{
+		Opcode: OP_ListLoad,
+		Args: [4]Value{
+			ValueList(values...),
+		},
+	}
+}
+
+func InstructionListConstruct(itemCount int64) Instruction {
+	return Instruction{
+		Opcode: OP_ListConstruct,
+		Args: [4]Value{
+			ValueI64(itemCount),
+		},
+	}
+}
+func InstructionListGet() Instruction {
+	return Instruction{
+		Opcode: OP_ListGet,
+	}
+}
+func InstructionListSet() Instruction {
+	return Instruction{
+		Opcode: OP_ListSet,
+	}
+}
+func InstructionListInsert() Instruction {
+	return Instruction{
+		Opcode: OP_ListInsert,
 	}
 }

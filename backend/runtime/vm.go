@@ -359,6 +359,71 @@ func (vm *VM) RunBlock() error {
 					!BoolValue(val),
 				),
 			)
+		case asm.OP_StringLoad:
+			val := instr.Args[0]
+			vm.Stack.Push(
+				val,
+			)
+		case asm.OP_StringConcat:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueString(
+					StringValue(val1) + StringValue(val2),
+				),
+			)
+		case asm.OP_StringEq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					StringValue(val1) == StringValue(val2),
+				),
+			)
+		case asm.OP_StringNeq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					StringValue(val1) != StringValue(val2),
+				),
+			)
+		case asm.OP_ListLoad:
+			val := instr.Args[0]
+			vm.Stack.Push(
+				val,
+			)
+		case asm.OP_ListConstruct:
+			argc := I64Value(instr.Args[0])
+			items := make([]asm.Value, argc)
+			for i := argc - 1; i >= 0; i-- {
+				items[i] = vm.Stack.Pop()
+			}
+			vm.Stack.Push(
+				asm.ValueList(items...),
+			)
+		case asm.OP_ListGet:
+			index := I64Value(vm.Stack.Pop())
+			list := ListValue(vm.Stack.Pop())
+			vm.Stack.Push(
+				list[index],
+			)
+		case asm.OP_ListSet:
+			val := vm.Stack.Pop()
+			index := I64Value(vm.Stack.Pop())
+			list := ListValue(vm.Stack.Pop())
+			list[index] = val
+			vm.Stack.Push(
+				asm.ValueList(list...),
+			)
+		case asm.OP_ListInsert:
+			val := vm.Stack.Pop()
+			index := I64Value(vm.Stack.Pop())
+			list := ListValue(vm.Stack.Pop())
+			list = append(list[:index], append([]asm.Value{val}, list[index:]...)...)
+			vm.Stack.Push(
+				asm.ValueList(list...),
+			)
 		default:
 			return fmt.Errorf("unexpected instruction: %s", instr.Inspect())
 		}

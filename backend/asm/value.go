@@ -2,6 +2,7 @@ package asm
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ValueType byte
@@ -11,8 +12,8 @@ const (
 	VT_I64
 	VT_Bool
 	VT_F64
-	// VT_String
-	// VT_List
+	VT_String
+	VT_List
 )
 
 func (vt ValueType) Inspect() string {
@@ -23,6 +24,10 @@ func (vt ValueType) Inspect() string {
 		return "f64"
 	case VT_Bool:
 		return "bool"
+	case VT_String:
+		return "str"
+	case VT_List:
+		return "list"
 	default:
 		return "illigal"
 	}
@@ -34,6 +39,9 @@ type Value struct {
 	Integer64 int64
 	Float64   float64
 	Boolean   bool
+	String    string
+
+	Items []Value
 }
 
 func (vl *Value) Inspect() string {
@@ -44,6 +52,14 @@ func (vl *Value) Inspect() string {
 		return fmt.Sprintf("%f", vl.Float64)
 	case VT_Bool:
 		return fmt.Sprintf("%v", vl.Boolean)
+	case VT_String:
+		return fmt.Sprintf("\"%s\"", vl.String)
+	case VT_List:
+		items := []string{}
+		for _, v := range vl.Items {
+			items = append(items, v.Inspect())
+		}
+		return fmt.Sprintf("'(%s)", strings.Join(items, " "))
 	default:
 		return "illigal"
 	}
@@ -67,5 +83,19 @@ func ValueBool(val bool) Value {
 	return Value{
 		Type:    VT_Bool,
 		Boolean: val,
+	}
+}
+
+func ValueString(val string) Value {
+	return Value{
+		Type:   VT_String,
+		String: val,
+	}
+}
+
+func ValueList(values ...Value) Value {
+	return Value{
+		Type:  VT_List,
+		Items: append([]Value{}, values...),
 	}
 }

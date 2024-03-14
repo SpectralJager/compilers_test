@@ -33,3 +33,17 @@ func F64Value(val asm.Value) float64 {
 	}
 	return val.Float64
 }
+
+func StringValue(val asm.Value) string {
+	if val.Type != asm.VT_String {
+		panic(fmt.Errorf("can't get %s from %s", asm.VT_F64.Inspect(), val.Type.Inspect()))
+	}
+	return val.String
+}
+
+func ListValue(val asm.Value) []asm.Value {
+	if val.Type != asm.VT_List {
+		panic(fmt.Errorf("can't get %s from %s", asm.VT_F64.Inspect(), val.Type.Inspect()))
+	}
+	return val.Items
+}
