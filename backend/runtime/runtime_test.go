@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var prog = fib_rec
+var prog = tmp
 
 var gcd = Must(asm.NewProgram(
 	asm.NewFunction("main_main",
@@ -90,6 +90,17 @@ var fib_rec = Must(asm.NewProgram(
 			asm.InstructionCall("main_fib", 1),
 			asm.InstructionI64Add(),
 			asm.InstructionReturn(1),
+		),
+	),
+))
+
+var tmp = Must(asm.NewProgram(
+	asm.NewFunction("main_main", false,
+		asm.NewBlock(
+			asm.InstructionF64Load(12.),
+			asm.InstructionF64Load(30.),
+			asm.InstructionF64Div(),
+			asm.InstructionHalt(),
 		),
 	),
 ))

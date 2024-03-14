@@ -81,6 +81,15 @@ func (vm *VM) RunBlock() error {
 		case asm.OP_Halt:
 			return nil
 		case asm.OP_Nop:
+		case asm.OP_Rotate:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(val2)
+			vm.Stack.Push(val1)
+		case asm.OP_Duplicate:
+			val := vm.Stack.Pop()
+			vm.Stack.Push(val)
+			vm.Stack.Push(val)
 		case asm.OP_LocalLoad:
 			val := instr.Args[0]
 			vm.Stack.Push(
@@ -137,6 +146,29 @@ func (vm *VM) RunBlock() error {
 					I64Value(val1) - I64Value(val2),
 				),
 			)
+		case asm.OP_I64Mul:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueI64(
+					I64Value(val1) * I64Value(val2),
+				),
+			)
+		case asm.OP_I64Div:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueI64(
+					I64Value(val1) / I64Value(val2),
+				),
+			)
+		case asm.OP_I64Neg:
+			val := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueI64(
+					-I64Value(val),
+				),
+			)
 		case asm.OP_I64Mod:
 			val2 := vm.Stack.Pop()
 			val1 := vm.Stack.Pop()
@@ -177,6 +209,133 @@ func (vm *VM) RunBlock() error {
 					I64Value(val1) < I64Value(val2),
 				),
 			)
+		case asm.OP_I64Geq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					I64Value(val1) >= I64Value(val2),
+				),
+			)
+		case asm.OP_I64Leq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					I64Value(val1) <= I64Value(val2),
+				),
+			)
+		case asm.OP_F64Load:
+			val := instr.Args[0]
+			vm.Stack.Push(val)
+		case asm.OP_F64Add:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueF64(
+					F64Value(val1) + F64Value(val2),
+				),
+			)
+		case asm.OP_F64Sub:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueF64(
+					F64Value(val1) - F64Value(val2),
+				),
+			)
+		case asm.OP_F64Mul:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueF64(
+					F64Value(val1) * F64Value(val2),
+				),
+			)
+		case asm.OP_F64Div:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueF64(
+					F64Value(val1) / F64Value(val2),
+				),
+			)
+		case asm.OP_F64Neg:
+			val := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueF64(
+					-F64Value(val),
+				),
+			)
+		case asm.OP_F64Eq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					F64Value(val1) == F64Value(val2),
+				),
+			)
+		case asm.OP_F64Neq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					F64Value(val1) != F64Value(val2),
+				),
+			)
+		case asm.OP_F64Gt:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					F64Value(val1) > F64Value(val2),
+				),
+			)
+		case asm.OP_F64Lt:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					F64Value(val1) < F64Value(val2),
+				),
+			)
+		case asm.OP_F64Geq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					F64Value(val1) >= F64Value(val2),
+				),
+			)
+		case asm.OP_F64Leq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					F64Value(val1) <= F64Value(val2),
+				),
+			)
+		case asm.OP_BoolLoad:
+			val := instr.Args[0]
+			vm.Stack.Push(
+				val,
+			)
+		case asm.OP_BoolEq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					BoolValue(val1) == BoolValue(val2),
+				),
+			)
+		case asm.OP_BoolNeq:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					BoolValue(val1) != BoolValue(val2),
+				),
+			)
 		case asm.OP_BoolAnd:
 			val2 := vm.Stack.Pop()
 			val1 := vm.Stack.Pop()
@@ -185,7 +344,21 @@ func (vm *VM) RunBlock() error {
 					BoolValue(val1) && BoolValue(val2),
 				),
 			)
-
+		case asm.OP_BoolOr:
+			val2 := vm.Stack.Pop()
+			val1 := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					BoolValue(val1) || BoolValue(val2),
+				),
+			)
+		case asm.OP_BoolNot:
+			val := vm.Stack.Pop()
+			vm.Stack.Push(
+				asm.ValueBool(
+					!BoolValue(val),
+				),
+			)
 		default:
 			return fmt.Errorf("unexpected instruction: %s", instr.Inspect())
 		}

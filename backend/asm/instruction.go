@@ -17,16 +17,42 @@ const (
 	OP_Call
 	OP_Return
 
+	OP_Rotate
+	OP_Duplicate
+
 	OP_I64Load
 	OP_I64Add
 	OP_I64Sub
+	OP_I64Mul
+	OP_I64Div
+	OP_I64Neg
 	OP_I64Mod
 	OP_I64Eq
 	OP_I64Neq
 	OP_I64Gt
 	OP_I64Lt
+	OP_I64Geq
+	OP_I64Leq
 
+	OP_F64Load
+	OP_F64Add
+	OP_F64Sub
+	OP_F64Mul
+	OP_F64Div
+	OP_F64Neg
+	OP_F64Eq
+	OP_F64Neq
+	OP_F64Gt
+	OP_F64Lt
+	OP_F64Geq
+	OP_F64Leq
+
+	OP_BoolLoad
+	OP_BoolEq
+	OP_BoolNeq
 	OP_BoolAnd
+	OP_BoolOr
+	OP_BoolNot
 )
 
 type Instruction struct {
@@ -45,6 +71,10 @@ func (instr *Instruction) Inspect() string {
 		return fmt.Sprintf("(local.load r%s)", instr.Args[0].Inspect())
 	case OP_LocalSave:
 		return fmt.Sprintf("(local.save r%s)", instr.Args[0].Inspect())
+	case OP_Rotate:
+		return "(rot)"
+	case OP_Duplicate:
+		return "(dup)"
 	case OP_Br:
 		return fmt.Sprintf("(br %s)", instr.Args[0].Inspect())
 	case OP_BrTrue:
@@ -59,6 +89,12 @@ func (instr *Instruction) Inspect() string {
 		return "(i64.add)"
 	case OP_I64Sub:
 		return "(i64.sub)"
+	case OP_I64Mul:
+		return "(i64.mul)"
+	case OP_I64Div:
+		return "(i64.div)"
+	case OP_I64Neg:
+		return "(i64.neg)"
 	case OP_I64Mod:
 		return "(i64.mod)"
 	case OP_I64Eq:
@@ -69,8 +105,46 @@ func (instr *Instruction) Inspect() string {
 		return "(i64.gt)"
 	case OP_I64Lt:
 		return "(i64.lt)"
+	case OP_I64Geq:
+		return "(i64.gt)"
+	case OP_I64Leq:
+		return "(i64.gt)"
+	case OP_F64Load:
+		return fmt.Sprintf("(f64.load %s)", instr.Args[0].Inspect())
+	case OP_F64Add:
+		return "(f64.add)"
+	case OP_F64Sub:
+		return "(f64.sub)"
+	case OP_F64Mul:
+		return "(f64.mul)"
+	case OP_F64Div:
+		return "(f64.div)"
+	case OP_F64Neg:
+		return "(f64.neg)"
+	case OP_F64Eq:
+		return "(f64.eq)"
+	case OP_F64Neq:
+		return "(f64.neq)"
+	case OP_F64Gt:
+		return "(f64.gt)"
+	case OP_F64Lt:
+		return "(f64.lt)"
+	case OP_F64Geq:
+		return "(f64.gt)"
+	case OP_F64Leq:
+		return "(f64.gt)"
+	case OP_BoolLoad:
+		return fmt.Sprintf("(bool.load %s)", instr.Args[0].Inspect())
+	case OP_BoolEq:
+		return "(bool.eq)"
+	case OP_BoolNeq:
+		return "(bool.neq)"
 	case OP_BoolAnd:
 		return "(bool.and)"
+	case OP_BoolOr:
+		return "(bool.or)"
+	case OP_BoolNot:
+		return "(bool.not)"
 	default:
 		return "(unenxpected or illigal instruction)"
 	}
@@ -85,6 +159,18 @@ func InstructionNop() Instruction {
 func InstructionHalt() Instruction {
 	return Instruction{
 		Opcode: OP_Halt,
+	}
+}
+
+func InstructionRotate() Instruction {
+	return Instruction{
+		Opcode: OP_Rotate,
+	}
+}
+
+func InstructionDuplicate() Instruction {
+	return Instruction{
+		Opcode: OP_Duplicate,
 	}
 }
 
@@ -165,6 +251,24 @@ func InstructionI64Sub() Instruction {
 	}
 }
 
+func InstructionI64Mul() Instruction {
+	return Instruction{
+		Opcode: OP_I64Mul,
+	}
+}
+
+func InstructionI64Div() Instruction {
+	return Instruction{
+		Opcode: OP_I64Div,
+	}
+}
+
+func InstructionI64Neg() Instruction {
+	return Instruction{
+		Opcode: OP_I64Neg,
+	}
+}
+
 func InstructionI64Mod() Instruction {
 	return Instruction{
 		Opcode: OP_I64Mod,
@@ -195,8 +299,128 @@ func InstructionI64Lt() Instruction {
 	}
 }
 
+func InstructionI64Geq() Instruction {
+	return Instruction{
+		Opcode: OP_I64Geq,
+	}
+}
+
+func InstructionI64Leq() Instruction {
+	return Instruction{
+		Opcode: OP_I64Leq,
+	}
+}
+
+func InstructionF64Load(val float64) Instruction {
+	return Instruction{
+		Opcode: OP_F64Load,
+		Args: [4]Value{
+			ValueF64(val),
+		},
+	}
+}
+
+func InstructionF64Add() Instruction {
+	return Instruction{
+		Opcode: OP_F64Add,
+	}
+}
+
+func InstructionF64Sub() Instruction {
+	return Instruction{
+		Opcode: OP_F64Sub,
+	}
+}
+
+func InstructionF64Mul() Instruction {
+	return Instruction{
+		Opcode: OP_F64Mul,
+	}
+}
+
+func InstructionF64Div() Instruction {
+	return Instruction{
+		Opcode: OP_F64Div,
+	}
+}
+
+func InstructionF64Neg() Instruction {
+	return Instruction{
+		Opcode: OP_F64Neg,
+	}
+}
+
+func InstructionF64Eq() Instruction {
+	return Instruction{
+		Opcode: OP_F64Eq,
+	}
+}
+
+func InstructionF64Neq() Instruction {
+	return Instruction{
+		Opcode: OP_F64Neq,
+	}
+}
+
+func InstructionF64Gt() Instruction {
+	return Instruction{
+		Opcode: OP_F64Gt,
+	}
+}
+
+func InstructionF64Lt() Instruction {
+	return Instruction{
+		Opcode: OP_F64Lt,
+	}
+}
+
+func InstructionF64Geq() Instruction {
+	return Instruction{
+		Opcode: OP_F64Geq,
+	}
+}
+
+func InstructionF64Leq() Instruction {
+	return Instruction{
+		Opcode: OP_F64Leq,
+	}
+}
+
+func InstructionBoolLoad(val bool) Instruction {
+	return Instruction{
+		Opcode: OP_BoolLoad,
+		Args: [4]Value{
+			ValueBool(val),
+		},
+	}
+}
+
+func InstructionBoolEq() Instruction {
+	return Instruction{
+		Opcode: OP_BoolEq,
+	}
+}
+
+func InstructionBoolNeq() Instruction {
+	return Instruction{
+		Opcode: OP_BoolNeq,
+	}
+}
+
 func InstructionBoolAnd() Instruction {
 	return Instruction{
 		Opcode: OP_BoolAnd,
+	}
+}
+
+func InstructionBoolOr() Instruction {
+	return Instruction{
+		Opcode: OP_BoolOr,
+	}
+}
+
+func InstructionBoolNot() Instruction {
+	return Instruction{
+		Opcode: OP_BoolNot,
 	}
 }

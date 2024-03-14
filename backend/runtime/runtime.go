@@ -26,3 +26,10 @@ func BoolValue(val asm.Value) bool {
 	}
 	return val.Boolean
 }
+
+func F64Value(val asm.Value) float64 {
+	if val.Type != asm.VT_F64 {
+		panic(fmt.Errorf("can't get %s from %s", asm.VT_F64.Inspect(), val.Type.Inspect()))
+	}
+	return val.Float64
+}
