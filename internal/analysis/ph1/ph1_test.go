@@ -21,5 +21,4 @@ func TestPh1(t *testing.T) {
 	mod := gen.GenModule(prog)
 	fmt.Println(mod.String())
 	AnalyseModule(mod)
-	fmt.Println(mod.String())
 }
