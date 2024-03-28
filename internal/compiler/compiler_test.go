@@ -46,15 +46,29 @@ func TestParser(t *testing.T) {
 func TestCodegen(t *testing.T) {
 	code := `
 @var result:int = 0;
-@fn main[] {
-	@var temp:int = 0;
-	@if (ieq temp 0) {
-		@set result = 10;
-	} else {
-		@set result = 20;
-	}
+
+@fn fib[n:int] <int> {
+    @if (ilt n 2) {
+        @return n;
+    }
+    @return (iadd 
+        (fib (isub n 1)) 
+        (fib (isub n 2)));
 }
-	`
+
+@fn main[] {
+   @set result = (fib 40);
+}`
+	// @var result:int = 0;
+	// @fn main[] {
+	// 	@var temp:int = 0;
+	// 	@if (ieq temp 0) {
+	// 		@set result = 10;
+	// 	} else {
+	// 		@set result = 20;
+	// 	}
+	// }
+	// 	`
 	programm, err := Parser.ParseString("test.grim", string(code))
 	if err != nil {
 		t.Fatal(err)

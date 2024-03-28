@@ -1,6 +1,4 @@
 @var result:int = 0;
-@var result1:int = 0;
-@var result2:int = 0;
 
 @fn fib[n:int] <int> {
     @if (ilt n 2) {
@@ -10,7 +8,5 @@
 }
 
 @fn main[] {
-   @set result = (fib 20);
-   @set result1 = (iadd result 20);
-   @set result2 = (imul result 20);
+   @set result = (fib 40);
 }
