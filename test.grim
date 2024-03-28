@@ -8,5 +8,9 @@
 }
 
 @fn main[] {
+<<<<<<< HEAD
    @set result = (fib 40);
+=======
+   @set result = (fib 35);
+>>>>>>> cacb6c1c1016ad03f5703b9605a9ebc4e63109c0
 }
